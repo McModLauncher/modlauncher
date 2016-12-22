@@ -1,0 +1,57 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+repositories {
+    mavenCentral()
+}
+
+group = 'cpw.mods'
+//noinspection GroovyUnusedAssignment
+archivesBaseName = 'modlauncher'
+version = '0.1-SNAPSHOT'
+//noinspection GroovyUnusedAssignment
+sourceCompatibility = 1.8
+
+
+dependencies {
+    compile 'net.sf.jopt-simple:jopt-simple:4.5'
+    compile 'org.ow2.asm:asm-debug-all:5.0.3'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+def repoDir = new File(projectDir, "repo")
+repoDir.mkdirs()
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://" + repoDir.absolutePath)
+
+            pom.project {
+                description 'Minecraft Mod Launcher'
+                url 'http://github.com/cpw/modlauncher'
+            }
+        }
+    }
+
+    doLast {
+        // Purge all annoying files that arent needed
+        repoDir.traverse(type: FileType.FILES, nameFilter: ~/.*\.(xml(?:\.sha1)?|md5)$/) {
+            it.delete()
+        }
+    }
+}
+
+clean << {
+    repoDir.deleteDir()
+}
