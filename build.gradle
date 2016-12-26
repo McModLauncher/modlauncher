@@ -17,6 +17,7 @@ sourceCompatibility = 1.8
 dependencies {
     compile 'net.sf.jopt-simple:jopt-simple:4.5'
     compile 'org.ow2.asm:asm-debug-all:5.0.3'
+    compile 'org.slf4j:slf4j-api:1.7.21'
 }
 
 task sourcesJar(type: Jar) {
