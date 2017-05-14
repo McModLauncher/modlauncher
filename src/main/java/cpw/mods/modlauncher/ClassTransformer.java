@@ -1,7 +1,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -18,9 +18,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Transforms classes using the supplied launcher services
- */
 public class ClassTransformer
 {
     private final TransformStore transformers;
@@ -90,36 +87,36 @@ public class ClassTransformer
     {
         do
         {
-            final Stream<Vote<T>> voteResultStream = transformers.stream().map(t -> gatherVote(t, context));
-            final Map<VoteResult, List<Vote<T>>> results = voteResultStream.collect(Collectors.groupingBy(Vote::getResult));
-            if (results.containsKey(VoteResult.REJECT))
+            final Stream<TransformerVote<T>> voteResultStream = transformers.stream().map(t -> gatherVote(t, context));
+            final Map<TransformerVoteResult, List<TransformerVote<T>>> results = voteResultStream.collect(Collectors.groupingBy(TransformerVote::getResult));
+            if (results.containsKey(TransformerVoteResult.REJECT))
             {
-                throw new VoteRejectedException(results.get(VoteResult.REJECT), node.getClass());
+                throw new VoteRejectedException(results.get(TransformerVoteResult.REJECT), node.getClass());
             }
-            if (results.containsKey(VoteResult.NO))
+            if (results.containsKey(TransformerVoteResult.NO))
             {
-                transformers.removeAll(results.get(VoteResult.NO).stream().map(Vote::getTransformer).collect(Collectors.toList()));
+                transformers.removeAll(results.get(TransformerVoteResult.NO).stream().map(TransformerVote::getTransformer).collect(Collectors.toList()));
             }
-            if (results.containsKey(VoteResult.YES))
+            if (results.containsKey(TransformerVoteResult.YES))
             {
-                final ITransformer<T> transformer = results.get(VoteResult.YES).get(0).getTransformer();
+                final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
                 transformers.remove(transformer);
                 continue;
             }
-            if (results.containsKey(VoteResult.DEFER))
+            if (results.containsKey(TransformerVoteResult.DEFER))
             {
-                throw new VoteDeadlockException(results.get(VoteResult.DEFER), node.getClass());
+                throw new VoteDeadlockException(results.get(TransformerVoteResult.DEFER), node.getClass());
             }
         }
         while (!transformers.isEmpty());
         return node;
     }
 
-    private <T> Vote<T> gatherVote(ITransformer<T> transformer, VotingContext context)
+    private <T> TransformerVote<T> gatherVote(ITransformer<T> transformer, VotingContext context)
     {
-        VoteResult vr = transformer.castVote(context);
-        return new Vote<>(vr, transformer);
+        TransformerVoteResult vr = transformer.castVote(context);
+        return new TransformerVote<>(vr, transformer);
     }
 
     private MessageDigest getSha256()

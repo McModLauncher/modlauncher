@@ -20,34 +20,34 @@ public interface ITransformer<T>
      * rounds of voting.
      */
     @Nonnull
-    T transform(T input, IVotingContext context);
+    T transform(T input, ITransformerVotingContext context);
 
     /**
-     * Return the {@link VoteResult} for this transformer.
+     * Return the {@link TransformerVoteResult} for this transformer.
      * The transformer should evaluate whether or not is is a candidate to apply during
      * the round of voting in progress, represented by the context parameter.
      * How the vote works:
      * <ul>
-     * <li>If the transformer wishes to be a candidate, it should return {@link VoteResult#YES}.</li>
+     * <li>If the transformer wishes to be a candidate, it should return {@link TransformerVoteResult#YES}.</li>
      * <li>If the transformer wishes to exit the voting (the transformer has already
-     * has its intended change applied, for example), it should return {@link VoteResult#NO}</li>
+     * has its intended change applied, for example), it should return {@link TransformerVoteResult#NO}</li>
      * <li>If the transformer wishes to wait for future rounds of voting it should return
-     * {@link VoteResult#DEFER}. Note that if there is <em>no</em> YES candidate, but DEFER
+     * {@link TransformerVoteResult#DEFER}. Note that if there is <em>no</em> YES candidate, but DEFER
      * candidates remain, this is a DEFERRAL stalemate and the game will crash.</li>
-     * <li>If the transformer wishes to crash the game, it should return {@link VoteResult#REJECT}.
+     * <li>If the transformer wishes to crash the game, it should return {@link TransformerVoteResult#REJECT}.
      * This is extremely frowned upon, and should not be used except in extreme circumstances. If an
      * incompatibility is present, it should detect and handle it in the {@link ILauncherService#onLoad}
      * </li>
      * </ul>
      * After all votes from candidate transformers are collected, the NOs are removed from the
-     * current set of voters, one from the set of YES voters is selected and it's {@link ITransformer#transform(Object, IVotingContext)}
+     * current set of voters, one from the set of YES voters is selected and it's {@link ITransformer#transform(Object, ITransformerVotingContext)}
      * method called. It is then removed from the set of transformers and another round is performed.
      *
      * @param context The context of the vote
-     * @return A VoteResult indicating the desire of this transformer
+     * @return A TransformerVoteResult indicating the desire of this transformer
      */
     @Nonnull
-    VoteResult castVote(IVotingContext context);
+    TransformerVoteResult castVote(ITransformerVotingContext context);
 
     /**
      * Return a set of {@link Target} identifying which elements this transformer wishes to try

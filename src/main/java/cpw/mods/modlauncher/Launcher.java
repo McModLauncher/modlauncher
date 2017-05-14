@@ -4,14 +4,8 @@ import cpw.mods.modlauncher.api.TypesafeMap;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
-/**
- * Entry point for the ModLauncher.
- */
 public enum Launcher
 {
-    /**
-     * Singleton instance
-     */
     INSTANCE;
 
     private final TypesafeMap blackboard;

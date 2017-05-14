@@ -40,9 +40,9 @@ public class ArgumentHandler
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
         this.optionSet = parser.parse(this.args);
-        env.getMap().computeIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
-        env.getMap().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
-        env.getMap().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
+        env.getAll().computeIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
+        env.getAll().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
+        env.getAll().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
         return this.optionSet.valueOf(minecraftJarOption);
     }

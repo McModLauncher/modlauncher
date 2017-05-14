@@ -1,11 +1,7 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
-import cpw.mods.modlauncher.api.ILauncherService;
-import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
 import org.objectweb.asm.Opcodes;
@@ -75,7 +71,7 @@ public class MockLauncherService implements ILauncherService
 
         @Nonnull
         @Override
-        public ClassNode transform(ClassNode input, IVotingContext context)
+        public ClassNode transform(ClassNode input, ITransformerVotingContext context)
         {
             FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
             input.fields.add(fn);
@@ -84,9 +80,9 @@ public class MockLauncherService implements ILauncherService
 
         @Nonnull
         @Override
-        public VoteResult castVote(IVotingContext context)
+        public TransformerVoteResult castVote(ITransformerVotingContext context)
         {
-            return VoteResult.YES;
+            return TransformerVoteResult.YES;
         }
 
         @Nonnull

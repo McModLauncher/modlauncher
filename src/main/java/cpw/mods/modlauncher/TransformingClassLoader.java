@@ -8,14 +8,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 
-/**
- * Minecraft Class Loader
- */
 public class TransformingClassLoader extends ClassLoader
 {
     static
     {
-        // We're capable of loading classes in parallel
         ClassLoader.registerAsParallelCapable();
     }
 

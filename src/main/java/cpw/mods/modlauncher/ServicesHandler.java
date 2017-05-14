@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
-import static cpw.mods.modlauncher.ServiceLoaderUtils.parallelForEach;
+import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.parallelForEach;
 
 class ServicesHandler
 {
@@ -26,7 +26,7 @@ class ServicesHandler
     ServicesHandler(IEnvironment environment, TransformStore transformStore)
     {
         launcherServices = ServiceLoader.load(ILauncherService.class);
-        launcherLog.info("Found services : {}", () -> ServiceLoaderUtils.toList(launcherServices));
+        launcherLog.info("Found services : {}", () -> ServiceLoaderStreamUtils.toList(launcherServices));
 
         serviceLookup = StreamSupport.stream(launcherServices.spliterator(), false)
                 .collect(Collectors.toMap(ILauncherService::name, LauncherServiceMetadataDecorator::new));

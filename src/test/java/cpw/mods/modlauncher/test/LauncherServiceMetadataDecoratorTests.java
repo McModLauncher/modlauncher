@@ -1,12 +1,12 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
-import cpw.mods.modlauncher.TargetLabel;
+import cpw.mods.modlauncher.TransformTargetLabel;
 import cpw.mods.modlauncher.TransformList;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.ITransformerVotingContext;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LauncherServiceMetadataDecoratorTests
 {
-
     private ClassNodeTransformer classNodeTransformer = new ClassNodeTransformer();
     private MethodNodeTransformer methodNodeTransformer = new MethodNodeTransformer();
 
@@ -45,15 +44,15 @@ class LauncherServiceMetadataDecoratorTests
 
         LauncherServiceMetadataDecorator sd = Whitebox.invokeConstructor(LauncherServiceMetadataDecorator.class, mockLauncherService);
         sd.gatherTransformers(store);
-        EnumMap<TargetLabel.LabelType, TransformList<?>> transformers = Whitebox.getInternalState(store, "transformers");
-        Set<TargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");
+        EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers = Whitebox.getInternalState(store, "transformers");
+        Set<TransformTargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");
         assertAll(
-                () -> assertTrue(transformers.containsKey(TargetLabel.LabelType.CLASS)),
-                () -> assertTrue(transformers.get(TargetLabel.LabelType.CLASS).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == classNodeTransformer)),
-                () -> assertTrue(targettedClasses.contains(new TargetLabel("cheese.Puffs"))),
-                () -> assertTrue(transformers.containsKey(TargetLabel.LabelType.METHOD)),
-                () -> assertTrue(transformers.get(TargetLabel.LabelType.METHOD).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == methodNodeTransformer)),
-                () -> assertTrue(targettedClasses.contains(new TargetLabel("cheesy.PuffMethod")))
+                () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.CLASS)),
+                () -> assertTrue(transformers.get(TransformTargetLabel.LabelType.CLASS).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == classNodeTransformer)),
+                () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheese.Puffs"))),
+                () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.METHOD)),
+                () -> assertTrue(transformers.get(TransformTargetLabel.LabelType.METHOD).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == methodNodeTransformer)),
+                () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheesy.PuffMethod")))
         );
     }
 
@@ -61,16 +60,16 @@ class LauncherServiceMetadataDecoratorTests
     {
         @Nonnull
         @Override
-        public ClassNode transform(ClassNode input, IVotingContext context)
+        public ClassNode transform(ClassNode input, ITransformerVotingContext context)
         {
             return input;
         }
 
         @Nonnull
         @Override
-        public VoteResult castVote(IVotingContext context)
+        public TransformerVoteResult castVote(ITransformerVotingContext context)
         {
-            return VoteResult.YES;
+            return TransformerVoteResult.YES;
         }
 
         @Nonnull
@@ -85,16 +84,16 @@ class LauncherServiceMetadataDecoratorTests
     {
         @Nonnull
         @Override
-        public MethodNode transform(MethodNode input, IVotingContext context)
+        public MethodNode transform(MethodNode input, ITransformerVotingContext context)
         {
             return input;
         }
 
         @Nonnull
         @Override
-        public VoteResult castVote(IVotingContext context)
+        public TransformerVoteResult castVote(ITransformerVotingContext context)
         {
-            return VoteResult.YES;
+            return TransformerVoteResult.YES;
         }
 
         @Nonnull
