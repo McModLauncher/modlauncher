@@ -19,7 +19,7 @@ import static cpw.mods.modlauncher.ServiceLoaderUtils.parallelForEach;
 class ServicesHandler
 {
     private final ServiceLoader<LauncherService> launcherServices;
-    private final Map<String, ServiceDecorator> serviceLookup;
+    private final Map<String, LauncherServiceMetadataDecorator> serviceLookup;
     private final Environment environment;
     private final TransformStore transformStore;
 
@@ -29,7 +29,7 @@ class ServicesHandler
         launcherLog.info("Found services : {}", () -> ServiceLoaderUtils.toList(launcherServices));
 
         serviceLookup = StreamSupport.stream(launcherServices.spliterator(), false)
-                .collect(Collectors.toMap(LauncherService::name, ServiceDecorator::new));
+                .collect(Collectors.toMap(LauncherService::name, LauncherServiceMetadataDecorator::new));
 
         this.environment = environment;
         this.transformStore = transformStore;
@@ -85,11 +85,11 @@ class ServicesHandler
 
     private void throwIfServicesFailedToLoad() throws RuntimeException
     {
-        final Stream<ServiceDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
+        final Stream<LauncherServiceMetadataDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
         if (failedServices.count() > 0)
         {
             launcherLog.error("Found {} services that failed to load", failedServices::count);
-            launcherLog.error("Failed services : {}", () -> failedServices.map(ServiceDecorator::getService).collect(Collectors.toList()));
+            launcherLog.error("Failed services : {}", () -> failedServices.map(LauncherServiceMetadataDecorator::getService).collect(Collectors.toList()));
             //TODO enrich exception with data from unhappy services
             throw new RuntimeException("Invalid Service found");
         }

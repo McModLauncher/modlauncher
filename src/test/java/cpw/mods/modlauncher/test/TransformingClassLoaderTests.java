@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.ServiceDecorator;
+import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformingClassLoader;
 import cpw.mods.modlauncher.api.IVotingContext;
@@ -39,7 +39,7 @@ class TransformingClassLoaderTests
         };
 
         TransformStore transformStore = new TransformStore();
-        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, mockLauncherService);
+        LauncherServiceMetadataDecorator sd = Whitebox.invokeConstructor(LauncherServiceMetadataDecorator.class, mockLauncherService);
         sd.gatherTransformers(transformStore);
         TransformingClassLoader tcl = new TransformingClassLoader(transformStore, new File("."));
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);
