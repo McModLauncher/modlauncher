@@ -23,10 +23,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Test the service decorator
- */
-class TestDecorator
+class ServiceDecoratorTests
 {
 
     private ClassNodeTransformer classNodeTransformer = new ClassNodeTransformer();
@@ -35,7 +32,7 @@ class TestDecorator
     @Test
     void testGatherTransformersNormally() throws Exception
     {
-        TestLauncherService testLauncherService = new TestLauncherService()
+        MockLauncherService mockLauncherService = new MockLauncherService()
         {
             @Nonnull
             @Override
@@ -46,7 +43,7 @@ class TestDecorator
         };
         TransformStore store = new TransformStore();
 
-        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, testLauncherService);
+        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, mockLauncherService);
         sd.gatherTransformers(store);
         EnumMap<TargetLabel.LabelType, TransformList<?>> transformers = Whitebox.getInternalState(store, "transformers");
         Set<TargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");

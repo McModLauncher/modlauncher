@@ -21,17 +21,14 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Test class loader
- */
-class TestClassLoader
+class TransformingClassLoaderTests
 {
     private Transformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();
 
     @Test
     void testClassLoader() throws Exception
     {
-        TestLauncherService testLauncherService = new TestLauncherService()
+        MockLauncherService mockLauncherService = new MockLauncherService()
         {
             @Nonnull
             @Override
@@ -42,7 +39,7 @@ class TestClassLoader
         };
 
         TransformStore transformStore = new TransformStore();
-        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, testLauncherService);
+        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, mockLauncherService);
         sd.gatherTransformers(transformStore);
         TransformingClassLoader tcl = new TransformingClassLoader(transformStore, new File("."));
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);

@@ -19,10 +19,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Test Launcher Service
- */
-public class TestLauncherService implements LauncherService
+public class MockLauncherService implements LauncherService
 {
     private ArgumentAcceptingOptionSpec<String> modsList;
     private ArgumentAcceptingOptionSpec<Integer> modlists;
