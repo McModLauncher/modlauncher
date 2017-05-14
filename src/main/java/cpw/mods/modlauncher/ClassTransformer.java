@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.VoteResult;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -63,7 +63,7 @@ public class ClassTransformer
         // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
         for (FieldNode field : clazz.fields)
         {
-            List<Transformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
+            List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
             fieldList.add(this.performVote(fieldTransformers, field, context));
         }
 
@@ -71,13 +71,13 @@ public class ClassTransformer
         List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
         for (MethodNode method : clazz.methods)
         {
-            List<Transformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
+            List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
             methodList.add(this.performVote(methodTransformers, method, context));
         }
 
         clazz.fields = fieldList;
         clazz.methods = methodList;
-        List<Transformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
+        List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
         ClassWriter cw = new ClassWriter(Opcodes.ASM5);
@@ -86,7 +86,7 @@ public class ClassTransformer
         return cw.toByteArray();
     }
 
-    private <T> T performVote(List<Transformer<T>> transformers, T node, VotingContext context)
+    private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context)
     {
         do
         {
@@ -102,7 +102,7 @@ public class ClassTransformer
             }
             if (results.containsKey(VoteResult.YES))
             {
-                final Transformer<T> transformer = results.get(VoteResult.YES).get(0).getTransformer();
+                final ITransformer<T> transformer = results.get(VoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
                 transformers.remove(transformer);
                 continue;
@@ -116,7 +116,7 @@ public class ClassTransformer
         return node;
     }
 
-    private <T> Vote<T> gatherVote(Transformer<T> transformer, VotingContext context)
+    private <T> Vote<T> gatherVote(ITransformer<T> transformer, VotingContext context)
     {
         VoteResult vr = transformer.castVote(context);
         return new Vote<>(vr, transformer);

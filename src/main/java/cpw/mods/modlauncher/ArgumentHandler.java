@@ -1,7 +1,7 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Environment;
-import cpw.mods.modlauncher.api.LauncherService;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ILauncherService;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -28,7 +28,7 @@ public class ArgumentHandler
         this.args = args;
     }
 
-    File handleArgumentsAndFindMinecraftJar(EnvironmentImpl env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, LauncherService.OptionResult>> resultConsumer)
+    File handleArgumentsAndFindMinecraftJar(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult>> resultConsumer)
     {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
@@ -40,16 +40,16 @@ public class ArgumentHandler
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
         this.optionSet = parser.parse(this.args);
-        env.getMap().computeIfAbsent(Environment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
-        env.getMap().computeIfAbsent(Environment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
-        env.getMap().computeIfAbsent(Environment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
+        env.getMap().computeIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
+        env.getMap().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
+        env.getMap().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
         return this.optionSet.valueOf(minecraftJarOption);
     }
 
-    private LauncherService.OptionResult optionResults(String serviceName, OptionSet set)
+    private ILauncherService.OptionResult optionResults(String serviceName, OptionSet set)
     {
-        return new LauncherService.OptionResult()
+        return new ILauncherService.OptionResult()
         {
             @Nonnull
             @Override

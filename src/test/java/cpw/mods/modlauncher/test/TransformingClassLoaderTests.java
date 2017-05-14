@@ -3,8 +3,8 @@ package cpw.mods.modlauncher.test;
 import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.Transformer;
 import cpw.mods.modlauncher.api.VoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Opcodes;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TransformingClassLoaderTests
 {
-    private Transformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();
+    private ITransformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();
 
     @Test
     void testClassLoader() throws Exception
@@ -32,7 +32,7 @@ class TransformingClassLoaderTests
         {
             @Nonnull
             @Override
-            public List<Transformer> transformers()
+            public List<ITransformer> transformers()
             {
                 return Stream.of(classNodeTransformer).collect(Collectors.toList());
             }
@@ -47,7 +47,7 @@ class TransformingClassLoaderTests
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");
     }
 
-    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         @Nonnull
         @Override

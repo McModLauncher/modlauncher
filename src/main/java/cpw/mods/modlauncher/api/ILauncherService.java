@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
  * should implement this interface, and provide a {@link java.util.ServiceLoader}
  * configuration file pointing at their implementation.
  */
-public interface LauncherService
+public interface ILauncherService
 {
     /**
      * The name of this mod service. It will be used throughout the system. It should be lower case,
@@ -54,7 +54,7 @@ public interface LauncherService
      *
      * @param environment
      */
-    void initialize(Environment environment);
+    void initialize(IEnvironment environment);
 
     /**
      * Load your service. Called immediately on loading with a list of other services found.
@@ -66,9 +66,9 @@ public interface LauncherService
      * @throws IncompatibleEnvironmentException if there is an incompatibility detected. Identify specifics in
      *                                          the exception message
      */
-    void onLoad(Environment env, Set<String> otherServices) throws IncompatibleEnvironmentException;
+    void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException;
 
     @Nonnull
-    List<Transformer> transformers();
+    List<ITransformer> transformers();
 
 }

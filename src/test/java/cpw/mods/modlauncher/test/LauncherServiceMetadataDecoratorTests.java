@@ -4,8 +4,8 @@ import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
 import cpw.mods.modlauncher.TargetLabel;
 import cpw.mods.modlauncher.TransformList;
 import cpw.mods.modlauncher.TransformStore;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.Transformer;
 import cpw.mods.modlauncher.api.VoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.tree.ClassNode;
@@ -36,7 +36,7 @@ class LauncherServiceMetadataDecoratorTests
         {
             @Nonnull
             @Override
-            public List<Transformer> transformers()
+            public List<ITransformer> transformers()
             {
                 return Stream.of(classNodeTransformer, methodNodeTransformer).collect(Collectors.toList());
             }
@@ -57,7 +57,7 @@ class LauncherServiceMetadataDecoratorTests
         );
     }
 
-    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         @Nonnull
         @Override
@@ -81,7 +81,7 @@ class LauncherServiceMetadataDecoratorTests
         }
     }
 
-    private static class MethodNodeTransformer implements Transformer<MethodNode>
+    private static class MethodNodeTransformer implements ITransformer<MethodNode>
     {
         @Nonnull
         @Override

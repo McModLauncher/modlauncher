@@ -1,10 +1,10 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.api.Environment;
+import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IVotingContext;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
-import cpw.mods.modlauncher.api.LauncherService;
-import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.ILauncherService;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.VoteResult;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
@@ -19,7 +19,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MockLauncherService implements LauncherService
+public class MockLauncherService implements ILauncherService
 {
     private ArgumentAcceptingOptionSpec<String> modsList;
     private ArgumentAcceptingOptionSpec<Integer> modlists;
@@ -46,25 +46,25 @@ public class MockLauncherService implements LauncherService
     }
 
     @Override
-    public void initialize(Environment environment)
+    public void initialize(IEnvironment environment)
     {
         state = "INITIALIZED";
     }
 
     @Override
-    public void onLoad(Environment env, Set<String> otherServices) throws IncompatibleEnvironmentException
+    public void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException
     {
 
     }
 
     @Nonnull
     @Override
-    public List<Transformer> transformers()
+    public List<ITransformer> transformers()
     {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
-    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         private final List<String> classNames;
 

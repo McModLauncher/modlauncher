@@ -1,7 +1,7 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Environment;
-import cpw.mods.modlauncher.api.LauncherService;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ILauncherService;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -18,24 +18,24 @@ import static cpw.mods.modlauncher.ServiceLoaderUtils.parallelForEach;
 
 class ServicesHandler
 {
-    private final ServiceLoader<LauncherService> launcherServices;
+    private final ServiceLoader<ILauncherService> launcherServices;
     private final Map<String, LauncherServiceMetadataDecorator> serviceLookup;
-    private final Environment environment;
+    private final IEnvironment environment;
     private final TransformStore transformStore;
 
-    ServicesHandler(Environment environment, TransformStore transformStore)
+    ServicesHandler(IEnvironment environment, TransformStore transformStore)
     {
-        launcherServices = ServiceLoader.load(LauncherService.class);
+        launcherServices = ServiceLoader.load(ILauncherService.class);
         launcherLog.info("Found services : {}", () -> ServiceLoaderUtils.toList(launcherServices));
 
         serviceLookup = StreamSupport.stream(launcherServices.spliterator(), false)
-                .collect(Collectors.toMap(LauncherService::name, LauncherServiceMetadataDecorator::new));
+                .collect(Collectors.toMap(ILauncherService::name, LauncherServiceMetadataDecorator::new));
 
         this.environment = environment;
         this.transformStore = transformStore;
     }
 
-    TransformingClassLoader initializeServicesAndConstructClassLoader(ArgumentHandler argumentHandler, EnvironmentImpl environment)
+    TransformingClassLoader initializeServicesAndConstructClassLoader(ArgumentHandler argumentHandler, Environment environment)
     {
         loadAllServices(environment);
         throwIfServicesFailedToLoad();
@@ -48,7 +48,7 @@ class ServicesHandler
         return new TransformingClassLoader(transformStore, specialJar);
     }
 
-    private File configureArgumentsForServicesAndFindMinecraftJar(ArgumentHandler argumentHandler, EnvironmentImpl environment)
+    private File configureArgumentsForServicesAndFindMinecraftJar(ArgumentHandler argumentHandler, Environment environment)
     {
         launcherLog.debug("Configuring option handling for services");
 
@@ -62,7 +62,7 @@ class ServicesHandler
         );
     }
 
-    private void applyArgumentsToAllServices(OptionSet optionSet, BiFunction<String, OptionSet, LauncherService.OptionResult> resultHandler)
+    private void applyArgumentsToAllServices(OptionSet optionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult> resultHandler)
     {
         parallelForEach(launcherServices,
                 service -> service.argumentValues(resultHandler.apply(service.name(), optionSet))
@@ -76,7 +76,7 @@ class ServicesHandler
         serviceLookup.values().forEach(s -> s.gatherTransformers(transformStore));
     }
 
-    private void initialiseAllServices(EnvironmentImpl environment)
+    private void initialiseAllServices(Environment environment)
     {
         launcherLog.debug("Services initializing");
 
@@ -95,7 +95,7 @@ class ServicesHandler
         }
     }
 
-    private void loadAllServices(EnvironmentImpl environment)
+    private void loadAllServices(Environment environment)
     {
         launcherLog.debug("Services loading");
 

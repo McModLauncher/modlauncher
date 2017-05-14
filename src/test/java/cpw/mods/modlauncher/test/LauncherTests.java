@@ -2,8 +2,8 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.ArgumentHandler;
 import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.api.Environment;
-import cpw.mods.modlauncher.api.LauncherService;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ILauncherService;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ class LauncherTests
         String testJarPath = testJars.get(0);
         Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<LauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "servicesHandler"), "launcherServices");
-        final List<LauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
+        final ServiceLoader<ILauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "servicesHandler"), "launcherServices");
+        final List<ILauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
                 () -> assertEquals(MockLauncherService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
@@ -58,7 +58,7 @@ class LauncherTests
         );
 
         assertAll(
-                () -> assertNotNull(instance.environment().getProperty(Environment.Keys.VERSION.get()))
+                () -> assertNotNull(instance.environment().getProperty(IEnvironment.Keys.VERSION.get()))
         );
 
         try

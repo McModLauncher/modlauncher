@@ -4,8 +4,8 @@ import cpw.mods.modlauncher.ClassTransformer;
 import cpw.mods.modlauncher.TargetLabel;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.Transformer;
 import cpw.mods.modlauncher.api.VoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
@@ -69,9 +69,9 @@ class ClassTransformerTests
         );
     }
 
-    private Transformer<FieldNode> fieldNodeTransformer1()
+    private ITransformer<FieldNode> fieldNodeTransformer1()
     {
-        return new Transformer<FieldNode>()
+        return new ITransformer<FieldNode>()
         {
             @Nonnull
             @Override
@@ -97,9 +97,9 @@ class ClassTransformerTests
         };
     }
 
-    private Transformer<ClassNode> classTransformer()
+    private ITransformer<ClassNode> classTransformer()
     {
-        return new Transformer<ClassNode>()
+        return new ITransformer<ClassNode>()
         {
             @Nonnull
             @Override

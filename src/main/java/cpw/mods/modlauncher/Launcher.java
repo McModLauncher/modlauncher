@@ -16,7 +16,7 @@ public enum Launcher
 
     private final TypesafeMap blackboard;
     private final ServicesHandler servicesHandler;
-    private final EnvironmentImpl environment;
+    private final Environment environment;
     private final TransformStore transformStore;
     private ArgumentHandler argumentHandler;
     private TransformingClassLoader classLoader;
@@ -31,7 +31,7 @@ public enum Launcher
     {
         launcherLog.info("ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.blackboard = new TypesafeMap();
-        this.environment = new EnvironmentImpl();
+        this.environment = new Environment();
         this.transformStore = new TransformStore();
         this.servicesHandler = new ServicesHandler(this.environment, this.transformStore);
         this.argumentHandler = new ArgumentHandler();
@@ -48,7 +48,7 @@ public enum Launcher
         this.classLoader = this.servicesHandler.initializeServicesAndConstructClassLoader(this.argumentHandler, this.environment);
     }
 
-    public EnvironmentImpl environment()
+    public Environment environment()
     {
         return this.environment;
     }

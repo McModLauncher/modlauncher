@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.ITransformer;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -22,7 +22,7 @@ import static cpw.mods.modlauncher.TargetLabel.LabelType.METHOD;
 public final class TargetLabel
 {
 
-    TargetLabel(Transformer.Target target)
+    TargetLabel(ITransformer.Target target)
     {
         this(target.getClassName(), target.getElementName(), target.getElementDescriptor(), LabelType.valueOf(target.getTargetType().name()));
     }

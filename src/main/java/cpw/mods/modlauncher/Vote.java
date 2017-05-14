@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.VoteResult;
 
 /**
@@ -9,10 +9,10 @@ import cpw.mods.modlauncher.api.VoteResult;
 @SuppressWarnings("WeakerAccess")
 public class Vote<T>
 {
-    private final Transformer<T> transformer;
+    private final ITransformer<T> transformer;
     private final VoteResult result;
 
-    public Vote(VoteResult vr, Transformer<T> transformer)
+    public Vote(VoteResult vr, ITransformer<T> transformer)
     {
         this.transformer = transformer;
         this.result = vr;
@@ -23,7 +23,7 @@ public class Vote<T>
         return result;
     }
 
-    public Transformer<T> getTransformer()
+    public ITransformer<T> getTransformer()
     {
         return transformer;
     }
