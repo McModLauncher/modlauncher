@@ -1,9 +1,26 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        // The following is only necessary if you want to use SNAPSHOT releases.
+        // maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-M4'
+    }
+}
+
+
+apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
 repositories {
     mavenCentral()
+}
+
+sourceSets {
+    testJars
 }
 
 group = 'cpw.mods'
@@ -15,9 +32,25 @@ sourceCompatibility = 1.8
 
 
 dependencies {
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '1.3.9'
     compile 'net.sf.jopt-simple:jopt-simple:4.5'
-    compile 'org.ow2.asm:asm-debug-all:5.0.3'
-    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.ow2.asm:asm-debug-all:5.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.1'
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.0-M4"
+    testCompile(group: 'org.powermock', name: 'powermock-core', version: '1.6.6')
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.0.0-M4"
+    testRuntime sourceSets.testJars.runtimeClasspath
+}
+
+junitPlatform {
+    filters {
+        includeClassNamePattern '.*TestLauncher'
+    }
+}
+task testsJar(type: Jar) {
+    classifier = 'testsjar'
+    from sourceSets.testJars.output
 }
 
 task sourcesJar(type: Jar) {
@@ -26,6 +59,7 @@ task sourcesJar(type: Jar) {
 }
 
 artifacts {
+    archives testsJar
     archives jar
     archives sourcesJar
 }
@@ -53,6 +87,6 @@ uploadArchives {
     }
 }
 
-clean << {
+clean.doLast {
     repoDir.deleteDir()
 }

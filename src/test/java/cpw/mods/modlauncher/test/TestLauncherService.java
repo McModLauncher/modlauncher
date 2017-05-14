@@ -1,25 +1,35 @@
 package cpw.mods.modlauncher.test;
 
+import cpw.mods.modlauncher.api.Environment;
+import cpw.mods.modlauncher.api.IVotingContext;
+import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import cpw.mods.modlauncher.api.LauncherService;
-import cpw.mods.modlauncher.api.Target;
 import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.VoteResult;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
-import java.util.Arrays;
+import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Created by cpw on 22/12/16.
+ * Test Launcher Service
  */
 public class TestLauncherService implements LauncherService
 {
-
     private ArgumentAcceptingOptionSpec<String> modsList;
     private ArgumentAcceptingOptionSpec<Integer> modlists;
+    private List<String> modList;
+    private String state;
 
+    @Nonnull
     @Override
     public String name()
     {
@@ -35,14 +45,59 @@ public class TestLauncherService implements LauncherService
     @Override
     public void argumentValues(OptionResult result)
     {
-        result.values(modsList);
+        modList = result.values(modsList);
     }
 
     @Override
-    public List<Transformer<?>> transformers()
+    public void initialize(Environment environment)
     {
-        Target.ClassTarget ct = new Target.ClassTarget("a", "b", "C");
-        Transformer<ClassNode> tf = ct.makeTransformer(n -> n);
-        return Arrays.asList(tf);
+        state = "INITIALIZED";
     }
+
+    @Override
+    public void onLoad(Environment env, Set<String> otherServices) throws IncompatibleEnvironmentException
+    {
+
+    }
+
+    @Nonnull
+    @Override
+    public List<Transformer> transformers()
+    {
+        return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
+    }
+
+    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    {
+        private final List<String> classNames;
+
+        private ClassNodeTransformer(List<String> classNames)
+        {
+            this.classNames = classNames;
+        }
+
+        @Nonnull
+        @Override
+        public ClassNode transform(ClassNode input, IVotingContext context)
+        {
+            FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
+            input.fields.add(fn);
+            return input;
+        }
+
+        @Nonnull
+        @Override
+        public VoteResult castVote(IVotingContext context)
+        {
+            return VoteResult.YES;
+        }
+
+        @Nonnull
+        @Override
+        public Set<Target> targets()
+        {
+            return classNames.stream().map(Target::targetClass).collect(Collectors.toSet());
+        }
+    }
+
 }
