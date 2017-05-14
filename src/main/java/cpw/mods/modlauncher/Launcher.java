@@ -15,7 +15,7 @@ public enum Launcher
     INSTANCE;
 
     private final TypesafeMap blackboard;
-    private final ServiceHandler serviceHandler;
+    private final ServicesHandler servicesHandler;
     private final EnvironmentImpl environment;
     private final TransformStore transformStore;
     private ArgumentHandler argumentHandler;
@@ -33,7 +33,7 @@ public enum Launcher
         this.blackboard = new TypesafeMap();
         this.environment = new EnvironmentImpl();
         this.transformStore = new TransformStore();
-        this.serviceHandler = new ServiceHandler(this.environment, this.transformStore);
+        this.servicesHandler = new ServicesHandler(this.environment, this.transformStore);
         this.argumentHandler = new ArgumentHandler();
     }
 
@@ -45,7 +45,7 @@ public enum Launcher
     private void run(String... args)
     {
         this.argumentHandler.setArgs(args);
-        this.classLoader = this.serviceHandler.initializeServices(this.argumentHandler, this.environment);
+        this.classLoader = this.servicesHandler.initializeServicesAndConstructClassLoader(this.argumentHandler, this.environment);
     }
 
     public EnvironmentImpl environment()

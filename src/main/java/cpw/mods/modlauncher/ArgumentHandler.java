@@ -13,9 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-/**
- * Handle command line arguments
- */
 public class ArgumentHandler
 {
     private String[] args;
@@ -31,7 +28,7 @@ public class ArgumentHandler
         this.args = args;
     }
 
-    File handleArguments(EnvironmentImpl env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, LauncherService.OptionResult>> resultConsumer)
+    File handleArgumentsAndFindMinecraftJar(EnvironmentImpl env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, LauncherService.OptionResult>> resultConsumer)
     {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();

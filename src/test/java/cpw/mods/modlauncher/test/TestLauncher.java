@@ -38,7 +38,7 @@ class TestLauncher
         String testJarPath = testJars.get(0);
         Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<LauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "serviceHandler"), "launcherServices");
+        final ServiceLoader<LauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "servicesHandler"), "launcherServices");
         final List<LauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
