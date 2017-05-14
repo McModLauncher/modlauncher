@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Transformer;
+import cpw.mods.modlauncher.api.ITransformer;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -11,23 +11,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static cpw.mods.modlauncher.TargetLabel.LabelType.CLASS;
-import static cpw.mods.modlauncher.TargetLabel.LabelType.FIELD;
-import static cpw.mods.modlauncher.TargetLabel.LabelType.METHOD;
+import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.CLASS;
+import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.FIELD;
+import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.METHOD;
 
-/**
- * Detailed targetting information
- */
-@SuppressWarnings("WeakerAccess")
-public final class TargetLabel
+public final class TransformTargetLabel
 {
 
-    TargetLabel(Transformer.Target target)
+    TransformTargetLabel(ITransformer.Target target)
     {
         this(target.getClassName(), target.getElementName(), target.getElementDescriptor(), LabelType.valueOf(target.getTargetType().name()));
     }
 
-    private TargetLabel(String className, String elementName, String elementDescriptor, LabelType labelType)
+    private TransformTargetLabel(String className, String elementName, String elementDescriptor, LabelType labelType)
     {
         this.className = Type.getObjectType(className.replaceAll("\\.", "/"));
         this.elementName = elementName;
@@ -88,22 +84,22 @@ public final class TargetLabel
     private final Type elementDescriptor;
     private final LabelType labelType;
 
-    public TargetLabel(String className, String fieldName)
+    public TransformTargetLabel(String className, String fieldName)
     {
         this(className, fieldName, "", FIELD);
     }
 
-    public TargetLabel(String className, String methodName, String methodDesc)
+    TransformTargetLabel(String className, String methodName, String methodDesc)
     {
         this(className, methodName, methodDesc, METHOD);
     }
 
-    public TargetLabel(String className)
+    public TransformTargetLabel(String className)
     {
         this(className, "", "", CLASS);
     }
 
-    public final Type getClassName()
+    final Type getClassName()
     {
         return this.className;
     }
@@ -118,7 +114,7 @@ public final class TargetLabel
         return this.elementDescriptor;
     }
 
-    public final LabelType getLabelType()
+    final LabelType getLabelType()
     {
         return this.labelType;
     }
@@ -133,7 +129,7 @@ public final class TargetLabel
     {
         try
         {
-            TargetLabel tl = (TargetLabel)obj;
+            TransformTargetLabel tl = (TransformTargetLabel)obj;
             return Objects.equals(this.className, tl.className)
                     && Objects.equals(this.elementName, tl.elementName)
                     && Objects.equals(this.elementDescriptor, tl.elementDescriptor);

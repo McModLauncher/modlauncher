@@ -2,8 +2,8 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.ArgumentHandler;
 import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.api.Environment;
-import cpw.mods.modlauncher.api.LauncherService;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ILauncherService;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.junit.jupiter.api.Test;
@@ -26,10 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * Test overall launcher
- */
-class TestLauncher
+class LauncherTests
 {
     @Test
     void testLauncher() throws IllegalAccessException
@@ -38,11 +35,11 @@ class TestLauncher
         String testJarPath = testJars.get(0);
         Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<LauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "serviceHandler"), "launcherServices");
-        final List<LauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
+        final ServiceLoader<ILauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "servicesHandler"), "launcherServices");
+        final List<ILauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
-                () -> assertEquals(TestLauncherService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
+                () -> assertEquals(MockLauncherService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
         );
 
         final ArgumentHandler argumentHandler = Whitebox.getInternalState(instance, "argumentHandler");
@@ -54,14 +51,14 @@ class TestLauncher
                 () -> assertTrue(optionsMap.containsKey("test.mods"), "Test service option is correct")
         );
 
-        final TestLauncherService testLauncherService = (TestLauncherService)launcherServices.get(0);
+        final MockLauncherService mockLauncherService = (MockLauncherService)launcherServices.get(0);
         assertAll("test launcher service is correctly configured",
-                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(testLauncherService, "modList"), "modlist is configured"),
-                () -> assertEquals(Whitebox.getInternalState(testLauncherService, "state"), "INITIALIZED", "Initialized was called")
+                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(mockLauncherService, "modList"), "modlist is configured"),
+                () -> assertEquals(Whitebox.getInternalState(mockLauncherService, "state"), "INITIALIZED", "Initialized was called")
         );
 
         assertAll(
-                () -> assertNotNull(instance.environment().getProperty(Environment.Keys.VERSION.get()))
+                () -> assertNotNull(instance.environment().getProperty(IEnvironment.Keys.VERSION.get()))
         );
 
         try

@@ -4,19 +4,13 @@ import cpw.mods.modlauncher.api.TypesafeMap;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
-/**
- * Entry point for the ModLauncher.
- */
 public enum Launcher
 {
-    /**
-     * Singleton instance
-     */
     INSTANCE;
 
     private final TypesafeMap blackboard;
-    private final ServiceHandler serviceHandler;
-    private final EnvironmentImpl environment;
+    private final ServicesHandler servicesHandler;
+    private final Environment environment;
     private final TransformStore transformStore;
     private ArgumentHandler argumentHandler;
     private TransformingClassLoader classLoader;
@@ -31,9 +25,9 @@ public enum Launcher
     {
         launcherLog.info("ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.blackboard = new TypesafeMap();
-        this.environment = new EnvironmentImpl();
+        this.environment = new Environment();
         this.transformStore = new TransformStore();
-        this.serviceHandler = new ServiceHandler(this.environment, this.transformStore);
+        this.servicesHandler = new ServicesHandler(this.environment, this.transformStore);
         this.argumentHandler = new ArgumentHandler();
     }
 
@@ -45,10 +39,10 @@ public enum Launcher
     private void run(String... args)
     {
         this.argumentHandler.setArgs(args);
-        this.classLoader = this.serviceHandler.initializeServices(this.argumentHandler, this.environment);
+        this.classLoader = this.servicesHandler.initializeServicesAndConstructClassLoader(this.argumentHandler, this.environment);
     }
 
-    public EnvironmentImpl environment()
+    public Environment environment()
     {
         return this.environment;
     }

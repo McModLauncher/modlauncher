@@ -1,21 +1,17 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.Environment;
+import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.TypesafeMap;
 
 import java.util.Optional;
 
-/**
- * Environment implementation class
- */
-@SuppressWarnings("WeakerAccess")
-public final class EnvironmentImpl implements Environment
+public final class Environment implements IEnvironment
 {
     private TypesafeMap environment;
 
-    EnvironmentImpl()
+    Environment()
     {
-        environment = new TypesafeMap(Environment.class);
+        environment = new TypesafeMap(IEnvironment.class);
     }
 
     @Override
@@ -24,7 +20,7 @@ public final class EnvironmentImpl implements Environment
         return environment.get(key);
     }
 
-    public TypesafeMap getMap()
+    TypesafeMap getAll()
     {
         return environment;
     }

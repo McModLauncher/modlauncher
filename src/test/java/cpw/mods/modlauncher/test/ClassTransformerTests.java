@@ -1,12 +1,12 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.ClassTransformer;
-import cpw.mods.modlauncher.TargetLabel;
+import cpw.mods.modlauncher.TransformTargetLabel;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformingClassLoader;
-import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.Transformer;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.ITransformerVotingContext;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -25,10 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Test core transformer functionality
- */
-class TestClassTransformer
+class ClassTransformerTests
 {
     @Test
     void testClassTransformer() throws Exception
@@ -36,7 +33,7 @@ class TestClassTransformer
         final TransformStore transformStore = new TransformStore();
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore);
 
-        Whitebox.invokeMethod(transformStore, "addTransformer", new TargetLabel("test.MyClass"), classTransformer());
+        Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer());
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[] {byte[].class, String.class}, new byte[0], "test.MyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result),
@@ -57,7 +54,7 @@ class TestClassTransformer
         dummyClass.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "dummyfield", "Ljava/lang/String;", null, null));
         ClassWriter cw = new ClassWriter(Opcodes.ASM5);
         dummyClass.accept(cw);
-        Whitebox.invokeMethod(transformStore, "addTransformer", new TargetLabel("test.DummyClass", "dummyfield"), fieldNodeTransformer1());
+        Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.DummyClass", "dummyfield"), fieldNodeTransformer1());
         byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[] {byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result1),
@@ -72,13 +69,13 @@ class TestClassTransformer
         );
     }
 
-    private Transformer<FieldNode> fieldNodeTransformer1()
+    private ITransformer<FieldNode> fieldNodeTransformer1()
     {
-        return new Transformer<FieldNode>()
+        return new ITransformer<FieldNode>()
         {
             @Nonnull
             @Override
-            public FieldNode transform(FieldNode input, IVotingContext context)
+            public FieldNode transform(FieldNode input, ITransformerVotingContext context)
             {
                 input.value = "CHEESE";
                 return input;
@@ -86,9 +83,9 @@ class TestClassTransformer
 
             @Nonnull
             @Override
-            public VoteResult castVote(IVotingContext context)
+            public TransformerVoteResult castVote(ITransformerVotingContext context)
             {
-                return VoteResult.YES;
+                return TransformerVoteResult.YES;
             }
 
             @Nonnull
@@ -100,13 +97,13 @@ class TestClassTransformer
         };
     }
 
-    private Transformer<ClassNode> classTransformer()
+    private ITransformer<ClassNode> classTransformer()
     {
-        return new Transformer<ClassNode>()
+        return new ITransformer<ClassNode>()
         {
             @Nonnull
             @Override
-            public ClassNode transform(ClassNode input, IVotingContext context)
+            public ClassNode transform(ClassNode input, ITransformerVotingContext context)
             {
                 FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC, "testfield", "Ljava/lang/String;", null, null);
                 input.fields.add(fn);
@@ -115,9 +112,9 @@ class TestClassTransformer
 
             @Nonnull
             @Override
-            public VoteResult castVote(IVotingContext context)
+            public TransformerVoteResult castVote(ITransformerVotingContext context)
             {
-                return VoteResult.YES;
+                return TransformerVoteResult.YES;
             }
 
             @Nonnull

@@ -9,11 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/**
- * Typesafe map tests
- */
-@SuppressWarnings("WeakerAccess")
-public class TestTypesafeMap
+class TypesafeMapTests
 {
     @Test
     void testTypesafeMapKey()

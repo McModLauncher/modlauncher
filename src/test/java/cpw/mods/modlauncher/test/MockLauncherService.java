@@ -1,11 +1,7 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.api.Environment;
-import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
-import cpw.mods.modlauncher.api.LauncherService;
-import cpw.mods.modlauncher.api.Transformer;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
 import org.objectweb.asm.Opcodes;
@@ -19,10 +15,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Test Launcher Service
- */
-public class TestLauncherService implements LauncherService
+public class MockLauncherService implements ILauncherService
 {
     private ArgumentAcceptingOptionSpec<String> modsList;
     private ArgumentAcceptingOptionSpec<Integer> modlists;
@@ -49,25 +42,25 @@ public class TestLauncherService implements LauncherService
     }
 
     @Override
-    public void initialize(Environment environment)
+    public void initialize(IEnvironment environment)
     {
         state = "INITIALIZED";
     }
 
     @Override
-    public void onLoad(Environment env, Set<String> otherServices) throws IncompatibleEnvironmentException
+    public void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException
     {
 
     }
 
     @Nonnull
     @Override
-    public List<Transformer> transformers()
+    public List<ITransformer> transformers()
     {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
-    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         private final List<String> classNames;
 
@@ -78,7 +71,7 @@ public class TestLauncherService implements LauncherService
 
         @Nonnull
         @Override
-        public ClassNode transform(ClassNode input, IVotingContext context)
+        public ClassNode transform(ClassNode input, ITransformerVotingContext context)
         {
             FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
             input.fields.add(fn);
@@ -87,9 +80,9 @@ public class TestLauncherService implements LauncherService
 
         @Nonnull
         @Override
-        public VoteResult castVote(IVotingContext context)
+        public TransformerVoteResult castVote(ITransformerVotingContext context)
         {
-            return VoteResult.YES;
+            return TransformerVoteResult.YES;
         }
 
         @Nonnull

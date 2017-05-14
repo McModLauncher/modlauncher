@@ -1,11 +1,11 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.ServiceDecorator;
+import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformingClassLoader;
-import cpw.mods.modlauncher.api.IVotingContext;
-import cpw.mods.modlauncher.api.Transformer;
-import cpw.mods.modlauncher.api.VoteResult;
+import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.ITransformerVotingContext;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -21,28 +21,25 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Test class loader
- */
-class TestClassLoader
+class TransformingClassLoaderTests
 {
-    private Transformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();
+    private ITransformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();
 
     @Test
     void testClassLoader() throws Exception
     {
-        TestLauncherService testLauncherService = new TestLauncherService()
+        MockLauncherService mockLauncherService = new MockLauncherService()
         {
             @Nonnull
             @Override
-            public List<Transformer> transformers()
+            public List<ITransformer> transformers()
             {
                 return Stream.of(classNodeTransformer).collect(Collectors.toList());
             }
         };
 
         TransformStore transformStore = new TransformStore();
-        ServiceDecorator sd = Whitebox.invokeConstructor(ServiceDecorator.class, testLauncherService);
+        LauncherServiceMetadataDecorator sd = Whitebox.invokeConstructor(LauncherServiceMetadataDecorator.class, mockLauncherService);
         sd.gatherTransformers(transformStore);
         TransformingClassLoader tcl = new TransformingClassLoader(transformStore, new File("."));
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);
@@ -50,11 +47,11 @@ class TestClassLoader
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");
     }
 
-    private static class ClassNodeTransformer implements Transformer<ClassNode>
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         @Nonnull
         @Override
-        public ClassNode transform(ClassNode input, IVotingContext context)
+        public ClassNode transform(ClassNode input, ITransformerVotingContext context)
         {
             FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
             input.fields.add(fn);
@@ -63,9 +60,9 @@ class TestClassLoader
 
         @Nonnull
         @Override
-        public VoteResult castVote(IVotingContext context)
+        public TransformerVoteResult castVote(ITransformerVotingContext context)
         {
-            return VoteResult.YES;
+            return TransformerVoteResult.YES;
         }
 
         @Nonnull
