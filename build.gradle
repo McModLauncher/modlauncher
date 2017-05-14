@@ -14,6 +14,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'jacoco'
 
 repositories {
     mavenCentral()
@@ -21,6 +22,10 @@ repositories {
 
 sourceSets {
     testJars
+}
+
+jacoco {
+    toolVersion = "0.7.6.201602180812"
 }
 
 group = 'cpw.mods'
@@ -43,11 +48,6 @@ dependencies {
     testRuntime sourceSets.testJars.runtimeClasspath
 }
 
-junitPlatform {
-    filters {
-        includeClassNamePattern '.*TestLauncher'
-    }
-}
 task testsJar(type: Jar) {
     classifier = 'testsjar'
     from sourceSets.testJars.output
