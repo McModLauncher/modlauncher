@@ -18,6 +18,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Transforms classes using the supplied launcher services
+ */
 public class ClassTransformer
 {
     private final TransformStore transformers;

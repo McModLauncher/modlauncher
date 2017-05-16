@@ -5,6 +5,10 @@ import cpw.mods.modlauncher.api.TypesafeMap;
 
 import java.util.Optional;
 
+/**
+ * Environment implementation class
+ */
+@SuppressWarnings("WeakerAccess")
 public final class Environment implements IEnvironment
 {
     private TypesafeMap environment;

@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Holds onto a specific list of transformers targetting a particular node type
+ */
+@SuppressWarnings("WeakerAccess")
 public class TransformList<T>
 {
     private final Map<TransformTargetLabel, List<ITransformer<T>>> transformers = new HashMap<>();

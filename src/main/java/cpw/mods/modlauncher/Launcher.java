@@ -4,6 +4,9 @@ import cpw.mods.modlauncher.api.TypesafeMap;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
+/**
+ * Entry point for the ModLauncher.
+ */
 public enum Launcher
 {
     INSTANCE;
@@ -39,7 +42,7 @@ public enum Launcher
     private void run(String... args)
     {
         this.argumentHandler.setArgs(args);
-        this.classLoader = this.servicesHandler.initializeServicesAndConstructClassLoader(this.argumentHandler, this.environment);
+        this.classLoader = this.servicesHandler.initializeServices(this.argumentHandler, this.environment);
     }
 
     public Environment environment()

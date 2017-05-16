@@ -13,6 +13,10 @@ import java.util.Set;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
+/**
+ * Transformer store - holds all the transformers
+ */
+@SuppressWarnings("WeakerAccess")
 public class TransformStore
 {
     private final Set<TransformTargetLabel> classNeedsTransforming = new HashSet<>();

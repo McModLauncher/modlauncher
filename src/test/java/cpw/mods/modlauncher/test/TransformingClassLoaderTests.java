@@ -21,6 +21,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test class loader
+ */
 class TransformingClassLoaderTests
 {
     private ITransformer<ClassNode> classNodeTransformer = new ClassNodeTransformer();

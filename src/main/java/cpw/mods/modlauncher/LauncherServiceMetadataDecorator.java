@@ -16,6 +16,9 @@ import java.util.stream.Collectors;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
+/**
+ * Decorates {@link cpw.mods.modlauncher.api.LauncherService} to track state and other runtime metadata.
+ */
 public class LauncherServiceMetadataDecorator
 {
     private final ILauncherService service;

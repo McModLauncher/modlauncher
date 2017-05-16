@@ -28,7 +28,7 @@ public class ArgumentHandler
         this.args = args;
     }
 
-    File handleArgumentsAndFindMinecraftJar(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult>> resultConsumer)
+    File processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult>> resultConsumer)
     {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();

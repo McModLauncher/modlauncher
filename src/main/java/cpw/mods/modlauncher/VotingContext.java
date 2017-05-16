@@ -2,6 +2,10 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 
+/**
+ * The internal vote context structure.
+ */
+@SuppressWarnings("WeakerAccess")
 public class VotingContext implements ITransformerVotingContext
 {
     private final String className;

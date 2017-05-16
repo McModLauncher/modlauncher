@@ -35,55 +35,55 @@ class ServicesHandler
         this.transformStore = transformStore;
     }
 
-    TransformingClassLoader initializeServicesAndConstructClassLoader(ArgumentHandler argumentHandler, Environment environment)
+    TransformingClassLoader initializeServices(ArgumentHandler argumentHandler, Environment environment)
     {
-        loadAllServices(environment);
-        throwIfServicesFailedToLoad();
+        loadServices(environment);
+        throwServiceRejectedEnvironment();
 
-        File specialJar = configureArgumentsForServicesAndFindMinecraftJar(argumentHandler, environment);
+        File specialJar = processArguments(argumentHandler, environment);
 
-        initialiseAllServices(environment);
-        initialiseAllServiceTransformers();
+        initialiseServices(environment);
+        initialiseServiceTransformers();
 
         return new TransformingClassLoader(transformStore, specialJar);
     }
 
-    private File configureArgumentsForServicesAndFindMinecraftJar(ArgumentHandler argumentHandler, Environment environment)
+    private File processArguments(ArgumentHandler argumentHandler, Environment environment)
     {
         launcherLog.debug("Configuring option handling for services");
 
-        return argumentHandler.handleArgumentsAndFindMinecraftJar(environment, this::offerArgumentsToAllServices, this::applyArgumentsToAllServices);
+        return argumentHandler.processArguments(environment, this::computeArgumentsForServices, this::offerArgumentResultsToServices);
     }
 
-    private void offerArgumentsToAllServices(OptionParser parser)
+    private void computeArgumentsForServices(OptionParser parser)
     {
         parallelForEach(launcherServices,
                 service -> service.arguments((a, b) -> parser.accepts(service.name() + "." + a, b))
         );
     }
 
-    private void applyArgumentsToAllServices(OptionSet optionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult> resultHandler)
+    private void offerArgumentResultsToServices(OptionSet optionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult> resultHandler)
     {
         parallelForEach(launcherServices,
                 service -> service.argumentValues(resultHandler.apply(service.name(), optionSet))
         );
     }
 
-    private void initialiseAllServiceTransformers()
+    private void initialiseServiceTransformers()
     {
         launcherLog.debug("Services loading transformers");
 
         serviceLookup.values().forEach(s -> s.gatherTransformers(transformStore));
     }
 
-    private void initialiseAllServices(Environment environment)
+    private void initialiseServices(Environment environment)
     {
         launcherLog.debug("Services initializing");
 
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
 
-    private void throwIfServicesFailedToLoad() throws RuntimeException
+    private void throwServiceRejectedEnvironment() throws RuntimeException
     {
         final Stream<LauncherServiceMetadataDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
         if (failedServices.count() > 0)
@@ -95,7 +95,7 @@ class ServicesHandler
         }
     }
 
-    private void loadAllServices(Environment environment)
+    private void loadServices(Environment environment)
     {
         launcherLog.debug("Services loading");
 

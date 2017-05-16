@@ -6,6 +6,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * Utilities for making service loaders more stream friendly
+ */
+@SuppressWarnings("WeakerAccess")
 public class ServiceLoaderStreamUtils
 {
     static <T> void parallelForEach(ServiceLoader<T> services, Consumer<T> consumer)

@@ -15,6 +15,10 @@ import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.CLASS;
 import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.FIELD;
 import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.METHOD;
 
+/**
+ * Detailed targetting information
+ */
+@SuppressWarnings("WeakerAccess")
 public final class TransformTargetLabel
 {
 
