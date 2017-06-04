@@ -1,3 +1,22 @@
+/*
+ * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
+ * Copyright ©2017-${date.year} cpw and others
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 package cpw.mods.modlauncher.api;
 
 import joptsimple.OptionSpec;
@@ -52,7 +71,7 @@ public interface ITransformationService
      * Initialize your service. Scan for mods (but don't classload them), identify metadata that might drive
      * game functionality.
      *
-     * @param environment
+     * @param environment environment - query state from here to determine viability
      */
     void initialize(IEnvironment environment);
 
@@ -61,7 +80,7 @@ public interface ITransformationService
      * Use to identify and immediately indicate incompatibilities with other services, and environment
      * configuration. This is to try and immediately abort a guaranteed bad environment.
      *
-     * @param env
+     * @param env environment - query state from here
      * @param otherServices other services loaded with the system
      * @throws IncompatibleEnvironmentException if there is an incompatibility detected. Identify specifics in
      *                                          the exception message
