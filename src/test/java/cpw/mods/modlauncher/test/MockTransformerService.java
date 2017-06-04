@@ -1,6 +1,6 @@
 /*
  * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2017-${date.year} cpw and others
+ * Copyright ©2016-2017 cpw and others
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
