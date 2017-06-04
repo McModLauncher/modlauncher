@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
  * should implement this interface, and provide a {@link java.util.ServiceLoader}
  * configuration file pointing at their implementation.
  */
-public interface ILauncherService
+public interface ITransformationService
 {
     /**
      * The name of this mod service. It will be used throughout the system. It should be lower case,

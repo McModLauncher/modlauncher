@@ -4,12 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
+import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
 
 /**
  * Minecraft Class Loader
+ *
+ * Somewhat modeled on code from https://dzone.com/articles/java-classloader-handling
+ *
  */
 public class TransformingClassLoader extends ClassLoader
 {
@@ -21,21 +30,14 @@ public class TransformingClassLoader extends ClassLoader
 
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
-    private final URL specialJar;
+    private final URL[] specialJars;
 
-    public TransformingClassLoader(TransformStore transformStore, File specialJar)
+    public TransformingClassLoader(TransformStore transformStore, File... specialJars)
     {
         super();
         this.classTransformer = new ClassTransformer(transformStore);
-        try
-        {
-            this.specialJar = specialJar.toURI().toURL();
-        }
-        catch (MalformedURLException e)
-        {
-            // Huh
-            throw new RuntimeException(e);
-        }
+        this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toURI().toURL()))
+                .collect(Collectors.toList()).toArray(new URL[specialJars.length]);
         this.delegatedClassLoader = new DelegatedClassLoader();
     }
 
@@ -65,7 +67,7 @@ public class TransformingClassLoader extends ClassLoader
     {
         DelegatedClassLoader()
         {
-            super(new URL[] {specialJar});
+            super(specialJars);
         }
 
         @Override
@@ -101,7 +103,11 @@ public class TransformingClassLoader extends ClassLoader
                 classBytes = new byte[0];
             }
             classBytes = classTransformer.transform(classBytes, name);
-            return defineClass(name, classBytes, 0, classBytes.length);
+            if (classBytes.length > 0)
+                return defineClass(name, classBytes, 0, classBytes.length);
+            else
+                // signal to the parent to fall back to the normal lookup
+                throw new ClassNotFoundException();
         }
 
     }

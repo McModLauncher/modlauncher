@@ -3,7 +3,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
-import cpw.mods.modlauncher.api.ILauncherService;
+import cpw.mods.modlauncher.api.ITransformationService;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 import static cpw.mods.modlauncher.Logging.launcherLog;
 
 /**
- * Decorates {@link cpw.mods.modlauncher.api.LauncherService} to track state and other runtime metadata.
+ * Decorates {@link cpw.mods.modlauncher.api.ITransformationService} to track state and other runtime metadata.
  */
-public class LauncherServiceMetadataDecorator
+public class TransformationServiceDecorator
 {
-    private final ILauncherService service;
+    private final ITransformationService service;
     private boolean isValid;
 
-    LauncherServiceMetadataDecorator(ILauncherService service)
+    TransformationServiceDecorator(ITransformationService service)
     {
         this.service = service;
     }
@@ -52,14 +52,14 @@ public class LauncherServiceMetadataDecorator
 
     void onInitialize(IEnvironment environment)
     {
-        launcherLog.debug("Initializing service {}", () -> this.service);
+        launcherLog.debug("Initializing transformation service {}", () -> this.service);
         this.service.initialize(environment);
-        launcherLog.debug("Initialized service {}", () -> this.service);
+        launcherLog.debug("Initialized transformation service {}", () -> this.service);
     }
 
     public void gatherTransformers(TransformStore transformStore)
     {
-        launcherLog.debug("Initializing transformers for service {}", () -> this.service);
+        launcherLog.debug("Initializing transformers for transformation service {}", () -> this.service);
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
@@ -91,10 +91,10 @@ public class LauncherServiceMetadataDecorator
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
             }
         }
-        launcherLog.debug("Initialized transformers for service {}", () -> this.service);
+        launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 
-    ILauncherService getService()
+    ITransformationService getService()
     {
         return service;
     }

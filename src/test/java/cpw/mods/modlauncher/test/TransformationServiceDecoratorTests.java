@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.LauncherServiceMetadataDecorator;
+import cpw.mods.modlauncher.TransformationServiceDecorator;
 import cpw.mods.modlauncher.TransformTargetLabel;
 import cpw.mods.modlauncher.TransformList;
 import cpw.mods.modlauncher.TransformStore;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class LauncherServiceMetadataDecoratorTests
+class TransformationServiceDecoratorTests
 {
     private ClassNodeTransformer classNodeTransformer = new ClassNodeTransformer();
     private MethodNodeTransformer methodNodeTransformer = new MethodNodeTransformer();
@@ -31,7 +31,7 @@ class LauncherServiceMetadataDecoratorTests
     @Test
     void testGatherTransformersNormally() throws Exception
     {
-        MockLauncherService mockLauncherService = new MockLauncherService()
+        MockTransformerService mockTransformerService = new MockTransformerService()
         {
             @Nonnull
             @Override
@@ -42,7 +42,7 @@ class LauncherServiceMetadataDecoratorTests
         };
         TransformStore store = new TransformStore();
 
-        LauncherServiceMetadataDecorator sd = Whitebox.invokeConstructor(LauncherServiceMetadataDecorator.class, mockLauncherService);
+        TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(store);
         EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers = Whitebox.getInternalState(store, "transformers");
         Set<TransformTargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");

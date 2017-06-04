@@ -3,7 +3,7 @@ package cpw.mods.modlauncher.test;
 import cpw.mods.modlauncher.ArgumentHandler;
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.ILauncherService;
+import cpw.mods.modlauncher.api.ITransformationService;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.junit.jupiter.api.Test;
@@ -36,13 +36,13 @@ class LauncherTests
     {
         final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
         String testJarPath = testJars.get(0);
-        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
+        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<ILauncherService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "servicesHandler"), "launcherServices");
-        final List<ILauncherService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
+        final ServiceLoader<ITransformationService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "transformationServices");
+        final List<ITransformationService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
-                () -> assertEquals(MockLauncherService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
+                () -> assertEquals(MockTransformerService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
         );
 
         final ArgumentHandler argumentHandler = Whitebox.getInternalState(instance, "argumentHandler");
@@ -54,10 +54,10 @@ class LauncherTests
                 () -> assertTrue(optionsMap.containsKey("test.mods"), "Test service option is correct")
         );
 
-        final MockLauncherService mockLauncherService = (MockLauncherService)launcherServices.get(0);
+        final MockTransformerService mockTransformerService = (MockTransformerService)launcherServices.get(0);
         assertAll("test launcher service is correctly configured",
-                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(mockLauncherService, "modList"), "modlist is configured"),
-                () -> assertEquals(Whitebox.getInternalState(mockLauncherService, "state"), "INITIALIZED", "Initialized was called")
+                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(mockTransformerService, "modList"), "modlist is configured"),
+                () -> assertEquals(Whitebox.getInternalState(mockTransformerService, "state"), "INITIALIZED", "Initialized was called")
         );
 
         assertAll(

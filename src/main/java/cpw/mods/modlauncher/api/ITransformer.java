@@ -36,7 +36,7 @@ public interface ITransformer<T>
      * candidates remain, this is a DEFERRAL stalemate and the game will crash.</li>
      * <li>If the transformer wishes to crash the game, it should return {@link TransformerVoteResult#REJECT}.
      * This is extremely frowned upon, and should not be used except in extreme circumstances. If an
-     * incompatibility is present, it should detect and handle it in the {@link ILauncherService#onLoad}
+     * incompatibility is present, it should detect and handle it in the {@link ITransformationService#onLoad}
      * </li>
      * </ul>
      * After all votes from candidate transformers are collected, the NOs are removed from the

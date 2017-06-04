@@ -1,7 +1,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.ILauncherService;
+import cpw.mods.modlauncher.api.ITransformationService;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -22,13 +22,14 @@ public class ArgumentHandler
     private OptionSpec<File> assetsDirOption;
     private OptionSpec<File> minecraftJarOption;
     private OptionSpec<String> nonOption;
+    private OptionSpec<String> launchTarget;
 
     void setArgs(String[] args)
     {
         this.args = args;
     }
 
-    File processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ILauncherService.OptionResult>> resultConsumer)
+    void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer)
     {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
@@ -36,6 +37,7 @@ public class ArgumentHandler
         gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().ofType(File.class);
         assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().ofType(File.class);
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().ofType(File.class);
+        launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
 
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
@@ -44,12 +46,21 @@ public class ArgumentHandler
         env.getAll().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
         env.getAll().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
+    }
+
+    File getSpecialJars()
+    {
         return this.optionSet.valueOf(minecraftJarOption);
     }
 
-    private ILauncherService.OptionResult optionResults(String serviceName, OptionSet set)
+    String getLaunchTarget()
     {
-        return new ILauncherService.OptionResult()
+        return this.optionSet.valueOf(launchTarget);
+    }
+
+    private ITransformationService.OptionResult optionResults(String serviceName, OptionSet set)
+    {
+        return new ITransformationService.OptionResult()
         {
             @Nonnull
             @Override
@@ -75,5 +86,12 @@ public class ArgumentHandler
                 }
             }
         };
+    }
+
+    public String[] buildArgumentList()
+    {
+        String[] ret = new String[this.args.length];
+        System.arraycopy(this.args, 0, ret, 0, this.args.length);
+        return ret;
     }
 }

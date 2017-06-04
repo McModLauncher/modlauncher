@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 /**
  * Test Launcher Service
  */
-public class MockLauncherService implements ILauncherService
+public class MockTransformerService implements ITransformationService
 {
     private ArgumentAcceptingOptionSpec<String> modsList;
     private ArgumentAcceptingOptionSpec<Integer> modlists;
