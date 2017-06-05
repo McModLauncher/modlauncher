@@ -28,6 +28,8 @@ import java.net.URLConnection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static cpw.mods.modlauncher.Logging.CLASSLOADING;
+import static cpw.mods.modlauncher.Logging.launcherLog;
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
 
 /**
@@ -64,11 +66,15 @@ public class TransformingClassLoader extends ClassLoader
         {
             try
             {
+                launcherLog.debug(CLASSLOADING, "Loading {}", name);
                 return delegatedClassLoader.findClass(name);
             }
             catch (ClassNotFoundException | SecurityException e)
             {
                 return super.loadClass(name, resolve);
+            }
+            finally {
+                launcherLog.debug(CLASSLOADING,"Loaded {}", name);
             }
         }
     }
@@ -87,11 +93,18 @@ public class TransformingClassLoader extends ClassLoader
         }
 
         @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+        {
+            return TransformingClassLoader.this.loadClass(name, resolve);
+        }
+
+        @Override
         protected Class<?> findClass(final String name) throws ClassNotFoundException
         {
             final Class<?> existingClass = super.findLoadedClass(name);
             if (existingClass != null)
             {
+                launcherLog.debug(CLASSLOADING,"Found existing class {}", name);
                 return existingClass;
             }
             final String path = name.replace('.', '/').concat(".class");
@@ -105,8 +118,11 @@ public class TransformingClassLoader extends ClassLoader
                     final int length = urlConnection.getContentLength();
                     final InputStream is = urlConnection.getInputStream();
                     classBytes = new byte[length];
-                    if (is.read(classBytes) != length) {
-                        throw new ClassNotFoundException("Unable to read complete stream");
+                    int pos = 0, remain = length, read;
+                    while ((read = is.read(classBytes, pos, remain)) != -1 && remain > 0)
+                    {
+                        pos += read;
+                        remain -= read;
                     }
                 }
                 catch (IOException e)
@@ -119,11 +135,16 @@ public class TransformingClassLoader extends ClassLoader
                 classBytes = new byte[0];
             }
             classBytes = classTransformer.transform(classBytes, name);
-            if (classBytes.length > 0)
+            if (classBytes.length > 0) {
+                launcherLog.debug(CLASSLOADING,"Loaded transform target {} from {}", name, classResource);
                 return defineClass(name, classBytes, 0, classBytes.length);
+            }
             else
+            {
+                launcherLog.debug(CLASSLOADING,"Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
                 throw new ClassNotFoundException();
+            }
         }
 
     }

@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
 /**
@@ -40,7 +41,8 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService
 
         return () -> {
             final Class<?> mcClass = Class.forName("net.minecraft.client.main.Main", true, launchClassLoader);
-            mcClass.getMethod("main", String[].class).invoke(arguments);
+            final Method mcClassMethod = mcClass.getMethod("main", String[].class);
+            mcClassMethod.invoke(null, (Object)arguments);
             return null;
         };
     }
