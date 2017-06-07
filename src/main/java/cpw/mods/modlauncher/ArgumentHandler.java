@@ -55,7 +55,7 @@ public class ArgumentHandler
         profileOption = parser.accepts("version", "The version we launched with").withRequiredArg();
         gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().ofType(File.class);
         assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().ofType(File.class);
-        minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().ofType(File.class);
+        minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().ofType(File.class).withValuesSeparatedBy(',');
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
 
         parserConsumer.accept(parser);
@@ -67,9 +67,9 @@ public class ArgumentHandler
         resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
-    File getSpecialJars()
+    File[] getSpecialJars()
     {
-        return this.optionSet.valueOf(minecraftJarOption);
+        return this.optionSet.valuesOf(minecraftJarOption).toArray(new File[0]);
     }
 
     String getLaunchTarget()

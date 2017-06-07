@@ -78,13 +78,6 @@ uploadArchives {
             }
         }
     }
-
-    doLast {
-        // Purge all annoying files that arent needed
-        repoDir.traverse(type: FileType.FILES, nameFilter: ~/.*\.(xml(?:\.sha1)?|md5)$/) {
-            it.delete()
-        }
-    }
 }
 
 clean.doLast {

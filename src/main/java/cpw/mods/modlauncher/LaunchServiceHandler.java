@@ -21,9 +21,12 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static cpw.mods.modlauncher.Logging.launcherLog;
@@ -53,5 +56,13 @@ class LaunchServiceHandler
         String launchTarget = argumentHandler.getLaunchTarget();
         String[] args = argumentHandler.buildArgumentList();
         launch(launchTarget, args, classLoader);
+    }
+
+    public File[] identifyTransformationTargets(ArgumentHandler argumentHandler)
+    {
+        final String launchTarget = argumentHandler.getLaunchTarget();
+        final File[] transformationTargets = launchHandlerLookup.get(launchTarget).findTransformationTargets();
+        final File[] specialJar = argumentHandler.getSpecialJars();
+        return Stream.concat(Arrays.stream(transformationTargets), Arrays.stream(specialJar)).collect(Collectors.toList()).toArray(new File[0]);
     }
 }

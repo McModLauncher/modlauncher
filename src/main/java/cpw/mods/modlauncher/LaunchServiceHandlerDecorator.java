@@ -21,6 +21,8 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
 
+import java.io.File;
+
 /**
  * Decorates {@link ILaunchHandlerService} for use by the system
  */
@@ -43,5 +45,10 @@ class LaunchServiceHandlerDecorator
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public File[] findTransformationTargets()
+    {
+        return this.service.identifyTransformationTargets();
     }
 }

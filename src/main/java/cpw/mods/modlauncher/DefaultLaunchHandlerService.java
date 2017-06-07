@@ -21,7 +21,11 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.util.concurrent.Callable;
 
 /**
@@ -33,6 +37,22 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService
     public String name()
     {
         return "minecraft";
+    }
+
+    @Override
+    public File[] identifyTransformationTargets()
+    {
+        final URL resource = getClass().getClassLoader().getResource("net/minecraft/client/main/Main.class");
+        try
+        {
+            JarURLConnection urlConnection  = (JarURLConnection)resource.openConnection();
+            return new File[] { new File(urlConnection.getJarFile().getName()) };
+        }
+        catch (IOException | NullPointerException e)
+        {
+            e.printStackTrace();
+            return new File[0];
+        }
     }
 
     @Override

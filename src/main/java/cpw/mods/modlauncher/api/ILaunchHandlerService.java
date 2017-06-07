@@ -19,6 +19,7 @@
 
 package cpw.mods.modlauncher.api;
 
+import java.io.File;
 import java.util.concurrent.Callable;
 
 /**
@@ -27,6 +28,8 @@ import java.util.concurrent.Callable;
 public interface ILaunchHandlerService
 {
     String name();
+
+    File[] identifyTransformationTargets();
 
     Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader);
 }
