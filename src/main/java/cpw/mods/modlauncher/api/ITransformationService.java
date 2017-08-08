@@ -19,10 +19,12 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -89,5 +91,8 @@ public interface ITransformationService
 
     @Nonnull
     List<ITransformer> transformers();
+
+    @Nullable
+    List<AccessTransformation> accessTransformers();
 
 }
