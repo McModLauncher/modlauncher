@@ -19,6 +19,31 @@
 
 package cpw.mods.modlauncher.api.accesstransformer;
 
-public enum AccessTransformationTarget {
-    CLASS, METHOD, FIELD
+import org.objectweb.asm.Opcodes;
+
+public enum AccessVisibilityModifier {
+    KEEP(0), PROTECTED(1), PUBLIC(2);
+
+    public final int sortingIndex;
+    AccessVisibilityModifier(int sortingIndex)
+    {
+        this.sortingIndex = sortingIndex;
+    }
+
+    public boolean shouldBeReplacedBy(AccessVisibilityModifier other) {
+        return (this.sortingIndex - other.sortingIndex) < 0;
+    }
+
+    public int getOpcode() {
+        switch (this.sortingIndex) {
+            case 0:
+                throw new IllegalArgumentException("Can't get Opcode for KEEP!");
+            case 1:
+                return Opcodes.ACC_PROTECTED;
+            case 2:
+                return Opcodes.ACC_PUBLIC;
+            default:
+                throw new RuntimeException(String.format("Found invalid sorting index %d, but how is this possible?!", sortingIndex));
+        }
+    }
 }

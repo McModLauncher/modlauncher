@@ -19,70 +19,36 @@
 
 package cpw.mods.modlauncher.api.accesstransformer;
 
-import org.objectweb.asm.Opcodes;
-
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
+import cpw.mods.modlauncher.TransformTargetLabel;
 
 /**
  * A class that allows easy transformation of access flags.
- * The AT with the highest access wins.
+ * ATs get run before the transformers are called to transform the class/method/field
+ * It is NOT possible to downgrade the access. F.E. if an AT wants protected but the class/field/method is already public, this will throw an exception
+ * ATs will get merged if more ATs want to modify the same class/method/field. See some examples below.
  * <br>
  * Example:
- * There are two ATs that transform the same method: One wants protected access, the other one public access. In this case,
- * the method will become public to avoid unexpected behavior
+ * There are two ATs that transform the same method:
+ * <p>One wants protected access, the other one public access. In this case, the method will be public.</p>
+ * <p>One wants final access, the other wants to keep. In this case, the method will keep the flag.</p>
  */
 public class AccessTransformation {
-    private static final List<Integer> validOpcodes = Arrays.asList(Opcodes.ACC_PROTECTED, Opcodes.ACC_PUBLIC);
-
-    public final int newAccessFlag;
-    public final String className;
-    public final AccessTransformationTarget type;
-    @Nullable
-    public final String[] names;
-
-    private AccessTransformation(int newAccessFlag, String className, AccessTransformationTarget type, @Nullable String[] names) {
-        this.names = names;
-        if (!validOpcodes.contains(newAccessFlag))
-            throw new IllegalArgumentException(String.format("Invalid access flag %d for AT transforming %s access level at class %s!", newAccessFlag, type, className));
-        this.newAccessFlag = newAccessFlag;
-        this.className = className;
-        this.type = type;
-    }
+    public AccessVisibilityModifier visibilityModifier;
+    public AccessWriteModifier finalModifier;
+    public final TransformTargetLabel label;
 
     /**
-     * Constructs an AccessTransformer that transforms the access of a class.
-     * Only the access of the class will be transformed, all methods and fields inside will be ignored and need a separate AT.
-     * @param newAccessFlag The new access flag, either {@code Opcodes.ACC_PROTECTED} or {@code Opcodes.ACC_PUBLIC}.
-     * @param className The name of the class to transform. Note that this needs to be the name <b>AFTER</b> the {@link cpw.mods.modlauncher.api.INameMappingService} did run.
+     * Constructs a new AT rule.
+     * @param visibilityModifier The new visibility flag.
+     * @param finalModifier The new write access flag.
+     * @param label The target to transform.
+     * @throws IllegalArgumentException If both the {@code AccessVisibilityModifier} and {@code AccessWriteModifier} are KEEP
      */
-    public static AccessTransformation createClassTransformer(int newAccessFlag, String className) {
-        return new AccessTransformation(newAccessFlag, className, AccessTransformationTarget.CLASS, null);
-    }
-
-    /**
-     * Constructs an AccessTransformer that transforms the access of a field.
-     * All fields will have the same specified access flag. If you want different access flags, you have to create multiple ATs
-     * <br>
-     * NOTE this runs <b>AFTER</b> the {@link cpw.mods.modlauncher.api.INameMappingService} did run, make sure to specify the transformed names
-     * @param newAccessFlag The new access flag, either {@code Opcodes.ACC_PROTECTED} or {@code Opcodes.ACC_PUBLIC}.
-     * @param className The name of the class in which the specified fields are.
-     */
-    public static AccessTransformation createFieldTransformer(int newAccessFlag, String className, String... fieldNames) {
-        return new AccessTransformation(newAccessFlag, className, AccessTransformationTarget.FIELD, fieldNames);
-    }
-
-    /**
-     * Constructs an AccessTransformer that transforms the access of a method.
-     * All methods will have the same specified access flag. If you want different access flags, you have to create multiple ATs
-     * <br>
-     * NOTE this runs <b>AFTER</b> the {@link cpw.mods.modlauncher.api.INameMappingService} did run, make sure to specify the transformed names
-     * @param newAccessFlag The new access flag, either {@code Opcodes.ACC_PROTECTED} or {@code Opcodes.ACC_PUBLIC}.
-     * @param className The name of the class in which the specified methods are.
-     * @param methodNames The names of the methods to change access.
-     */
-    public static AccessTransformation createMethodTransformer(int newAccessFlag, String className, String... methodNames) {
-        return new AccessTransformation(newAccessFlag, className, AccessTransformationTarget.METHOD, methodNames);
+    public AccessTransformation(AccessVisibilityModifier visibilityModifier, AccessWriteModifier finalModifier, TransformTargetLabel label) throws IllegalArgumentException {
+        this.label = label;
+        if (visibilityModifier == AccessVisibilityModifier.KEEP && finalModifier == AccessWriteModifier.KEEP)
+            throw new IllegalArgumentException("Both the visibilityModifier and the writeModifier are KEEP. This AT is useless!");
+        this.finalModifier = finalModifier;
+        this.visibilityModifier = visibilityModifier;
     }
 }

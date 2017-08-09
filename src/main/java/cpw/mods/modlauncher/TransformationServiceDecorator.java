@@ -23,6 +23,7 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import cpw.mods.modlauncher.api.ITransformationService;
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -110,6 +111,10 @@ public class TransformationServiceDecorator
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
             }
         }
+        launcherLog.debug("Collection access transformers for transformation service {}", () -> this.service);
+        List<AccessTransformation> ats = this.service.accessTransformers();
+        if (ats != null)
+            ats.forEach(transformStore::addAccessTransformer);
         launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 
