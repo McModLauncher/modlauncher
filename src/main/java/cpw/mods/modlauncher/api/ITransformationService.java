@@ -92,7 +92,7 @@ public interface ITransformationService
     @Nonnull
     List<ITransformer> transformers();
 
-    @Nullable
+    @Nonnull
     List<AccessTransformation> accessTransformers();
 
 }

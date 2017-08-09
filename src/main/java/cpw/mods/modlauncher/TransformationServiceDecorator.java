@@ -112,9 +112,7 @@ public class TransformationServiceDecorator
             }
         }
         launcherLog.debug("Collection access transformers for transformation service {}", () -> this.service);
-        List<AccessTransformation> ats = this.service.accessTransformers();
-        if (ats != null)
-            ats.forEach(transformStore::addAccessTransformer);
+        this.service.accessTransformers().forEach(transformStore::addAccessTransformer);
         launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 

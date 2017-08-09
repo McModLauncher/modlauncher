@@ -25,6 +25,7 @@ import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
 import org.objectweb.asm.Opcodes;
@@ -32,6 +33,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -84,6 +87,12 @@ public class MockTransformerService implements ITransformationService
     public List<ITransformer> transformers()
     {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
+    }
+
+    @Nonnull
+    @Override
+    public List<AccessTransformation> accessTransformers() {
+        return Collections.emptyList();
     }
 
     private static class ClassNodeTransformer implements ITransformer<ClassNode>
