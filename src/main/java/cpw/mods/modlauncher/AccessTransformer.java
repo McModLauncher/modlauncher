@@ -61,7 +61,7 @@ class AccessTransformer {
             }
             else
             { //already public, just check if AT is alright
-                if (modifiedAccess != Opcodes.ACC_PUBLIC)
+                if (newAccess != Opcodes.ACC_PUBLIC)
                 {
                     Logging.launcherLog.warn("Invalid AT for field {} in class {}, access in AT is lower than in code!", at.label.getElementName(), at.label.getClassName().getInternalName());
                 }

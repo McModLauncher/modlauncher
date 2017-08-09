@@ -23,7 +23,6 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import cpw.mods.modlauncher.api.ITransformationService;
-import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

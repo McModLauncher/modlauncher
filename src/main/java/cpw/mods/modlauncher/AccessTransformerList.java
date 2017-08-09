@@ -17,10 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cpw.mods.modlauncher.api.accesstransformer;
+package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.TransformList;
 import cpw.mods.modlauncher.TransformTargetLabel;
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 
 import java.util.HashMap;
 import java.util.Map;

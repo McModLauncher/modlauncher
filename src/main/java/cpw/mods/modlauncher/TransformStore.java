@@ -21,7 +21,6 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
-import cpw.mods.modlauncher.api.accesstransformer.AccessTransformerList;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
