@@ -67,7 +67,7 @@ class AccessTransformer {
                 }
                 else
                 {
-                    Logging.launcherLog.debug("Found unnecessary visibility AT for {} {] at class {}.", at.label.getLabelType(), at.label.getElementName(), at.label.getClassName().getInternalName());
+                    Logging.launcherLog.debug("Found unnecessary visibility AT for {} {} at class {}.", at.label.getLabelType(), at.label.getElementName(), at.label.getClassName().getInternalName());
                 }
             }
         }

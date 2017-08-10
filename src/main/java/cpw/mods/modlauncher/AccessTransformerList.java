@@ -19,26 +19,24 @@
 
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.TransformList;
-import cpw.mods.modlauncher.TransformTargetLabel;
 import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * More ore less the same as {@link TransformList} but for ATs
+ * More or less the same as {@link TransformList} but for ATs
  */
 public class AccessTransformerList<T> {
     private final Map<TransformTargetLabel, AccessTransformation> transformers = new HashMap<>();
     private final Class<T> nodeType;
 
-    public AccessTransformerList(Class<T> nodeType)
+    AccessTransformerList(Class<T> nodeType)
     {
         this.nodeType = nodeType;
     }
 
-    public void addTransformer(AccessTransformation newAT)
+    void addTransformer(AccessTransformation newAT)
     {
         AccessTransformation at = transformers.get(newAT.label);
         if (at == null)
