@@ -35,4 +35,5 @@ public class Logging
 
     static final Logger launcherLog = LogManager.getLogger("Launcher");
     static final Marker CLASSLOADING = MarkerManager.getMarker("CLASSLOADING");
+    static final Marker ACCESS_TRANSFORMING = MarkerManager.getMarker("ACCESS TRANSFORMING");
 }

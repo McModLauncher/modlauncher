@@ -94,7 +94,7 @@ public class TransformStore
 
     void addAccessTransformer(AccessTransformation transformation)
     {
-        launcherLog.debug("Adding AT for class {} of type {}", transformation.label.getClassName(), transformation.label.getLabelType());
+        launcherLog.debug(Logging.ACCESS_TRANSFORMING, "Adding AT for {}", transformation.label);
         classNeedsTransforming.add(new TransformTargetLabel(transformation.label.getClassName().getInternalName()));
         accessTransformers.get(transformation.label.getLabelType()).addTransformer(transformation);
     }

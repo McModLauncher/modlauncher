@@ -27,7 +27,8 @@ import java.util.Map;
 /**
  * More or less the same as {@link TransformList} but for ATs
  */
-public class AccessTransformerList<T> {
+public class AccessTransformerList<T>
+{
     private final Map<TransformTargetLabel, AccessTransformation> transformers = new HashMap<>();
     private final Class<T> nodeType;
 
@@ -46,10 +47,17 @@ public class AccessTransformerList<T> {
         else
         {
             //merge the ATs
+            Logging.launcherLog.debug(Logging.ACCESS_TRANSFORMING, "Found duplicate AT for {}, merging...", newAT.label);
             if (at.finalModifier.shouldBeReplacedBy(newAT.finalModifier))
+            {
+                Logging.launcherLog.debug(Logging.ACCESS_TRANSFORMING, "Changing rule write modifier from {} to {}", at.finalModifier, newAT.finalModifier);
                 at.finalModifier = newAT.finalModifier;
+            }
             if (at.visibilityModifier.shouldBeReplacedBy(newAT.visibilityModifier))
+            {
+                Logging.launcherLog.debug(Logging.ACCESS_TRANSFORMING, "Changing rule visibility modifier from {} to {}", at.visibilityModifier, newAT.visibilityModifier);
                 at.visibilityModifier = newAT.visibilityModifier;
+            }
         }
     }
 

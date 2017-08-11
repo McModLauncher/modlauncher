@@ -21,10 +21,12 @@ package cpw.mods.modlauncher.api.accesstransformer;
 
 import cpw.mods.modlauncher.TransformTargetLabel;
 
+import java.util.Objects;
+
 /**
  * A class that allows easy transformation of access flags.
  * ATs get run before the transformers are called to transform the class/method/field
- * It is NOT possible to downgrade the access. F.E. if an AT wants protected but the class/field/method is already public, this will throw an exception
+ * It is NOT possible to downgrade the access. F.E. if an AT wants protected but the class/field/method is already public, this will cause an error to be logged
  * ATs will get merged if more ATs want to modify the same class/method/field. See some examples below.
  * <br>
  * Example:
@@ -32,7 +34,8 @@ import cpw.mods.modlauncher.TransformTargetLabel;
  * <p>One wants protected access, the other one public access. In this case, the method will be public.</p>
  * <p>One wants final access, the other wants to keep. In this case, the method will keep the flag.</p>
  */
-public class AccessTransformation {
+public class AccessTransformation
+{
     public AccessVisibilityModifier visibilityModifier;
     public AccessWriteModifier finalModifier;
     public final TransformTargetLabel label;
@@ -45,10 +48,32 @@ public class AccessTransformation {
      * @throws IllegalArgumentException If both the {@code AccessVisibilityModifier} and {@code AccessWriteModifier} are KEEP
      */
     public AccessTransformation(AccessVisibilityModifier visibilityModifier, AccessWriteModifier finalModifier, TransformTargetLabel label) throws IllegalArgumentException {
-        this.label = label;
         if (visibilityModifier == AccessVisibilityModifier.KEEP && finalModifier == AccessWriteModifier.KEEP)
             throw new IllegalArgumentException("Both the visibilityModifier and the writeModifier are KEEP. This AT is useless!");
+        this.label = label;
         this.finalModifier = finalModifier;
         this.visibilityModifier = visibilityModifier;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof AccessTransformation) {
+            AccessTransformation other = (AccessTransformation) obj;
+            return other.label.equals(this.label) && other.finalModifier == this.finalModifier && other.visibilityModifier == this.visibilityModifier;
+        }
+        return super.equals(obj);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(label, finalModifier, visibilityModifier);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("AT Rule: visibility modifier %s, write modifier %s, target %s", visibilityModifier, finalModifier, label);
     }
 }

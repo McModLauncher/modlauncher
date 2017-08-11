@@ -29,49 +29,71 @@ import org.objectweb.asm.tree.MethodNode;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-class AccessTransformer {
+class AccessTransformer
+{
 
     @Nonnull
-    static FieldNode transform(@Nullable AccessTransformation fieldAT, FieldNode field) {
+    static FieldNode transform(@Nullable AccessTransformation fieldAT, FieldNode field)
+    {
         field.access = getAccessForAT(field.access, fieldAT);
         return field;
     }
 
     @Nonnull
-    static MethodNode transform(@Nullable AccessTransformation fieldAT, MethodNode method) {
+    static MethodNode transform(@Nullable AccessTransformation fieldAT, MethodNode method)
+    {
         method.access = getAccessForAT(method.access, fieldAT);
         return method;
     }
 
     @Nonnull
-    static ClassNode transform(@Nullable AccessTransformation fieldAT, ClassNode clazz) {
+    static ClassNode transform(@Nullable AccessTransformation fieldAT, ClassNode clazz)
+    {
         clazz.access = getAccessForAT(clazz.access, fieldAT);
         return clazz;
     }
 
-    private static int getAccessForAT(int oldAccess, @Nullable AccessTransformation at) {
+    private static int getAccessForAT(int oldAccess, @Nullable AccessTransformation at)
+    {
         if (at == null)
             return oldAccess;
         int modifiedAccess = (oldAccess & ~7);
-        if (at.visibilityModifier != AccessVisibilityModifier.KEEP) {
+        if (at.visibilityModifier != AccessVisibilityModifier.KEEP)
+        {
             int newAccess = at.visibilityModifier.getOpcode();
-            if ((oldAccess & 7) != Opcodes.ACC_PUBLIC)
-            { //most common case
-                modifiedAccess |= newAccess;
-            }
-            else
-            { //already public, just check if AT is alright
-                if (newAccess != Opcodes.ACC_PUBLIC)
-                {
-                    Logging.launcherLog.warn("Invalid AT for field {} in class {}, access in AT is lower than in code!", at.label.getElementName(), at.label.getClassName().getInternalName());
-                }
-                else
-                {
-                    Logging.launcherLog.debug("Found unnecessary visibility AT for {} {} at class {}.", at.label.getLabelType(), at.label.getElementName(), at.label.getClassName().getInternalName());
-                }
+            switch (oldAccess & 7)
+            {
+                case Opcodes.ACC_PRIVATE:
+                case 0:
+                    modifiedAccess |= newAccess;
+                    break;
+                case Opcodes.ACC_PROTECTED:
+                    if (newAccess == Opcodes.ACC_PUBLIC) //fine, just what we expect
+                    {
+                        modifiedAccess |= newAccess;
+                    }
+                    else
+                    {
+                        Logging.launcherLog.warn(Logging.ACCESS_TRANSFORMING, "Found unnecessary visibility AT for {}, as it is already protected!", at.label);
+                    }
+                    break;
+                case Opcodes.ACC_PUBLIC:
+                    if (newAccess != Opcodes.ACC_PUBLIC)
+                    {
+                        Logging.launcherLog.error(Logging.ACCESS_TRANSFORMING, "Invalid AT for field {}, access in AT is lower than in code, ignoring!", at.label);
+                    }
+                    else
+                    {
+                        Logging.launcherLog.warn(Logging.ACCESS_TRANSFORMING, "Found unnecessary visibility AT for {}, as it is already public!", at.label);
+                    }
+                    break;
+                default: //No clue how this should happen though...
+                    Logging.launcherLog.fatal(Logging.ACCESS_TRANSFORMING, "Found invalid Opcode {}, how could this happen?!", oldAccess & 7);
+                    throw new RuntimeException("Found invalid Opcode " + (oldAccess & 7) + " while applying AT");
             }
         }
-        switch (at.finalModifier) {
+        switch (at.finalModifier)
+        {
             case KEEP:
                 //ignore
                 break;
