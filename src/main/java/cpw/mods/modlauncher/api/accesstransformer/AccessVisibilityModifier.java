@@ -17,23 +17,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cpw.mods.modlauncher;
+package cpw.mods.modlauncher.api.accesstransformer;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.core.config.Configurator;
+import org.objectweb.asm.Opcodes;
 
-public class Logging
-{
-    static
+public enum AccessVisibilityModifier {
+    KEEP(0), PROTECTED(1), PUBLIC(2);
+
+    public final int sortingIndex;
+    AccessVisibilityModifier(int sortingIndex)
     {
-        Configurator.setRootLevel(Level.INFO);
+        this.sortingIndex = sortingIndex;
     }
 
-    static final Logger launcherLog = LogManager.getLogger("Launcher");
-    static final Marker CLASSLOADING = MarkerManager.getMarker("CLASSLOADING");
-    static final Marker ACCESS_TRANSFORMING = MarkerManager.getMarker("ACCESS TRANSFORMING");
+    public boolean shouldBeReplacedBy(AccessVisibilityModifier other) {
+        return (this.sortingIndex - other.sortingIndex) < 0;
+    }
+
+    public int getOpcode() {
+        switch (this.sortingIndex) {
+            case 0:
+                throw new IllegalArgumentException("Can't get Opcode for KEEP!");
+            case 1:
+                return Opcodes.ACC_PROTECTED;
+            case 2:
+                return Opcodes.ACC_PUBLIC;
+            default:
+                throw new RuntimeException(String.format("Found invalid sorting index %d, but how is this possible?!", sortingIndex));
+        }
+    }
 }

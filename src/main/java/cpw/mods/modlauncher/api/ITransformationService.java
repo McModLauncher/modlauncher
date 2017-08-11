@@ -19,6 +19,7 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 
@@ -89,5 +90,8 @@ public interface ITransformationService
 
     @Nonnull
     List<ITransformer> transformers();
+
+    @Nonnull
+    List<AccessTransformation> accessTransformers();
 
 }

@@ -20,6 +20,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
+import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
 import java.util.Arrays;
@@ -61,7 +62,12 @@ class LaunchServiceHandler
     public File[] identifyTransformationTargets(ArgumentHandler argumentHandler)
     {
         final String launchTarget = argumentHandler.getLaunchTarget();
-        final File[] transformationTargets = launchHandlerLookup.get(launchTarget).findTransformationTargets();
+        if (Strings.isBlank(launchTarget))
+            throw new RuntimeException("Cannot launch because no launch target could be found!");
+        final LaunchServiceHandlerDecorator serviceHandlerDecorator = launchHandlerLookup.get(launchTarget);
+        if (serviceHandlerDecorator == null)
+            throw new RuntimeException("Cannot launch because the launch target " + launchTarget + " could not be found!");
+        final File[] transformationTargets = serviceHandlerDecorator.findTransformationTargets();
         final File[] specialJar = argumentHandler.getSpecialJars();
         return Stream.concat(Arrays.stream(transformationTargets), Arrays.stream(specialJar)).collect(Collectors.toList()).toArray(new File[0]);
     }

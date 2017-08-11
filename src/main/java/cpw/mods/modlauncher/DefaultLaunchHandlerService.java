@@ -20,6 +20,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService
         }
         catch (IOException | NullPointerException e)
         {
-            e.printStackTrace();
+            Logging.launcherLog.log(Level.ERROR, "Could not find minecraft transformation target!", e);
             return new File[0];
         }
     }

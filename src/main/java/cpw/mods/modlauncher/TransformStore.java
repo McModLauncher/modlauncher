@@ -20,10 +20,12 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -39,6 +41,7 @@ public class TransformStore
 {
     private final Set<TransformTargetLabel> classNeedsTransforming = new HashSet<>();
     private final EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers;
+    private final EnumMap<TransformTargetLabel.LabelType, AccessTransformerList<?>> accessTransformers;
 
     public TransformStore()
     {
@@ -46,6 +49,10 @@ public class TransformStore
         transformers.put(TransformTargetLabel.LabelType.CLASS, new TransformList<>(ClassNode.class));
         transformers.put(TransformTargetLabel.LabelType.METHOD, new TransformList<>(MethodNode.class));
         transformers.put(TransformTargetLabel.LabelType.FIELD, new TransformList<>(FieldNode.class));
+        accessTransformers = new EnumMap<>(TransformTargetLabel.LabelType.class);
+        accessTransformers.put(TransformTargetLabel.LabelType.CLASS, new AccessTransformerList<>(ClassNode.class));
+        accessTransformers.put(TransformTargetLabel.LabelType.METHOD, new AccessTransformerList<>(MethodNode.class));
+        accessTransformers.put(TransformTargetLabel.LabelType.FIELD, new AccessTransformerList<>(FieldNode.class));
     }
 
     List<ITransformer<FieldNode>> getTransformersFor(String className, FieldNode field)
@@ -81,5 +88,35 @@ public class TransformStore
     boolean needsTransforming(String className)
     {
         return classNeedsTransforming.contains(new TransformTargetLabel(className));
+    }
+
+    // ACCESS TRANSFORMERS
+
+    void addAccessTransformer(AccessTransformation transformation)
+    {
+        launcherLog.debug(Logging.ACCESS_TRANSFORMING, "Adding AT for {}", transformation.label);
+        classNeedsTransforming.add(new TransformTargetLabel(transformation.label.getClassName().getInternalName()));
+        accessTransformers.get(transformation.label.getLabelType()).addTransformer(transformation);
+    }
+
+    @Nullable
+    AccessTransformation getATFor(String className, FieldNode field)
+    {
+        TransformTargetLabel tl = new TransformTargetLabel(className, field.name);
+        return accessTransformers.get(TransformTargetLabel.LabelType.FIELD).getTransformers().get(tl);
+    }
+
+    @Nullable
+    AccessTransformation getATFor(String className, MethodNode method)
+    {
+        TransformTargetLabel tl = new TransformTargetLabel(className, method.name);
+        return accessTransformers.get(TransformTargetLabel.LabelType.METHOD).getTransformers().get(tl);
+    }
+
+    @Nullable
+    AccessTransformation getATFor(String className)
+    {
+        TransformTargetLabel tl = new TransformTargetLabel(className);
+        return accessTransformers.get(TransformTargetLabel.LabelType.CLASS).getTransformers().get(tl);
     }
 }

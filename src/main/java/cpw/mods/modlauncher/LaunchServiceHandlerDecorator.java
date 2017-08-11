@@ -22,6 +22,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.ILaunchHandlerService;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Decorates {@link ILaunchHandlerService} for use by the system
@@ -43,7 +44,11 @@ class LaunchServiceHandlerDecorator
         }
         catch (Exception e)
         {
-            throw new RuntimeException(e);
+            Throwable cause = e.getCause(); //hide invocation target exception if possible
+            if (e instanceof InvocationTargetException && cause != null)
+                throw new RuntimeException("Exception in launched service!", cause);
+            else
+                throw new RuntimeException("Failed to launch due to exception in service launcher!", e);
         }
     }
 

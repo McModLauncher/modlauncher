@@ -110,6 +110,8 @@ public class TransformationServiceDecorator
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
             }
         }
+        launcherLog.debug("Collection access transformers for transformation service {}", () -> this.service);
+        this.service.accessTransformers().forEach(transformStore::addAccessTransformer);
         launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 

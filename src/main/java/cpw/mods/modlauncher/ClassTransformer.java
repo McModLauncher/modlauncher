@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
+import cpw.mods.modlauncher.api.accesstransformer.AccessTransformation;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -78,10 +79,16 @@ public class ClassTransformer
         }
         VotingContext context = new VotingContext(className, empty, digest);
 
+        //Transform class access
+        AccessTransformation classAT = transformers.getATFor(className);
+        clazz = AccessTransformer.transform(classAT, clazz);
+
         List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
         // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
         for (FieldNode field : clazz.fields)
         {
+            AccessTransformation fieldAT = transformers.getATFor(className, field);
+            field = AccessTransformer.transform(fieldAT, field);
             List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
             fieldList.add(this.performVote(fieldTransformers, field, context));
         }
@@ -90,6 +97,8 @@ public class ClassTransformer
         List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
         for (MethodNode method : clazz.methods)
         {
+            AccessTransformation fieldAT = transformers.getATFor(className, method);
+            method = AccessTransformer.transform(fieldAT, method);
             List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
             methodList.add(this.performVote(methodTransformers, method, context));
         }

@@ -17,23 +17,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cpw.mods.modlauncher;
+package cpw.mods.modlauncher.api.accesstransformer;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.core.config.Configurator;
+public enum AccessWriteModifier {
+    FINAL(0), KEEP(1), NONFINAL(2);
 
-public class Logging
-{
-    static
+    public final int sortingIndex;
+    AccessWriteModifier(int sortingIndex)
     {
-        Configurator.setRootLevel(Level.INFO);
+        this.sortingIndex = sortingIndex;
     }
 
-    static final Logger launcherLog = LogManager.getLogger("Launcher");
-    static final Marker CLASSLOADING = MarkerManager.getMarker("CLASSLOADING");
-    static final Marker ACCESS_TRANSFORMING = MarkerManager.getMarker("ACCESS TRANSFORMING");
+    public boolean shouldBeReplacedBy(AccessWriteModifier other) {
+        return (this.sortingIndex - other.sortingIndex) < 0;
+    }
 }
