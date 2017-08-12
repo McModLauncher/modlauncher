@@ -37,7 +37,7 @@ import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.parallelForEach;
 class TransformationServicesHandler
 {
     private final ServiceLoader<ITransformationService> transformationServices;
-    private final Map<String, TransformationServiceDecorator> serviceLookup;
+    final Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
 
     TransformationServicesHandler(TransformStore transformStore)

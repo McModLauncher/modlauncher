@@ -44,6 +44,7 @@ class LaunchServiceHandlerDecorator
         }
         catch (Exception e)
         {
+            ClassCache.invalidate(); // Make sure the class cache isn't responsible for this crash
             Throwable cause = e.getCause(); //hide invocation target exception if possible
             if (e instanceof InvocationTargetException && cause != null)
                 throw new RuntimeException("Exception in launched service!", cause);

@@ -50,14 +50,19 @@ public class ClassTransformer
         this.transformers = transformers;
     }
 
+    boolean shouldTransform(String className)
+    {
+        return transformers.needsTransforming(className);
+    }
+
     byte[] transform(byte[] inputClass, String className)
     {
-        Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
         if (!transformers.needsTransforming(className))
         {
             return inputClass;
         }
 
+        Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
         ClassNode clazz = new ClassNode(Opcodes.ASM5);
         byte[] digest;
         boolean empty;

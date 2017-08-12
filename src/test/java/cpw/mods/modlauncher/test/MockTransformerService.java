@@ -86,6 +86,12 @@ public class MockTransformerService implements ITransformationService
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
+    @Nonnull
+    @Override
+    public String getConfigurationString() {
+        return "V1.0";
+    }
+
     private static class ClassNodeTransformer implements ITransformer<ClassNode>
     {
         private final List<String> classNames;

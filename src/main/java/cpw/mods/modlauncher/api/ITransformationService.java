@@ -23,6 +23,7 @@ import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -89,5 +90,18 @@ public interface ITransformationService
 
     @Nonnull
     List<ITransformer> transformers();
+
+    /**
+     * This String is used to validate the classCache.
+     * Anything that affects your transformations should be logged here.
+     * This is f.e. a version that should be bumped every time you change something on your transformer or accessTransformer.
+     * <br>
+     * <b>Please do not use newline!</b> Newline is reserved for the ModLauncher.
+     * If any string is different than the one that has been used for building the cache, the entire class cache will be rebuild.
+     * Called after your service has been initialized.
+     * @return Your current configuration
+     */
+    @Nonnull
+    String getConfigurationString();
 
 }
