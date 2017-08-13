@@ -30,13 +30,23 @@ public class ClassCacheFileWriter implements Runnable
 
     @Override
     public void run() {
+        if (!run_impl())
+            ClassCache.invalidate();
+        latch.countDown();
+    }
+
+    private boolean run_impl()
+    {
         //CONFIG
         if (!cacheConfigFile.exists())
         {
             BufferedWriter writer = null;
             try
             {
+                ClassCache.createIfMissing(cacheConfigFile);
                 writer = new BufferedWriter(new FileWriter(cacheConfigFile));
+                writer.write("THIS IN AN AUTOMATIC GENERATED FILE - DO NOT MODIFY!");
+                writer.newLine();
                 writer.write(ClassCache.VERSION + "");
                 writer.newLine();
                 for (TransformationServiceDecorator serviceDecorator : servicesHandler.serviceLookup.values())
@@ -51,7 +61,7 @@ public class ClassCacheFileWriter implements Runnable
             catch (IOException e)
             {
                 Logging.launcherLog.info("Could not write config file - not creating class cache", e);
-                ClassCache.invalidate();
+                return false;
             }
             finally
             {
@@ -67,7 +77,7 @@ public class ClassCacheFileWriter implements Runnable
                 try
                 {
                     sleeping = true;
-                    Thread.sleep(2 * 1000); //write the cache every 20 secs
+                    Thread.sleep(20 * 1000); //write the cache every 20 secs
                     sleeping = false;
                 } catch (InterruptedException e)
                 {
@@ -80,7 +90,7 @@ public class ClassCacheFileWriter implements Runnable
         catch (IOException e)
         {
             Logging.launcherLog.warn("Error while writing class cache!");
-            ClassCache.invalidate();
+            return false;
         }
         finally
         {
@@ -91,8 +101,7 @@ public class ClassCacheFileWriter implements Runnable
         {
             ClassCache.deleteCacheFiles();
         }
-
-        latch.countDown();
+        return true;
     }
 
     private void writeCache(JarOutputStream outputStream) throws IOException
@@ -103,7 +112,7 @@ public class ClassCacheFileWriter implements Runnable
             while (mapIterator.hasNext())
             {
                 Map.Entry<String, byte[]> next = mapIterator.next();
-                JarEntry entry = new JarEntry(next.getKey());
+                JarEntry entry = new JarEntry(next.getKey().concat(".cache"));
                 outputStream.putNextEntry(entry);
                 outputStream.write(next.getValue());
                 outputStream.closeEntry();

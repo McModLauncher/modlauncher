@@ -57,11 +57,6 @@ public class ClassTransformer
 
     byte[] transform(byte[] inputClass, String className)
     {
-        if (!transformers.needsTransforming(className))
-        {
-            return inputClass;
-        }
-
         Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
         ClassNode clazz = new ClassNode(Opcodes.ASM5);
         byte[] digest;

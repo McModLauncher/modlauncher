@@ -98,7 +98,7 @@ public class TransformingClassLoader extends ClassLoader
             }
             catch (MalformedURLException e)
             {
-                e.printStackTrace();
+                Logging.launcherLog.error("Could not hook the class cache!", e);
             }
         }
 
@@ -120,18 +120,18 @@ public class TransformingClassLoader extends ClassLoader
             final String path = name.replace('.', '/').concat(".class");
             byte[] classBytes;
             URL classResource;
-            boolean needsTransform = true;
-            if (ClassCache.validCache)
+            boolean needsTransform = classTransformer.shouldTransform(name);
+            if (ClassCache.validCache && needsTransform) //try using the class cache
             {
                 final String cachedPath = path.concat(".cache");
                 classResource = findResource(cachedPath);
-                if (classResource == null) //fallback and mark for cache
+                if (classResource == null) //fallback to loading and transforming
                 {
                     classResource = findResource(path);
                 }
                 else //transformed version available in cache
                 {
-                    launcherLog.info(CLASSLOADING, "Found cached class {}, skipping transformation", name);
+                    launcherLog.debug(CLASSLOADING, "Found cached class {}, skipping transformation", name);
                     needsTransform = false;
                 }
             }
@@ -140,7 +140,7 @@ public class TransformingClassLoader extends ClassLoader
                 classResource = findResource(path);
             }
 
-            if (classResource != null)
+            if (classResource != null) //file not in cache and not present in jars
             {
                 try (AutoURLConnection urlConnection = new AutoURLConnection(classResource))
                 {
@@ -163,15 +163,17 @@ public class TransformingClassLoader extends ClassLoader
             {
                 classBytes = new byte[0];
             }
+
             if (needsTransform) //Cached classes can circumvent this
             {
                 classBytes = classTransformer.transform(classBytes, name);
             }
+
             if (classBytes.length > 0) {
                 launcherLog.debug(CLASSLOADING,"Loaded transform target {} from {}", name, classResource);
-                if (needsTransform && classTransformer.shouldTransform(name)) //add for writing the class cache
+                if (needsTransform) //add for writing the class cache
                 {
-                    ClassCache.classCacheToWrite.put(path.concat(".cache"), classBytes);
+                    ClassCache.classCacheToWrite.put(path, classBytes);
                 }
                 return defineClass(name, classBytes, 0, classBytes.length);
             }
