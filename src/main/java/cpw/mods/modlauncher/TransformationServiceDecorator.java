@@ -53,7 +53,10 @@ public class TransformationServiceDecorator
         try
         {
             if (service.getConfigurationString().contains("\n"))
-                throw new RuntimeException("Configuration string may not contain newLine!");
+            {
+                launcherLog.error("Configuration String contains newline. This is not allowed");
+                throw new IncompatibleEnvironmentException();
+            }
             launcherLog.debug("Loading service {}", () -> this.service);
             this.service.onLoad(env, otherServices);
             this.isValid = true;

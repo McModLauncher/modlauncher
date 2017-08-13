@@ -57,6 +57,7 @@ class TransformationServicesHandler
         validateTransformationServices();
 
         processArguments(argumentHandler, environment);
+        ClassCacheHandler.init(this);
 
         initialiseTransformationServices(environment);
         initialiseServiceTransformers();

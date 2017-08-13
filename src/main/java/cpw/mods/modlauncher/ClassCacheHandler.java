@@ -1,6 +1,7 @@
 package cpw.mods.modlauncher;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 class ClassCacheHandler
@@ -9,9 +10,16 @@ class ClassCacheHandler
     private static ClassCacheFileWriter classCacheFileWriter;
     private static Thread readerThread, writerThread;
 
-    static void init(TransformationServicesHandler servicesHandler, File baseDir)
+    static void init(TransformationServicesHandler servicesHandler)
     {
-        ClassCache.init(baseDir);
+        Optional<File> mcDir = Launcher.INSTANCE.environment().getProperty(Environment.Keys.GAMEDIR.get());
+        Optional<String> ver = Launcher.INSTANCE.environment().getProperty(Environment.Keys.VERSION.get());
+        if (!mcDir.isPresent() || !ver.isPresent())
+        {
+            Logging.launcherLog.warn("Cannot use class cache as the game dir / version is absent!");
+            return;
+        }
+        ClassCache.init(new File(mcDir.get() + "/classcache/" + ver.get() + "/"));
         configReaderInstance = new ClassCacheReader(servicesHandler);
         readerThread = new Thread(configReaderInstance);
         readerThread.setDaemon(true);
@@ -21,6 +29,8 @@ class ClassCacheHandler
 
     static void launchClassCacheWriter(TransformationServicesHandler servicesHandler)
     {
+        if (configReaderInstance == null)
+            return;
         try
         {
             configReaderInstance.latch.await(5, TimeUnit.SECONDS);

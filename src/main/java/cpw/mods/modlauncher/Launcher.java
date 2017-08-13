@@ -68,7 +68,6 @@ public enum Launcher
     {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
-        ClassCacheHandler.init(this.transformationServicesHandler, new File("C:/users/tobias/desktop/classCache/")); //TODO dynamic, find a good home for this
         File[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(specialJars);
         Thread.currentThread().setContextClassLoader(this.classLoader);
