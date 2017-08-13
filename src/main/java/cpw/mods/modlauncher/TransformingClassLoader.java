@@ -93,7 +93,7 @@ public class TransformingClassLoader extends ClassLoader
             super(specialJars);
             try
             {
-                addURL(ClassCache.classCacheFile.toURI().toURL());
+                addURL(ClassCache.classCacheFile.toUri().toURL());
             }
             catch (MalformedURLException e)
             {

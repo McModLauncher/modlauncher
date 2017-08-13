@@ -3,9 +3,8 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.ITransformationService;
 
 import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -38,13 +37,13 @@ public class ClassCacheFileWriter implements Runnable
     private boolean run_impl()
     {
         //CONFIG
-        if (!cacheConfigFile.exists())
+        if (!Files.exists(cacheConfigFile))
         {
             BufferedWriter writer = null;
             try
             {
-                ClassCache.createIfMissing(cacheConfigFile);
-                writer = new BufferedWriter(new FileWriter(cacheConfigFile));
+                Files.createFile(cacheConfigFile);
+                writer = Files.newBufferedWriter(cacheConfigFile);
                 writer.write("THIS IN AN AUTOMATIC GENERATED FILE - DO NOT MODIFY!");
                 writer.newLine();
                 writer.write(ClassCache.VERSION + "");
@@ -71,7 +70,7 @@ public class ClassCacheFileWriter implements Runnable
         JarOutputStream jos = null;
         try
         {
-            jos = new JarOutputStream(new FileOutputStream(ClassCache.tempClassCacheFile));
+            jos = new JarOutputStream(Files.newOutputStream(ClassCache.tempClassCacheFile));
             while (shouldRun)
             {
                 try

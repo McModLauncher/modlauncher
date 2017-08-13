@@ -3,13 +3,16 @@ package cpw.mods.modlauncher;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassCache {
     static transient final int VERSION = 1;
-    static File classCacheFile, cacheConfigFile, tempClassCacheFile, toCopyClassCacheFile;
+    static Path classCacheFile, cacheConfigFile, tempClassCacheFile, toCopyClassCacheFile;
     static boolean validCache = true;
     static Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
 
@@ -17,10 +20,10 @@ public class ClassCache {
     {
         //noinspection ResultOfMethodCallIgnored
         baseDir.mkdirs();
-        classCacheFile = new File(baseDir + "/cache.jar");
-        cacheConfigFile = new File(baseDir + "/configuration.cfg");
-        tempClassCacheFile = new File(baseDir + "/cache.jar.tmp");
-        toCopyClassCacheFile = new File(baseDir + "/merge.tmp");
+        classCacheFile = Paths.get(baseDir + "/cache.jar");
+        cacheConfigFile = Paths.get(baseDir + "/configuration.cfg");
+        tempClassCacheFile = Paths.get(baseDir + "/cache.jar.tmp");
+        toCopyClassCacheFile = Paths.get(baseDir + "/merge.tmp");
     }
 
     /**
@@ -41,22 +44,15 @@ public class ClassCache {
     {
         try
         {
-            ClassCache.deleteIfPresent(ClassCache.classCacheFile, ClassCache.cacheConfigFile, ClassCache.tempClassCacheFile);
+            Files.deleteIfExists(classCacheFile);
+            Files.deleteIfExists(cacheConfigFile);
+            Files.deleteIfExists(tempClassCacheFile);
+            Files.deleteIfExists(toCopyClassCacheFile);
         }
         catch (IOException ioe)
         {
             Logging.launcherLog.info("Could not delete invalid class cache. Bad things may happen at the next start! ", ioe);
             validCache = false;
-        }
-    }
-
-    static void createIfMissing(File... files) throws IOException
-    {
-        for (File f : files)
-        {
-            if (!f.exists())
-                if (!f.createNewFile())
-                    throw new IOException();
         }
     }
 
@@ -75,16 +71,6 @@ public class ClassCache {
                     //NO OP
                 }
             }
-        }
-    }
-
-    static void deleteIfPresent(File... files) throws IOException
-    {
-        for (File f : files)
-        {
-            if (f.exists())
-                if (!f.delete())
-                    throw new IOException("Could not delete file " + f);
         }
     }
 }
