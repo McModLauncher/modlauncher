@@ -1,35 +1,15 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.TypesafeMap;
+import cpw.mods.modlauncher.api.*;
 
-import java.io.File;
+import java.io.*;
 
-import static cpw.mods.modlauncher.Logging.launcherLog;
+import static cpw.mods.modlauncher.Logging.*;
 
 /**
  * Entry point for the ModLauncher.
  */
-public enum Launcher
-{
+public enum Launcher {
     INSTANCE;
 
     private final TypesafeMap blackboard;
@@ -41,14 +21,7 @@ public enum Launcher
     private final LaunchServiceHandler launchService;
     private TransformingClassLoader classLoader;
 
-    public static void main(String... args)
-    {
-        launcherLog.info("ModLauncher running: args {}", () -> args);
-        INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
-    }
-
-    Launcher()
-    {
+    Launcher() {
         launcherLog.info("ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
@@ -59,13 +32,16 @@ public enum Launcher
         this.nameMappingServiceHandler = new NameMappingServiceHandler();
     }
 
-    public final TypesafeMap blackboard()
-    {
+    public static void main(String... args) {
+        launcherLog.info("ModLauncher running: args {}", () -> args);
+        INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
+    }
+
+    public final TypesafeMap blackboard() {
         return blackboard;
     }
 
-    private void run(String... args)
-    {
+    private void run(String... args) {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
         File[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
@@ -74,8 +50,7 @@ public enum Launcher
         this.launchService.launch(this.argumentHandler, this.classLoader);
     }
 
-    public Environment environment()
-    {
+    public Environment environment() {
         return this.environment;
     }
 }

@@ -1,170 +1,117 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.ITransformer;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
+import cpw.mods.modlauncher.api.*;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
-import java.util.EnumMap;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.*;
 
-import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.CLASS;
-import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.FIELD;
-import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.METHOD;
+import static cpw.mods.modlauncher.TransformTargetLabel.LabelType.*;
 
 /**
  * Detailed targetting information
  */
-public final class TransformTargetLabel
-{
+public final class TransformTargetLabel {
 
-    TransformTargetLabel(ITransformer.Target target)
-    {
+    private final Type className;
+    private final String elementName;
+    private final Type elementDescriptor;
+    private final LabelType labelType;
+    TransformTargetLabel(ITransformer.Target target) {
         this(target.getClassName(), target.getElementName(), target.getElementDescriptor(), LabelType.valueOf(target.getTargetType().name()));
     }
-
-    private TransformTargetLabel(String className, String elementName, String elementDescriptor, LabelType labelType)
-    {
+    private TransformTargetLabel(String className, String elementName, String elementDescriptor, LabelType labelType) {
         this.className = Type.getObjectType(className.replaceAll("\\.", "/"));
         this.elementName = elementName;
-        this.elementDescriptor = elementDescriptor.length() > 0? Type.getMethodType(elementDescriptor) : Type.VOID_TYPE;
+        this.elementDescriptor = elementDescriptor.length() > 0 ? Type.getMethodType(elementDescriptor) : Type.VOID_TYPE;
         this.labelType = labelType;
     }
+    public TransformTargetLabel(String className, String fieldName) {
+        this(className, fieldName, "", FIELD);
+    }
 
-    public enum LabelType
-    {
+    TransformTargetLabel(String className, String methodName, String methodDesc) {
+        this(className, methodName, methodDesc, METHOD);
+    }
+
+    public TransformTargetLabel(String className) {
+        this(className, "", "", CLASS);
+    }
+
+    final Type getClassName() {
+        return this.className;
+    }
+
+    public final String getElementName() {
+        return this.elementName;
+    }
+
+    public final Type getElementDescriptor() {
+        return this.elementDescriptor;
+    }
+
+    final LabelType getLabelType() {
+        return this.labelType;
+    }
+
+    public int hashCode() {
+        return Objects.hash(this.className, this.elementName, this.elementDescriptor);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        try {
+            TransformTargetLabel tl = (TransformTargetLabel) obj;
+            return Objects.equals(this.className, tl.className)
+                    && Objects.equals(this.elementName, tl.elementName)
+                    && Objects.equals(this.elementDescriptor, tl.elementDescriptor);
+        } catch (ClassCastException cce) {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Target : " + Objects.toString(labelType) + " {" + Objects.toString(className) + "} {" + Objects.toString(elementName) + "} {" + Objects.toString(elementDescriptor) + "}";
+    }
+
+    public enum LabelType {
         FIELD(FieldNode.class), METHOD(MethodNode.class), CLASS(ClassNode.class);
 
         private final Class<?> nodeType;
 
-        LabelType(Class<?> nodeType)
-        {
+        LabelType(Class<?> nodeType) {
             this.nodeType = nodeType;
         }
 
-        public Class<?> getNodeType()
-        {
-            return nodeType;
-        }
-
-        @SuppressWarnings("unchecked")
-        public <V> TransformList<V> getFromMap(EnumMap<LabelType, TransformList<?>> transformers)
-        {
-            return get(transformers, (Class<V>)this.nodeType);
-        }
-
-        @SuppressWarnings("unchecked")
-        private <V> TransformList<V> get(EnumMap<LabelType, TransformList<?>> transformers, Class<V> type)
-        {
-            return (TransformList<V>)transformers.get(this);
-        }
-
-        @SuppressWarnings("unchecked")
-        public <T> Supplier<TransformList<T>> mapSupplier(EnumMap<LabelType, TransformList<?>> transformers)
-        {
-            return () -> (TransformList<T>)transformers.get(this);
-        }
-
-        public static Optional<LabelType> getTypeFor(java.lang.reflect.Type type)
-        {
-            for (LabelType t : values())
-            {
-                if (t.nodeType.getName().equals(type.getTypeName()))
-                {
+        public static Optional<LabelType> getTypeFor(java.lang.reflect.Type type) {
+            for (LabelType t : values()) {
+                if (t.nodeType.getName().equals(type.getTypeName())) {
                     return Optional.of(t);
                 }
             }
             return Optional.empty();
         }
 
-    }
-
-    private final Type className;
-    private final String elementName;
-    private final Type elementDescriptor;
-    private final LabelType labelType;
-
-    public TransformTargetLabel(String className, String fieldName)
-    {
-        this(className, fieldName, "", FIELD);
-    }
-
-    TransformTargetLabel(String className, String methodName, String methodDesc)
-    {
-        this(className, methodName, methodDesc, METHOD);
-    }
-
-    public TransformTargetLabel(String className)
-    {
-        this(className, "", "", CLASS);
-    }
-
-    final Type getClassName()
-    {
-        return this.className;
-    }
-
-    public final String getElementName()
-    {
-        return this.elementName;
-    }
-
-    public final Type getElementDescriptor()
-    {
-        return this.elementDescriptor;
-    }
-
-    final LabelType getLabelType()
-    {
-        return this.labelType;
-    }
-
-    public int hashCode()
-    {
-        return Objects.hash(this.className, this.elementName, this.elementDescriptor);
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        try
-        {
-            TransformTargetLabel tl = (TransformTargetLabel)obj;
-            return Objects.equals(this.className, tl.className)
-                    && Objects.equals(this.elementName, tl.elementName)
-                    && Objects.equals(this.elementDescriptor, tl.elementDescriptor);
+        public Class<?> getNodeType() {
+            return nodeType;
         }
-        catch (ClassCastException cce)
-        {
-            return false;
-        }
-    }
 
-    @Override
-    public String toString()
-    {
-        return "Target : " + Objects.toString(labelType) + " {" + Objects.toString(className) + "} {" + Objects.toString(elementName) + "} {" + Objects.toString(elementDescriptor) + "}";
+        @SuppressWarnings("unchecked")
+        public <V> TransformList<V> getFromMap(EnumMap<LabelType, TransformList<?>> transformers) {
+            return get(transformers, (Class<V>) this.nodeType);
+        }
+
+        @SuppressWarnings("unchecked")
+        private <V> TransformList<V> get(EnumMap<LabelType, TransformList<?>> transformers, Class<V> type) {
+            return (TransformList<V>) transformers.get(this);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> Supplier<TransformList<T>> mapSupplier(EnumMap<LabelType, TransformList<?>> transformers) {
+            return () -> (TransformList<T>) transformers.get(this);
+        }
+
     }
 }
