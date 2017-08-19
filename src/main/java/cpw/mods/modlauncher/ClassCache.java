@@ -3,20 +3,29 @@ package cpw.mods.modlauncher;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public class ClassCache {
     static transient final int VERSION = 1;
-    static Path classCacheFile, cacheConfigFile, tempClassCacheFile, toCopyClassCacheFile;
-    static boolean validCache = true;
-    static Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
+    private ClassCacheReader configReaderInstance;
+    private ClassCacheFileWriter classCacheFileWriter;
+    private static Thread writerThread;
 
-    static void init(File baseDir)
+    final Path classCacheFile, cacheConfigFile, tempClassCacheFile, toCopyClassCacheFile;
+    final URL classCacheURL;
+    boolean validCache = true;
+    Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
+
+    ClassCache(File baseDir)
     {
         //noinspection ResultOfMethodCallIgnored
         baseDir.mkdirs();
@@ -24,6 +33,14 @@ public class ClassCache {
         cacheConfigFile = Paths.get(baseDir + "/configuration.cfg");
         tempClassCacheFile = Paths.get(baseDir + "/cache.jar.tmp");
         toCopyClassCacheFile = Paths.get(baseDir + "/merge.tmp");
+        try
+        {
+            classCacheURL = classCacheFile.toUri().toURL();
+        }
+        catch (MalformedURLException e)
+        {
+            throw new RuntimeException("Could not build class cache URL", e);
+        }
     }
 
     /**
@@ -31,7 +48,7 @@ public class ClassCache {
      * ModLauncher will invalidate the cache automatically when your config string changes.
      */
     @SuppressWarnings("WeakerAccess")
-    public static void invalidate()
+    public void invalidate()
     {
         if (!validCache)
             return;
@@ -40,7 +57,7 @@ public class ClassCache {
         deleteCacheFiles();
     }
 
-    static void deleteCacheFiles()
+    void deleteCacheFiles()
     {
         try
         {
@@ -53,6 +70,70 @@ public class ClassCache {
         {
             Logging.launcherLog.info("Could not delete invalid class cache. Bad things may happen at the next start! ", ioe);
             validCache = false;
+        }
+    }
+
+    static ClassCache initReaderThread(TransformationServicesHandler servicesHandler, Environment environment) {
+        Optional<File> mcDir = environment.getProperty(Environment.Keys.GAMEDIR.get());
+        Optional<String> ver = environment.getProperty(Environment.Keys.VERSION.get());
+        if (!mcDir.isPresent() || !ver.isPresent())
+        {
+            Logging.launcherLog.warn("Cannot use class cache as the game dir / version is absent!");
+            throw new RuntimeException(); //TODO handle this better
+        }
+        File baseDir = new File(mcDir.get() + "/classcache/" + ver.get() + "/");
+        ClassCache classCache = new ClassCache(baseDir);
+        classCache.configReaderInstance = new ClassCacheReader(servicesHandler, classCache);
+        Thread readerThread = new Thread(classCache.configReaderInstance);
+        readerThread.setDaemon(true);
+        readerThread.setName("ClassCache Reader Thread");
+        readerThread.start();
+        return classCache;
+    }
+
+    void initWriterThread(TransformationServicesHandler servicesHandler)
+    {
+        if (!validCache) //Do not write if the cache has been invalidated.
+        {
+            return;
+        }
+        try
+        {
+            long time = System.currentTimeMillis();
+            configReaderInstance.latch.await();
+        }
+        catch (InterruptedException e)
+        {
+            //Shrug
+        }
+        classCacheFileWriter = new ClassCacheFileWriter(servicesHandler, this);
+        writerThread = new Thread(classCacheFileWriter);
+        writerThread.setDaemon(true);
+        writerThread.setName("ClassCache Writer Thread");
+        writerThread.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(new ClassCacheShutdownHook()));
+        configReaderInstance = null;
+    }
+
+    private class ClassCacheShutdownHook implements Runnable
+    {
+
+        @Override
+        public void run()
+        {
+            classCacheFileWriter.writeLast(writerThread);
+            if (writerThread.isAlive())
+            {
+                try
+                {
+                    //wait 5 seconds for the write to finish. If it didn't finish by then, terminate the write
+                    classCacheFileWriter.latch.await(5, TimeUnit.SECONDS);
+                }
+                catch (InterruptedException e)
+                {
+                    //Shrug
+                }
+            }
         }
     }
 

@@ -80,6 +80,6 @@ public class TransformStore
 
     boolean needsTransforming(String className)
     {
-        return className.startsWith("b");//classNeedsTransforming.contains(new TransformTargetLabel(className)); TODO CHANGE THIS BACK
+        return classNeedsTransforming.contains(new TransformTargetLabel(className));
     }
 }

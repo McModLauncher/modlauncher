@@ -39,6 +39,7 @@ public enum Launcher
     private final NameMappingServiceHandler nameMappingServiceHandler;
     private final ArgumentHandler argumentHandler;
     private final LaunchServiceHandler launchService;
+    private ClassCache classCache;
     private TransformingClassLoader classLoader;
 
     public static void main(String... args)
@@ -64,15 +65,22 @@ public enum Launcher
         return blackboard;
     }
 
+    public ClassCache classCache() //public to allow invalidation
+    {
+        return classCache;
+    }
+
     private void run(String... args)
     {
         this.argumentHandler.setArgs(args);
-        this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
+        this.transformationServicesHandler.loadTransformationServices(this.argumentHandler, this.environment);
+        this.classCache = ClassCache.initReaderThread(this.transformationServicesHandler, this.environment);
+        this.transformationServicesHandler.initializeTransformationServices(this.environment);
         File[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
-        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(specialJars);
+        this.classCache.initWriterThread(this.transformationServicesHandler);
+        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.classCache, specialJars);
         Thread.currentThread().setContextClassLoader(this.classLoader);
-        ClassCacheHandler.launchClassCacheWriter(this.transformationServicesHandler);
-        this.launchService.launch(this.argumentHandler, this.classLoader);
+        this.launchService.launch(this.argumentHandler, this.classLoader, this.classCache);
     }
 
     public Environment environment()

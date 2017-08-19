@@ -11,39 +11,39 @@ import java.util.concurrent.CountDownLatch;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
-import static cpw.mods.modlauncher.ClassCache.cacheConfigFile;
-
 public class ClassCacheFileWriter implements Runnable
 {
 
     private final TransformationServicesHandler servicesHandler;
+    private final ClassCache classCache;
     private boolean shouldRun = true;
     private boolean sleeping = false;
     final CountDownLatch latch = new CountDownLatch(1);
 
-    ClassCacheFileWriter(TransformationServicesHandler servicesHandler)
+    ClassCacheFileWriter(TransformationServicesHandler servicesHandler, ClassCache classCache)
     {
         this.servicesHandler = servicesHandler;
-        ClassCache.classCacheToWrite.clear();
+        this.classCache = classCache;
+        classCache.classCacheToWrite.clear();
     }
 
     @Override
     public void run() {
         if (!run_impl())
-            ClassCache.invalidate();
+            classCache.invalidate();
         latch.countDown();
     }
 
     private boolean run_impl()
     {
         //CONFIG
-        if (!Files.exists(cacheConfigFile))
+        if (!Files.exists(classCache.cacheConfigFile))
         {
             BufferedWriter writer = null;
             try
             {
-                Files.createFile(cacheConfigFile);
-                writer = Files.newBufferedWriter(cacheConfigFile);
+                Files.createFile(classCache.cacheConfigFile);
+                writer = Files.newBufferedWriter(classCache.cacheConfigFile);
                 writer.write("THIS IN AN AUTOMATIC GENERATED FILE - DO NOT MODIFY!");
                 writer.newLine();
                 writer.write(ClassCache.VERSION + "");
@@ -70,8 +70,8 @@ public class ClassCacheFileWriter implements Runnable
         JarOutputStream jos = null;
         try
         {
-            jos = new JarOutputStream(Files.newOutputStream(ClassCache.tempClassCacheFile));
-            while (shouldRun)
+            jos = new JarOutputStream(Files.newOutputStream(classCache.tempClassCacheFile));
+            while (shouldRun && classCache.validCache)
             {
                 try
                 {
@@ -96,18 +96,18 @@ public class ClassCacheFileWriter implements Runnable
             ClassCache.closeQuietly(jos);
         }
 
-        if (!ClassCache.validCache)
+        if (!classCache.validCache)
         {
-            ClassCache.deleteCacheFiles();
+            classCache.deleteCacheFiles();
         }
         return true;
     }
 
     private void writeCache(JarOutputStream outputStream) throws IOException
     {
-        if (!ClassCache.classCacheToWrite.isEmpty())
+        if (!classCache.classCacheToWrite.isEmpty())
         {
-            Iterator<Map.Entry<String, byte[]>> mapIterator = ClassCache.classCacheToWrite.entrySet().iterator();
+            Iterator<Map.Entry<String, byte[]>> mapIterator = classCache.classCacheToWrite.entrySet().iterator();
             while (mapIterator.hasNext())
             {
                 Map.Entry<String, byte[]> next = mapIterator.next();

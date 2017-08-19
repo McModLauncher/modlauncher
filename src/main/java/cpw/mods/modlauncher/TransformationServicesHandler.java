@@ -51,20 +51,22 @@ class TransformationServicesHandler
         this.transformStore = transformStore;
     }
 
-    void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment)
+    void loadTransformationServices(ArgumentHandler argumentHandler, Environment environment)
     {
         loadTransformationServices(environment);
         validateTransformationServices();
 
         processArguments(argumentHandler, environment);
-        ClassCacheHandler.init(this);
+    }
 
+    void initializeTransformationServices(Environment environment)
+    {
         initialiseTransformationServices(environment);
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(File... specialJars) {
-        return new TransformingClassLoader(transformStore, specialJars);
+    TransformingClassLoader buildTransformingClassLoader(ClassCache classCache, File... specialJars) {
+        return new TransformingClassLoader(transformStore, classCache, specialJars);
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment)

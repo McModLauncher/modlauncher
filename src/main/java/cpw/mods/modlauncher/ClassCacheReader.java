@@ -16,18 +16,20 @@ import java.util.zip.ZipException;
 public class ClassCacheReader implements Runnable
 {
     private final TransformationServicesHandler servicesHandler;
+    private final ClassCache classCache;
     final CountDownLatch latch = new CountDownLatch(1);
 
-    ClassCacheReader(TransformationServicesHandler servicesHandler)
+    ClassCacheReader(TransformationServicesHandler servicesHandler, ClassCache classCache)
     {
         this.servicesHandler = servicesHandler;
+        this.classCache = classCache;
     }
 
     @Override
     public void run()
     {
         if (!prepareCache())
-            ClassCache.invalidate();
+            classCache.deleteCacheFiles();
         latch.countDown(); //Notify that we`re done
     }
 
@@ -36,16 +38,15 @@ public class ClassCacheReader implements Runnable
      */
     private boolean prepareCache()
     {
-        if (!Files.exists(ClassCache.cacheConfigFile))
+        if (!Files.exists(classCache.cacheConfigFile))
         {
             Logging.launcherLog.info("Creating new ClassCache as cache config file is missing!");
-            ClassCache.deleteCacheFiles();
-            return true;
+            return false;
         }
         BufferedReader reader = null;
         try
         {
-            reader = Files.newBufferedReader(ClassCache.cacheConfigFile);
+            reader = Files.newBufferedReader(classCache.cacheConfigFile);
             String serviceName = null;
             String read;
             int detectedCount = 0;
@@ -72,13 +73,13 @@ public class ClassCacheReader implements Runnable
             if (detectedCount != servicesHandler.serviceLookup.size())
                 throw new RuntimeException("Transformation services changed!");
             //valid cache, now merge the temp into the other jar
-            if (!Files.exists(ClassCache.classCacheFile)) //just copy the tmp cache
+            if (!Files.exists(classCache.classCacheFile)) //just copy the tmp cache
             {
-                if (Files.exists(ClassCache.tempClassCacheFile))
+                if (Files.exists(classCache.tempClassCacheFile))
                 {
-                    if (!Files.exists(ClassCache.classCacheFile))
-                        Files.createFile(ClassCache.classCacheFile);
-                    Files.copy(ClassCache.tempClassCacheFile, ClassCache.classCacheFile, StandardCopyOption.REPLACE_EXISTING);
+                    if (!Files.exists(classCache.classCacheFile))
+                        Files.createFile(classCache.classCacheFile);
+                    Files.copy(classCache.tempClassCacheFile, classCache.classCacheFile, StandardCopyOption.REPLACE_EXISTING);
                 }
                 return true;
             }
@@ -89,23 +90,23 @@ public class ClassCacheReader implements Runnable
             JarOutputStream jarWriter = null;
             try
             {
-                Files.deleteIfExists(ClassCache.toCopyClassCacheFile);
-                if (Files.exists(ClassCache.toCopyClassCacheFile))
-                    Files.createFile(ClassCache.toCopyClassCacheFile);
-                tmpReader = new JarInputStream(Files.newInputStream(ClassCache.tempClassCacheFile));
-                jarReader = new JarInputStream(Files.newInputStream(ClassCache.classCacheFile));
-                jarWriter = new JarOutputStream(Files.newOutputStream(ClassCache.toCopyClassCacheFile));
-                if (copyJarFile(tmpReader, jarWriter, ClassCache.tempClassCacheFile)) //empty tmp file, just rename
+                Files.deleteIfExists(classCache.toCopyClassCacheFile);
+                if (Files.exists(classCache.toCopyClassCacheFile))
+                    Files.createFile(classCache.toCopyClassCacheFile);
+                tmpReader = new JarInputStream(Files.newInputStream(classCache.tempClassCacheFile));
+                jarReader = new JarInputStream(Files.newInputStream(classCache.classCacheFile));
+                jarWriter = new JarOutputStream(Files.newOutputStream(classCache.toCopyClassCacheFile));
+                if (copyJarFile(tmpReader, jarWriter, classCache.tempClassCacheFile)) //empty tmp file, just rename
                 {
-                    copyJarFile(jarReader, jarWriter, ClassCache.classCacheFile);
+                    copyJarFile(jarReader, jarWriter, classCache.classCacheFile);
                     ClassCache.closeQuietly(tmpReader, jarReader, jarWriter); //need to close in order to move
-                    Files.delete(ClassCache.classCacheFile);
-                    Files.move(ClassCache.toCopyClassCacheFile, ClassCache.classCacheFile);
+                    Files.delete(classCache.classCacheFile);
+                    Files.move(classCache.toCopyClassCacheFile, classCache.classCacheFile);
                 }
                 else
                 {
                     ClassCache.closeQuietly(tmpReader, jarReader, jarWriter); //need to close in order to delete
-                    Files.deleteIfExists(ClassCache.toCopyClassCacheFile);
+                    Files.deleteIfExists(classCache.toCopyClassCacheFile);
                 }
             }
             catch (IOException e)
@@ -116,14 +117,14 @@ public class ClassCacheReader implements Runnable
             finally
             {
                 ClassCache.closeQuietly(tmpReader, jarReader, jarWriter);
-                Files.deleteIfExists(ClassCache.toCopyClassCacheFile);
+                Files.deleteIfExists(classCache.toCopyClassCacheFile);
             }
         }
         catch (Exception e)
         {
             Logging.launcherLog.info("Class cache invalid - rebuilding", e);
             ClassCache.closeQuietly(reader);
-            ClassCache.deleteCacheFiles();
+            return false;
         }
         finally
         {

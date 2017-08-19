@@ -51,13 +51,13 @@ public class TransformingClassLoader extends ClassLoader
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
 
-    public TransformingClassLoader(TransformStore transformStore, File... specialJars)
+    public TransformingClassLoader(TransformStore transformStore, ClassCache classCache, File... specialJars)
     {
         super();
         this.classTransformer = new ClassTransformer(transformStore);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toURI().toURL()))
                 .collect(Collectors.toList()).toArray(new URL[specialJars.length]);
-        this.delegatedClassLoader = new DelegatedClassLoader();
+        this.delegatedClassLoader = new DelegatedClassLoader(classCache);
     }
 
     @Override
@@ -88,16 +88,15 @@ public class TransformingClassLoader extends ClassLoader
 
     private class DelegatedClassLoader extends URLClassLoader
     {
-        DelegatedClassLoader()
+        private final ClassCache cache;
+
+        DelegatedClassLoader(ClassCache cache)
         {
             super(specialJars);
-            try
+            this.cache = cache;
+            if (cache.validCache)
             {
-                addURL(ClassCache.classCacheFile.toUri().toURL());
-            }
-            catch (MalformedURLException e)
-            {
-                Logging.launcherLog.error("Could not hook the class cache!", e);
+                addURL(cache.classCacheURL);
             }
         }
 
@@ -120,7 +119,7 @@ public class TransformingClassLoader extends ClassLoader
             byte[] classBytes;
             URL classResource;
             boolean needsTransform = classTransformer.shouldTransform(name);
-            if (ClassCache.validCache && needsTransform) //try using the class cache
+            if (cache.validCache && needsTransform) //try using the class cache
             {
                 final String cachedPath = path.concat(".cache");
                 classResource = findResource(cachedPath);
@@ -170,9 +169,9 @@ public class TransformingClassLoader extends ClassLoader
 
             if (classBytes.length > 0) {
                 launcherLog.debug(CLASSLOADING,"Loaded transform target {} from {}", name, classResource);
-                if (needsTransform) //add for writing the class cache
+                if (needsTransform && cache.validCache) //add for writing the class cache
                 {
-                    ClassCache.classCacheToWrite.put(path, classBytes);
+                    cache.classCacheToWrite.put(path, classBytes);
                 }
                 return defineClass(name, classBytes, 0, classBytes.length);
             }
