@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("WeakerAccess")
 public class ClassCache {
     static transient final int VERSION = 1;
-    private ClassCacheReader configReaderInstance;
+    private ClassCacheReader cacheReader;
     private ClassCacheFileWriter classCacheFileWriter;
     private static Thread writerThread;
 
@@ -25,7 +25,7 @@ public class ClassCache {
     boolean validCache = true;
     Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
 
-    ClassCache(File baseDir)
+    private ClassCache(File baseDir)
     {
         //noinspection ResultOfMethodCallIgnored
         baseDir.mkdirs();
@@ -83,8 +83,8 @@ public class ClassCache {
         }
         File baseDir = new File(mcDir.get() + "/classcache/" + ver.get() + "/");
         ClassCache classCache = new ClassCache(baseDir);
-        classCache.configReaderInstance = new ClassCacheReader(servicesHandler, classCache);
-        Thread readerThread = new Thread(classCache.configReaderInstance);
+        classCache.cacheReader = new ClassCacheReader(servicesHandler, classCache);
+        Thread readerThread = new Thread(classCache.cacheReader);
         readerThread.setDaemon(true);
         readerThread.setName("ClassCache Reader Thread");
         readerThread.start();
@@ -99,8 +99,7 @@ public class ClassCache {
         }
         try
         {
-            long time = System.currentTimeMillis();
-            configReaderInstance.latch.await();
+            cacheReader.latch.await();
         }
         catch (InterruptedException e)
         {
@@ -112,7 +111,7 @@ public class ClassCache {
         writerThread.setName("ClassCache Writer Thread");
         writerThread.start();
         Runtime.getRuntime().addShutdownHook(new Thread(new ClassCacheShutdownHook()));
-        configReaderInstance = null;
+        cacheReader = null;
     }
 
     private class ClassCacheShutdownHook implements Runnable

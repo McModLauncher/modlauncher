@@ -34,7 +34,7 @@ import java.util.stream.StreamSupport;
 import static cpw.mods.modlauncher.Logging.launcherLog;
 import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.parallelForEach;
 
-class TransformationServicesHandler
+public class TransformationServicesHandler
 {
     private final ServiceLoader<ITransformationService> transformationServices;
     final Map<String, TransformationServiceDecorator> serviceLookup;
