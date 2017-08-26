@@ -111,10 +111,14 @@ public class ClassCacheFileWriter implements Runnable
             while (mapIterator.hasNext())
             {
                 Map.Entry<String, byte[]> next = mapIterator.next();
-                JarEntry entry = new JarEntry(next.getKey().concat(".cache"));
-                outputStream.putNextEntry(entry);
-                outputStream.write(next.getValue());
-                outputStream.closeEntry();
+                String key = next.getKey();
+                if (!classCache.blacklist.contains(key))
+                {
+                    JarEntry entry = new JarEntry(key.concat(".cache"));
+                    outputStream.putNextEntry(entry);
+                    outputStream.write(next.getValue());
+                    outputStream.closeEntry();
+                }
                 mapIterator.remove();
             }
         }

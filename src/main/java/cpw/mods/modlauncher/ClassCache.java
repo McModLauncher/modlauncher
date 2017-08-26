@@ -8,6 +8,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +26,7 @@ public class ClassCache {
     final URL classCacheURL;
     boolean validCache = true;
     Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
+    List<String> blacklist = new ArrayList<>();
 
     private ClassCache(File baseDir)
     {
@@ -55,6 +58,16 @@ public class ClassCache {
         Logging.launcherLog.info("The class cache has been invalidated. It will not be used!");
         validCache = false;
         deleteCacheFiles();
+    }
+
+    /**
+     * Adds a class to the cache blacklist. This class will not be cached.
+     * For example, the String {@code path/to/class/TestClass.class} will avoid the class {@code TestClass} in the package {@code path.to.class} to be cached
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void blacklistClass(String className) {
+        if (!blacklist.contains(className))
+            blacklist.add(className);
     }
 
     void deleteCacheFiles()
