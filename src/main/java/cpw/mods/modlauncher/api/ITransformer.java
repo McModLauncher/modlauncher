@@ -1,34 +1,13 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher.api;
 
-import javax.annotation.Nonnull;
-import java.util.Objects;
-import java.util.Set;
+import javax.annotation.*;
+import java.util.*;
 
 /**
  * A transformer is injected into the modding ClassLoader. It can manipulate any item
  * it is designated to target.
  */
-public interface ITransformer<T>
-{
+public interface ITransformer<T> {
     /**
      * Transform the input to the ITransformer's desire. The context from the last vote is
      * provided as well.
@@ -82,8 +61,7 @@ public interface ITransformer<T>
      * Specifies the target type for the {@link Target}. Note that the type of the transformer T
      * dictates what are acceptable targets for this transformer.
      */
-    enum TargetType
-    {
+    enum TargetType {
         /**
          * Target a class. The {@link ITransformer} T variable must refer to {@link org.objectweb.asm.tree.ClassNode}
          */
@@ -102,8 +80,7 @@ public interface ITransformer<T>
      * Simple data holder indicating where the {@link ITransformer} can target.
      */
     @SuppressWarnings("SameParameterValue")
-    final class Target
-    {
+    final class Target {
         private final String className;
         private final String elementName;
         private final String elementDescriptor;
@@ -123,8 +100,7 @@ public interface ITransformer<T>
          * @param targetType        The {@link TargetType} for this target - it should match the ITransformer
          *                          type variable T
          */
-        Target(String className, String elementName, String elementDescriptor, TargetType targetType)
-        {
+        Target(String className, String elementName, String elementDescriptor, TargetType targetType) {
             Objects.requireNonNull(className, "Class Name cannot be null");
             Objects.requireNonNull(elementName, "Element Name cannot be null");
             Objects.requireNonNull(elementDescriptor, "Element Descriptor cannot be null");
@@ -142,8 +118,7 @@ public interface ITransformer<T>
          * @return A target for the named class
          */
         @Nonnull
-        public static Target targetClass(String className)
-        {
+        public static Target targetClass(String className) {
             return new Target(className, "", "", TargetType.CLASS);
         }
 
@@ -156,8 +131,7 @@ public interface ITransformer<T>
          * @return A target for the named method
          */
         @Nonnull
-        public static Target targetMethod(String className, String methodName, String methodDescriptor)
-        {
+        public static Target targetMethod(String className, String methodName, String methodDescriptor) {
             return new Target(className, methodName, methodDescriptor, TargetType.METHOD);
         }
 
@@ -169,40 +143,35 @@ public interface ITransformer<T>
          * @return A target for the named field
          */
         @Nonnull
-        public static Target targetField(String className, String fieldName)
-        {
+        public static Target targetField(String className, String fieldName) {
             return new Target(className, fieldName, "", TargetType.FIELD);
         }
 
         /**
          * @return The class name for this target
          */
-        public String getClassName()
-        {
+        public String getClassName() {
             return className;
         }
 
         /**
          * @return The element name for this target, either the field name or the method name
          */
-        public String getElementName()
-        {
+        public String getElementName() {
             return elementName;
         }
 
         /**
          * @return The element's descriptor. Usually the method descriptor
          */
-        public String getElementDescriptor()
-        {
+        public String getElementDescriptor() {
             return elementDescriptor;
         }
 
         /**
          * @return The target type of this target
          */
-        public TargetType getTargetType()
-        {
+        public TargetType getTargetType() {
             return targetType;
         }
     }

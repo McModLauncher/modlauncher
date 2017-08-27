@@ -1,0 +1,5 @@
+<code_scheme name="codestyle">
+  <option name="GENERATE_FINAL_LOCALS" value="true" />
+  <option name="GENERATE_FINAL_PARAMETERS" value="true" />
+  <option name="USE_SINGLE_CLASS_IMPORTS" value="false" />
+</code_scheme>

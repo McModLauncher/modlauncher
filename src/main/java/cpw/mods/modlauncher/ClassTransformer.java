@@ -1,52 +1,21 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.TransformerVoteResult;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
+import cpw.mods.modlauncher.api.*;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.security.*;
+import java.util.*;
+import java.util.stream.*;
 
 /**
  * Transforms classes using the supplied launcher services
  */
-public class ClassTransformer
-{
-    private final TransformStore transformers;
+public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
+    private final TransformStore transformers;
 
-    ClassTransformer(TransformStore transformers)
-    {
+    ClassTransformer(TransformStore transformers) {
         this.transformers = transformers;
     }
 
@@ -61,15 +30,12 @@ public class ClassTransformer
         ClassNode clazz = new ClassNode(Opcodes.ASM5);
         byte[] digest;
         boolean empty;
-        if (inputClass.length > 0)
-        {
+        if (inputClass.length > 0) {
             final ClassReader classReader = new ClassReader(inputClass);
             classReader.accept(clazz, 0);
             digest = getSha256().digest(inputClass);
             empty = false;
-        }
-        else
-        {
+        } else {
             clazz.name = classDesc.getInternalName();
             clazz.version = 52;
             clazz.superName = "java/lang/Object";
@@ -80,16 +46,14 @@ public class ClassTransformer
 
         List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
         // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
-        for (FieldNode field : clazz.fields)
-        {
+        for (FieldNode field : clazz.fields) {
             List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
             fieldList.add(this.performVote(fieldTransformers, field, context));
         }
 
         // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
         List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
-        for (MethodNode method : clazz.methods)
-        {
+        for (MethodNode method : clazz.methods) {
             List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
             methodList.add(this.performVote(methodTransformers, method, context));
         }
@@ -105,29 +69,23 @@ public class ClassTransformer
         return cw.toByteArray();
     }
 
-    private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context)
-    {
-        do
-        {
+    private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context) {
+        do {
             final Stream<TransformerVote<T>> voteResultStream = transformers.stream().map(t -> gatherVote(t, context));
             final Map<TransformerVoteResult, List<TransformerVote<T>>> results = voteResultStream.collect(Collectors.groupingBy(TransformerVote::getResult));
-            if (results.containsKey(TransformerVoteResult.REJECT))
-            {
+            if (results.containsKey(TransformerVoteResult.REJECT)) {
                 throw new VoteRejectedException(results.get(TransformerVoteResult.REJECT), node.getClass());
             }
-            if (results.containsKey(TransformerVoteResult.NO))
-            {
+            if (results.containsKey(TransformerVoteResult.NO)) {
                 transformers.removeAll(results.get(TransformerVoteResult.NO).stream().map(TransformerVote::getTransformer).collect(Collectors.toList()));
             }
-            if (results.containsKey(TransformerVoteResult.YES))
-            {
+            if (results.containsKey(TransformerVoteResult.YES)) {
                 final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
                 transformers.remove(transformer);
                 continue;
             }
-            if (results.containsKey(TransformerVoteResult.DEFER))
-            {
+            if (results.containsKey(TransformerVoteResult.DEFER)) {
                 throw new VoteDeadlockException(results.get(TransformerVoteResult.DEFER), node.getClass());
             }
         }
@@ -135,20 +93,15 @@ public class ClassTransformer
         return node;
     }
 
-    private <T> TransformerVote<T> gatherVote(ITransformer<T> transformer, VotingContext context)
-    {
+    private <T> TransformerVote<T> gatherVote(ITransformer<T> transformer, VotingContext context) {
         TransformerVoteResult vr = transformer.castVote(context);
         return new TransformerVote<>(vr, transformer);
     }
 
-    private MessageDigest getSha256()
-    {
-        try
-        {
+    private MessageDigest getSha256() {
+        try {
             return MessageDigest.getInstance("SHA-256");
-        }
-        catch (NoSuchAlgorithmException e)
-        {
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("HUH");
         }
     }

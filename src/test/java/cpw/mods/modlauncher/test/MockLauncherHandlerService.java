@@ -1,49 +1,26 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.api.ILaunchHandlerService;
+import cpw.mods.modlauncher.api.*;
 
-import java.io.File;
-import java.util.concurrent.Callable;
+import java.io.*;
+import java.util.concurrent.*;
 
 /**
  * Mock launch handler for testing
  */
-public class MockLauncherHandlerService implements ILaunchHandlerService
-{
+public class MockLauncherHandlerService implements ILaunchHandlerService {
     @Override
-    public String name()
-    {
+    public String name() {
         return "mockLaunch";
     }
 
     @Override
-    public File[] identifyTransformationTargets()
-    {
+    public File[] identifyTransformationTargets() {
         return new File[0];
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader)
-    {
+    public Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader) {
         return () -> null;
     }
 }

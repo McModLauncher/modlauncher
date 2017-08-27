@@ -1,58 +1,24 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.ClassCache;
-import cpw.mods.modlauncher.ClassTransformer;
-import cpw.mods.modlauncher.TransformTargetLabel;
-import cpw.mods.modlauncher.TransformStore;
-import cpw.mods.modlauncher.TransformingClassLoader;
-import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.ITransformerVotingContext;
-import cpw.mods.modlauncher.api.TransformerVoteResult;
-import org.junit.jupiter.api.Test;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.powermock.reflect.Whitebox;
+import cpw.mods.modlauncher.*;
+import cpw.mods.modlauncher.api.*;
+import org.junit.jupiter.api.*;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
+import org.powermock.reflect.*;
 
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
+import javax.annotation.*;
+import java.io.*;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test core transformer functionality
  */
-class ClassTransformerTests
-{
+class ClassTransformerTests {
     @Test
-    void testClassTransformer() throws Exception
-    {
+    void testClassTransformer() throws Exception {
         final TransformStore transformStore = new TransformStore();
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore);
 
@@ -80,7 +46,7 @@ class ClassTransformerTests
         ClassWriter cw = new ClassWriter(Opcodes.ASM5);
         dummyClass.accept(cw);
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.DummyClass", "dummyfield"), fieldNodeTransformer1());
-        byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[] {byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
+        byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result1),
                 () -> assertNotNull(new TransformingClassLoader(transformStore, dummy, new File(".")).getClass("test.DummyClass", result1)),
@@ -94,42 +60,34 @@ class ClassTransformerTests
         );
     }
 
-    private ITransformer<FieldNode> fieldNodeTransformer1()
-    {
-        return new ITransformer<FieldNode>()
-        {
+    private ITransformer<FieldNode> fieldNodeTransformer1() {
+        return new ITransformer<FieldNode>() {
             @Nonnull
             @Override
-            public FieldNode transform(FieldNode input, ITransformerVotingContext context)
-            {
+            public FieldNode transform(FieldNode input, ITransformerVotingContext context) {
                 input.value = "CHEESE";
                 return input;
             }
 
             @Nonnull
             @Override
-            public TransformerVoteResult castVote(ITransformerVotingContext context)
-            {
+            public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
             @Nonnull
             @Override
-            public Set<Target> targets()
-            {
+            public Set<Target> targets() {
                 return Collections.emptySet();
             }
         };
     }
 
-    private ITransformer<ClassNode> classTransformer()
-    {
-        return new ITransformer<ClassNode>()
-        {
+    private ITransformer<ClassNode> classTransformer() {
+        return new ITransformer<ClassNode>() {
             @Nonnull
             @Override
-            public ClassNode transform(ClassNode input, ITransformerVotingContext context)
-            {
+            public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
                 FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC, "testfield", "Ljava/lang/String;", null, null);
                 input.fields.add(fn);
                 return input;
@@ -137,15 +95,13 @@ class ClassTransformerTests
 
             @Nonnull
             @Override
-            public TransformerVoteResult castVote(ITransformerVotingContext context)
-            {
+            public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
             @Nonnull
             @Override
-            public Set<Target> targets()
-            {
+            public Set<Target> targets() {
                 return Collections.emptySet();
             }
         };

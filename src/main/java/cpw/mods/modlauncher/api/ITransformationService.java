@@ -1,39 +1,17 @@
-/*
- * Modlauncher - utility to launch Minecraft-like game environments with runtime transformation
- * Copyright ©2016-2017 cpw and others
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
 package cpw.mods.modlauncher.api;
 
-import joptsimple.OptionSpec;
-import joptsimple.OptionSpecBuilder;
+import joptsimple.*;
 
-import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiFunction;
+import javax.annotation.*;
+import java.util.*;
+import java.util.function.*;
 
 /**
  * Users who wish to provide a mod service which plugs into this API
  * should implement this interface, and provide a {@link java.util.ServiceLoader}
  * configuration file pointing at their implementation.
  */
-public interface ITransformationService
-{
+public interface ITransformationService {
     /**
      * The name of this mod service. It will be used throughout the system. It should be lower case,
      * the first character should be alphanumeric and it should only consist of standard alphanumeric
@@ -50,21 +28,10 @@ public interface ITransformationService
      *
      * @param argumentBuilder a function mapping name, description to a set of JOptSimple properties for that argument
      */
-    default void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder)
-    {
+    default void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder) {
     }
 
-    default void argumentValues(OptionResult option)
-    {
-    }
-
-    interface OptionResult
-    {
-        @Nonnull
-        <V> V value(OptionSpec<V> options);
-
-        @Nonnull
-        <V> List<V> values(OptionSpec<V> options);
+    default void argumentValues(OptionResult option) {
     }
 
     /**
@@ -80,7 +47,7 @@ public interface ITransformationService
      * Use to identify and immediately indicate incompatibilities with other services, and environment
      * configuration. This is to try and immediately abort a guaranteed bad environment.
      *
-     * @param env environment - query state from here
+     * @param env           environment - query state from here
      * @param otherServices other services loaded with the system
      * @throws IncompatibleEnvironmentException if there is an incompatibility detected. Identify specifics in
      *                                          the exception message
@@ -102,5 +69,13 @@ public interface ITransformationService
      */
     @Nonnull
     String getConfigurationString();
+
+    interface OptionResult {
+        @Nonnull
+        <V> V value(OptionSpec<V> options);
+
+        @Nonnull
+        <V> List<V> values(OptionSpec<V> options);
+    }
 
 }
