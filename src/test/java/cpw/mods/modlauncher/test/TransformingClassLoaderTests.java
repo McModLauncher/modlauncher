@@ -33,7 +33,9 @@ class TransformingClassLoaderTests {
         TransformStore transformStore = new TransformStore();
         TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(transformStore);
-        TransformingClassLoader tcl = new TransformingClassLoader(transformStore, new File("."));
+        ClassCache dummy = Whitebox.invokeConstructor(ClassCache.class, File.createTempFile("classCacheTemp", null));
+        dummy.invalidate();
+        TransformingClassLoader tcl = new TransformingClassLoader(transformStore, dummy, new File("."));
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");

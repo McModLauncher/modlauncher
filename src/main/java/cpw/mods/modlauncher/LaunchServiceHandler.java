@@ -22,14 +22,14 @@ class LaunchServiceHandler {
                 .collect(Collectors.toMap(ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new));
     }
 
-    private void launch(String target, String[] arguments, ClassLoader classLoader) {
-        launchHandlerLookup.get(target).launch(arguments, classLoader);
+    private void launch(String target, String[] arguments, ClassLoader classLoader, ClassCache classCache) {
+        launchHandlerLookup.get(target).launch(arguments, classLoader, classCache);
     }
 
-    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader) {
+    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader, ClassCache classCache) {
         String launchTarget = argumentHandler.getLaunchTarget();
         String[] args = argumentHandler.buildArgumentList();
-        launch(launchTarget, args, classLoader);
+        launch(launchTarget, args, classLoader, classCache);
     }
 
     public File[] identifyTransformationTargets(ArgumentHandler argumentHandler) {

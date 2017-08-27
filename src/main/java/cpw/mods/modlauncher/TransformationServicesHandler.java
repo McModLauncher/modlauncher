@@ -11,9 +11,9 @@ import java.util.stream.*;
 import static cpw.mods.modlauncher.Logging.*;
 import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.*;
 
-class TransformationServicesHandler {
+public class TransformationServicesHandler {
     private final ServiceLoader<ITransformationService> transformationServices;
-    private final Map<String, TransformationServiceDecorator> serviceLookup;
+    final Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
 
     TransformationServicesHandler(TransformStore transformStore) {
@@ -26,18 +26,20 @@ class TransformationServicesHandler {
         this.transformStore = transformStore;
     }
 
-    void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
+    void loadTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
         loadTransformationServices(environment);
         validateTransformationServices();
 
         processArguments(argumentHandler, environment);
+    }
 
+    void initializeTransformationServices(Environment environment) {
         initialiseTransformationServices(environment);
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(File... specialJars) {
-        return new TransformingClassLoader(transformStore, specialJars);
+    TransformingClassLoader buildTransformingClassLoader(ClassCache classCache, File... specialJars) {
+        return new TransformingClassLoader(transformStore, classCache, specialJars);
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {

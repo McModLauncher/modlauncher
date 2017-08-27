@@ -18,6 +18,10 @@ public class MockTransformerService implements ITransformationService {
     private ArgumentAcceptingOptionSpec<Integer> modlists;
     private List<String> modList;
     private String state;
+    /**
+     * For ClassCache test
+     */
+    String configString = "V1.0";
 
     @Nonnull
     @Override
@@ -51,7 +55,14 @@ public class MockTransformerService implements ITransformationService {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
-    private static class ClassNodeTransformer implements ITransformer<ClassNode> {
+    @Nonnull
+    @Override
+    public String getConfigurationString() {
+        return configString;
+    }
+
+    private static class ClassNodeTransformer implements ITransformer<ClassNode>
+    {
         private final List<String> classNames;
 
         private ClassNodeTransformer(List<String> classNames) {

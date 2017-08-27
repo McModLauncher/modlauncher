@@ -22,12 +22,12 @@ public class TransformingClassLoader extends ClassLoader {
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
 
-    public TransformingClassLoader(TransformStore transformStore, File... specialJars) {
+    public TransformingClassLoader(TransformStore transformStore, ClassCache classCache, File... specialJars) {
         super();
         this.classTransformer = new ClassTransformer(transformStore);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toURI().toURL()))
                 .collect(Collectors.toList()).toArray(new URL[specialJars.length]);
-        this.delegatedClassLoader = new DelegatedClassLoader();
+        this.delegatedClassLoader = new DelegatedClassLoader(classCache);
     }
 
     @Override
@@ -73,8 +73,15 @@ public class TransformingClassLoader extends ClassLoader {
     }
 
     private class DelegatedClassLoader extends URLClassLoader {
-        DelegatedClassLoader() {
+        private final ClassCache cache;
+
+        DelegatedClassLoader(ClassCache cache) {
             super(specialJars);
+            this.cache = cache;
+            if (cache.validCache)
+            {
+                addURL(cache.classCacheURL);
+            }
         }
 
         @Override
@@ -90,10 +97,25 @@ public class TransformingClassLoader extends ClassLoader {
                 return existingClass;
             }
             final String path = name.replace('.', '/').concat(".class");
-
-            final URL classResource = findResource(path);
             byte[] classBytes;
-            if (classResource != null) {
+            URL classResource;
+            boolean needsTransform = classTransformer.shouldTransform(name);
+            if (cache.validCache && needsTransform) { //try using the class cache
+                final String cachedPath = path.concat(".cache");
+                classResource = findResource(cachedPath);
+                if (classResource == null) { //fallback to loading and transforming
+                    classResource = findResource(path);
+                }
+                else { //transformed version available in cache
+                    launcherLog.debug(CLASSLOADING, "Found cached class {}, skipping transformation", name);
+                    needsTransform = false;
+                }
+            }
+            else {
+                classResource = findResource(path);
+            }
+
+            if (classResource != null) { //file not in cache and not present in jars
                 try (AutoURLConnection urlConnection = new AutoURLConnection(classResource)) {
                     final int length = urlConnection.getContentLength();
                     final InputStream is = urlConnection.getInputStream();
@@ -109,9 +131,16 @@ public class TransformingClassLoader extends ClassLoader {
             } else {
                 classBytes = new byte[0];
             }
-            classBytes = classTransformer.transform(classBytes, name);
+
+            if (needsTransform) { //Cached classes can circumvent this
+                classBytes = classTransformer.transform(classBytes, name);
+            }
+
             if (classBytes.length > 0) {
-                launcherLog.debug(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
+                launcherLog.debug(CLASSLOADING,"Loaded transform target {} from {}", name, classResource);
+                if (needsTransform && cache.validCache) { //add for writing the class cache
+                    cache.classCacheToWrite.put(path, classBytes);
+                }
                 return defineClass(name, classBytes, 0, classBytes.length);
             } else {
                 launcherLog.debug(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);

@@ -21,6 +21,10 @@ public class TransformationServiceDecorator {
 
     void onLoad(IEnvironment env, Set<String> otherServices) {
         try {
+            if (service.getConfigurationString().contains("\n")) {
+                launcherLog.error("Configuration String contains newline. This is not allowed");
+                throw new IncompatibleEnvironmentException();
+            }
             launcherLog.debug("Loading service {}", () -> this.service);
             this.service.onLoad(env, otherServices);
             this.isValid = true;
@@ -72,7 +76,7 @@ public class TransformationServiceDecorator {
         launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 
-    ITransformationService getService() {
+    public ITransformationService getService() {
         return service;
     }
 }

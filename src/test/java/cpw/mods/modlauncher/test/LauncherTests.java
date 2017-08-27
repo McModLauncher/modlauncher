@@ -21,7 +21,7 @@ class LauncherTests {
     void testLauncher() throws IllegalAccessException {
         final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
         String testJarPath = testJars.get(0);
-        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
+        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--gameDir", testJarPath,"--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass");
         Launcher instance = Launcher.INSTANCE;
         final ServiceLoader<ITransformationService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "transformationServices");
         final List<ITransformationService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
