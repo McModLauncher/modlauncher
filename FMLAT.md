@@ -28,7 +28,7 @@ An access transformation pre-processor is *required* to allow compilation agains
 ForgeGradle has such a tool. Other tools are available to do the same thing.
 
 ### Directive lines
-####Class transformer
+#### Class transformer
 ````
 <access modifier> <classname>
 ````
@@ -37,7 +37,7 @@ Example. Transforms the class ````net.minecraft.world.gen.structure.StructureVil
 public net.minecraft.world.gen.structure.StructureVillagePieces$Village
 ````
 
-####Method transformer
+#### Method transformer
 ````
 <access modifier> <classname> <methodname><methodsignature>
 ````
@@ -50,7 +50,7 @@ Example. Transforms all methods in class ````net.minecraft.world.biome.Biome````
 ````
 public net.minecraft.world.biome.Biome *()
 ````
-####Field transformer
+#### Field transformer
 ````
 <access modifier> <classname> <fieldname>
 ````
