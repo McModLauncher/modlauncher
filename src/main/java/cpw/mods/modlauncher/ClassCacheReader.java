@@ -13,54 +13,43 @@ import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipException;
 
-public class ClassCacheReader implements Runnable
-{
+public class ClassCacheReader implements Runnable {
+    final CountDownLatch latch = new CountDownLatch(1);
     private final TransformationServicesHandler servicesHandler;
     private final ClassCache classCache;
-    final CountDownLatch latch = new CountDownLatch(1);
 
-    ClassCacheReader(TransformationServicesHandler servicesHandler, ClassCache classCache)
-    {
+    ClassCacheReader(TransformationServicesHandler servicesHandler, ClassCache classCache) {
         this.servicesHandler = servicesHandler;
         this.classCache = classCache;
     }
 
     @Override
-    public void run()
-    {
-        if (!prepareCache())
-            classCache.deleteCacheFiles();
+    public void run() {
+        if (!prepareCache()) classCache.deleteCacheFiles();
         latch.countDown(); //Notify that we`re done
     }
 
     /**
      * @return true if no invalidation should occur, false if the cache should be invalidated
      */
-    private boolean prepareCache()
-    {
-        if (!Files.exists(classCache.cacheConfigFile))
-        {
+    private boolean prepareCache() {
+        if (!Files.exists(classCache.cacheConfigFile)) {
             Logging.launcherLog.info("Creating new ClassCache as cache config file is missing!");
             return false;
         }
         BufferedReader reader = null;
-        try
-        {
+        try {
             reader = Files.newBufferedReader(classCache.cacheConfigFile);
             String serviceName = null;
             String read;
             int detectedCount = 0;
             reader.readLine(); //info line, ignore
             int saveVersion = Integer.parseInt(reader.readLine());
-            if (saveVersion != ClassCache.VERSION)
-                throw new RuntimeException("Invalid ClassCache version!");
+            if (saveVersion != ClassCache.VERSION) throw new RuntimeException("Invalid ClassCache version!");
             //validate that the environment did not change
-            while ((read = reader.readLine()) != null)
-            {
-                if (serviceName == null)
-                    serviceName = read;
-                else
-                {
+            while ((read = reader.readLine()) != null) {
+                if (serviceName == null) serviceName = read;
+                else {
                     detectedCount++;
                     TransformationServiceDecorator lookup = servicesHandler.serviceLookup.get(serviceName);
                     String config = lookup.getService().getConfigurationString();
@@ -75,10 +64,8 @@ public class ClassCacheReader implements Runnable
             //valid cache, now merge the temp into the other jar
             if (!Files.exists(classCache.classCacheFile)) //just copy the tmp cache
             {
-                if (Files.exists(classCache.tempClassCacheFile))
-                {
-                    if (!Files.exists(classCache.classCacheFile))
-                        Files.createFile(classCache.classCacheFile);
+                if (Files.exists(classCache.tempClassCacheFile)) {
+                    if (!Files.exists(classCache.classCacheFile)) Files.createFile(classCache.classCacheFile);
                     Files.copy(classCache.tempClassCacheFile, classCache.classCacheFile, StandardCopyOption.REPLACE_EXISTING);
                 }
                 return true;
@@ -88,11 +75,9 @@ public class ClassCacheReader implements Runnable
             JarInputStream tmpReader = null;
             JarInputStream jarReader = null;
             JarOutputStream jarWriter = null;
-            try
-            {
+            try {
                 Files.deleteIfExists(classCache.toCopyClassCacheFile);
-                if (Files.exists(classCache.toCopyClassCacheFile))
-                    Files.createFile(classCache.toCopyClassCacheFile);
+                if (Files.exists(classCache.toCopyClassCacheFile)) Files.createFile(classCache.toCopyClassCacheFile);
                 tmpReader = new JarInputStream(Files.newInputStream(classCache.tempClassCacheFile));
                 jarReader = new JarInputStream(Files.newInputStream(classCache.classCacheFile));
                 jarWriter = new JarOutputStream(Files.newOutputStream(classCache.toCopyClassCacheFile));
@@ -102,59 +87,42 @@ public class ClassCacheReader implements Runnable
                     ClassCache.closeQuietly(tmpReader, jarReader, jarWriter); //need to close in order to move
                     Files.delete(classCache.classCacheFile);
                     Files.move(classCache.toCopyClassCacheFile, classCache.classCacheFile);
-                }
-                else
-                {
+                } else {
                     ClassCache.closeQuietly(tmpReader, jarReader, jarWriter); //need to close in order to delete
                     Files.deleteIfExists(classCache.toCopyClassCacheFile);
                 }
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 Logging.launcherLog.error("Error while merging temp file with the cache!", e);
                 return false;
-            }
-            finally
-            {
+            } finally {
                 ClassCache.closeQuietly(tmpReader, jarReader, jarWriter);
                 Files.deleteIfExists(classCache.toCopyClassCacheFile);
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             Logging.launcherLog.info("Class cache invalid - rebuilding", e);
             ClassCache.closeQuietly(reader);
             return false;
-        }
-        finally
-        {
+        } finally {
             ClassCache.closeQuietly(reader);
         }
         return true;
     }
 
-    private boolean copyJarFile(JarInputStream inputStream, JarOutputStream outputStream, Path from) throws IOException
-    {
+    private boolean copyJarFile(JarInputStream inputStream, JarOutputStream outputStream, Path from) throws IOException {
         JarEntry entry;
         byte[] buffer = new byte[2 * 1024]; //2 MB buffer
         JarFile tempJarFile = null;
-        try
-        {
-            try
-            {
+        try {
+            try {
                 tempJarFile = new JarFile(from.toFile());
-            }
-            catch (ZipException e)
-            {
+            } catch (ZipException e) {
                 //ignore, this means temp is empty
                 return false;
             }
-            while ((entry = inputStream.getNextJarEntry()) != null)
-            {
+            while ((entry = inputStream.getNextJarEntry()) != null) {
                 outputStream.putNextEntry(entry);
                 InputStream stream = null;
-                try
-                {
+                try {
                     stream = tempJarFile.getInputStream(entry);
                     int bytesRead;
                     while ((bytesRead = stream.read(buffer)) != -1) {
@@ -163,15 +131,11 @@ public class ClassCacheReader implements Runnable
                     stream.close();
                     outputStream.flush();
                     outputStream.closeEntry();
-                }
-                finally
-                {
+                } finally {
                     ClassCache.closeQuietly(stream);
                 }
             }
-        }
-        finally
-        {
+        } finally {
             ClassCache.closeQuietly(tempJarFile);
         }
         return true;

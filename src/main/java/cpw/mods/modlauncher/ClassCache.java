@@ -28,20 +28,16 @@ public class ClassCache {
     Map<String, byte[]> classCacheToWrite = new ConcurrentHashMap<>();
     List<String> blacklist = new ArrayList<>();
 
-    private ClassCache(File baseDir)
-    {
+    private ClassCache(File baseDir) {
         //noinspection ResultOfMethodCallIgnored
         baseDir.mkdirs();
         classCacheFile = Paths.get(baseDir + "/cache.jar");
         cacheConfigFile = Paths.get(baseDir + "/configuration.cfg");
         tempClassCacheFile = Paths.get(baseDir + "/cache.jar.tmp");
         toCopyClassCacheFile = Paths.get(baseDir + "/merge.tmp");
-        try
-        {
+        try {
             classCacheURL = classCacheFile.toUri().toURL();
-        }
-        catch (MalformedURLException e)
-        {
+        } catch (MalformedURLException e) {
             throw new RuntimeException("Could not build class cache URL", e);
         }
     }
@@ -51,8 +47,7 @@ public class ClassCache {
      * ModLauncher will invalidate the cache automatically when your config string changes.
      */
     @SuppressWarnings("WeakerAccess")
-    public void invalidate()
-    {
+    public void invalidate() {
         if (!validCache)
             return;
         Logging.launcherLog.info("The class cache has been invalidated. It will not be used!");
@@ -70,17 +65,14 @@ public class ClassCache {
             blacklist.add(className);
     }
 
-    void deleteCacheFiles()
-    {
-        try
-        {
+    void deleteCacheFiles() {
+        try {
             Files.deleteIfExists(classCacheFile);
             Files.deleteIfExists(cacheConfigFile);
             Files.deleteIfExists(tempClassCacheFile);
             Files.deleteIfExists(toCopyClassCacheFile);
         }
-        catch (IOException ioe)
-        {
+        catch (IOException ioe) {
             Logging.launcherLog.info("Could not delete invalid class cache. Bad things may happen at the next start! ", ioe);
             validCache = false;
         }
@@ -89,8 +81,7 @@ public class ClassCache {
     static ClassCache initReaderThread(TransformationServicesHandler servicesHandler, Environment environment) {
         Optional<File> mcDir = environment.getProperty(Environment.Keys.GAMEDIR.get());
         Optional<String> ver = environment.getProperty(Environment.Keys.VERSION.get());
-        if (!mcDir.isPresent() || !ver.isPresent())
-        {
+        if (!mcDir.isPresent() || !ver.isPresent()) {
             Logging.launcherLog.warn("Cannot use class cache as the game dir / version is absent!");
             throw new RuntimeException(); //TODO handle this better
         }
@@ -107,15 +98,10 @@ public class ClassCache {
     void initWriterThread(TransformationServicesHandler servicesHandler)
     {
         if (!validCache) //Do not write if the cache has been invalidated.
-        {
             return;
-        }
-        try
-        {
+        try {
             cacheReader.latch.await();
-        }
-        catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             //Shrug
         }
         classCacheFileWriter = new ClassCacheFileWriter(servicesHandler, this);
@@ -127,40 +113,28 @@ public class ClassCache {
         cacheReader = null;
     }
 
-    private class ClassCacheShutdownHook implements Runnable
-    {
+    private class ClassCacheShutdownHook implements Runnable {
 
         @Override
-        public void run()
-        {
+        public void run() {
             classCacheFileWriter.writeLast(writerThread);
-            if (writerThread.isAlive())
-            {
-                try
-                {
+            if (writerThread.isAlive()) {
+                try {
                     //wait 5 seconds for the write to finish. If it didn't finish by then, terminate the write
                     classCacheFileWriter.latch.await(5, TimeUnit.SECONDS);
-                }
-                catch (InterruptedException e)
-                {
+                } catch (InterruptedException e) {
                     //Shrug
                 }
             }
         }
     }
 
-    static void closeQuietly(Closeable... closeables)
-    {
-        for (Closeable closeable : closeables)
-        {
-            if (closeable != null)
-            {
-                try
-                {
+    static void closeQuietly(Closeable... closeables) {
+        for (Closeable closeable : closeables) {
+            if (closeable != null) {
+                try {
                     closeable.close();
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     //NO OP
                 }
             }

@@ -42,13 +42,11 @@ public enum Launcher {
         return blackboard;
     }
 
-    public ClassCache classCache() //public to allow invalidation
-    {
+    public ClassCache classCache() {
         return classCache;
     }
 
-    private void run(String... args)
-    {
+    private void run(String... args) {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.loadTransformationServices(this.argumentHandler, this.environment);
         this.classCache = ClassCache.initReaderThread(this.transformationServicesHandler, this.environment);

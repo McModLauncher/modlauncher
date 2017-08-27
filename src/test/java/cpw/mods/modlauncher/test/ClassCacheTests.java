@@ -19,8 +19,7 @@ public class ClassCacheTests {
 
     @SuppressWarnings("unchecked")
     @Test
-    void testClassCache() throws Exception
-    {
+    void testClassCache() throws Exception {
         final TransformStore store = new TransformStore();
         final TransformationServicesHandler transformationServiceHandler = Whitebox.invokeConstructor(TransformationServicesHandler.class, store);
         final Path baseDir = Files.createTempDirectory("classCache");
@@ -36,7 +35,7 @@ public class ClassCacheTests {
                 () -> Assertions.assertTrue(success, "The config file has been written successfully"),
                 () -> Assertions.assertTrue(validCache, "The class cache is valid and ready for use"),
                 () -> Assertions.assertTrue(shouldRunWriter, "The class cache writer is still ready to write"));
-        TransformationServiceDecorator decorator = (TransformationServiceDecorator)((Map) Whitebox.getField(TransformationServicesHandler.class, "serviceLookup").get(transformationServiceHandler)).get("test");
+        TransformationServiceDecorator decorator = (TransformationServiceDecorator) ((Map) Whitebox.getField(TransformationServicesHandler.class, "serviceLookup").get(transformationServiceHandler)).get("test");
         ((MockTransformerService) decorator.getService()).configString = "V2.0";
         classCacheReader.run();
         final boolean stillValidCache = Whitebox.getField(ClassCache.class, "validCache").getBoolean(classCache);

@@ -26,8 +26,7 @@ class LaunchServiceHandler {
         launchHandlerLookup.get(target).launch(arguments, classLoader, classCache);
     }
 
-    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader, ClassCache classCache)
-    {
+    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader, ClassCache classCache) {
         String launchTarget = argumentHandler.getLaunchTarget();
         String[] args = argumentHandler.buildArgumentList();
         launch(launchTarget, args, classLoader, classCache);

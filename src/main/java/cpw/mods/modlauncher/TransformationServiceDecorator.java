@@ -20,10 +20,8 @@ public class TransformationServiceDecorator {
     }
 
     void onLoad(IEnvironment env, Set<String> otherServices) {
-        try
-        {
-            if (service.getConfigurationString().contains("\n"))
-            {
+        try {
+            if (service.getConfigurationString().contains("\n")) {
                 launcherLog.error("Configuration String contains newline. This is not allowed");
                 throw new IncompatibleEnvironmentException();
             }

@@ -100,29 +100,23 @@ public class TransformingClassLoader extends ClassLoader {
             byte[] classBytes;
             URL classResource;
             boolean needsTransform = classTransformer.shouldTransform(name);
-            if (cache.validCache && needsTransform) //try using the class cache
-            {
+            if (cache.validCache && needsTransform) { //try using the class cache
                 final String cachedPath = path.concat(".cache");
                 classResource = findResource(cachedPath);
-                if (classResource == null) //fallback to loading and transforming
-                {
+                if (classResource == null) { //fallback to loading and transforming
                     classResource = findResource(path);
                 }
-                else //transformed version available in cache
-                {
+                else { //transformed version available in cache
                     launcherLog.debug(CLASSLOADING, "Found cached class {}, skipping transformation", name);
                     needsTransform = false;
                 }
             }
-            else
-            {
+            else {
                 classResource = findResource(path);
             }
 
-            if (classResource != null) //file not in cache and not present in jars
-            {
-                try (AutoURLConnection urlConnection = new AutoURLConnection(classResource))
-                {
+            if (classResource != null) { //file not in cache and not present in jars
+                try (AutoURLConnection urlConnection = new AutoURLConnection(classResource)) {
                     final int length = urlConnection.getContentLength();
                     final InputStream is = urlConnection.getInputStream();
                     classBytes = new byte[length];
@@ -138,15 +132,13 @@ public class TransformingClassLoader extends ClassLoader {
                 classBytes = new byte[0];
             }
 
-            if (needsTransform) //Cached classes can circumvent this
-            {
+            if (needsTransform) { //Cached classes can circumvent this
                 classBytes = classTransformer.transform(classBytes, name);
             }
 
             if (classBytes.length > 0) {
                 launcherLog.debug(CLASSLOADING,"Loaded transform target {} from {}", name, classResource);
-                if (needsTransform && cache.validCache) //add for writing the class cache
-                {
+                if (needsTransform && cache.validCache) { //add for writing the class cache
                     cache.classCacheToWrite.put(path, classBytes);
                 }
                 return defineClass(name, classBytes, 0, classBytes.length);
