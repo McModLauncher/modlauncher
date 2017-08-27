@@ -118,7 +118,7 @@ public class TransformationServiceDecorator
         launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
     }
 
-    ITransformationService getService()
+    public ITransformationService getService()
     {
         return service;
     }

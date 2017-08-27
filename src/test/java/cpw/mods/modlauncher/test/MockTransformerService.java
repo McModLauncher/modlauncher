@@ -47,6 +47,10 @@ public class MockTransformerService implements ITransformationService
     private ArgumentAcceptingOptionSpec<Integer> modlists;
     private List<String> modList;
     private String state;
+    /**
+     * For ClassCache test
+     */
+    String configString = "V1.0";
 
     @Nonnull
     @Override
@@ -89,7 +93,7 @@ public class MockTransformerService implements ITransformationService
     @Nonnull
     @Override
     public String getConfigurationString() {
-        return "V1.0";
+        return configString;
     }
 
     private static class ClassNodeTransformer implements ITransformer<ClassNode>

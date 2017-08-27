@@ -29,13 +29,21 @@ public class ClassCacheFileWriter implements Runnable
 
     @Override
     public void run() {
-        if (!run_impl())
+        if (!setupCache())
+        {
             classCache.invalidate();
+        }
+        else
+        {
+            if (!runWriterLoop())
+            {
+                classCache.invalidate();
+            }
+        }
         latch.countDown();
     }
 
-    private boolean run_impl()
-    {
+    private boolean setupCache() {
         //CONFIG
         if (!Files.exists(classCache.cacheConfigFile))
         {
@@ -67,6 +75,11 @@ public class ClassCacheFileWriter implements Runnable
                 ClassCache.closeQuietly(writer);
             }
         }
+        return true;
+    }
+
+    private boolean runWriterLoop()
+    {
         JarOutputStream jos = null;
         try
         {
