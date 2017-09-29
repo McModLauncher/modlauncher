@@ -2,7 +2,7 @@
 Intended as a replacement for LegacyLauncher, using Java 8 and 9 compatible constructs, in theory.
 
 # NOTE
-This is strictly for initial development and review of ideas. It will not be this github repo once complete, it will not be these packages once complete. **Please note this well - this is a holding area as I develop out the initial plans, a more permanent home has yet to be identified **
+This is strictly for initial development and review of ideas. It will not be this github repo once complete, it will not be these packages once complete. *Please note this well - this is a holding area as I develop out the initial plans, a more permanent home has yet to be identified*
 
 
 # TODO
