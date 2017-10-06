@@ -1,4 +1,4 @@
-package cpw.mods.modlauncher.api;
+package cpw.mods.modlauncher.serviceapi;
 
 import java.io.*;
 import java.util.concurrent.*;

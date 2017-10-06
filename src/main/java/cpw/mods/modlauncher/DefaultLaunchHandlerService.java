@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.serviceapi.*;
 
 import java.io.*;
 import java.lang.reflect.*;
