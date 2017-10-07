@@ -61,7 +61,7 @@ public class ClassTransformer {
         List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
-        ClassWriter cw = new ClassWriter(Opcodes.ASM5);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | Opcodes.ASM5);
         clazz.accept(cw);
 
         return cw.toByteArray();
