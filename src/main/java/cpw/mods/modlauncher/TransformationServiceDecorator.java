@@ -26,7 +26,7 @@ public class TransformationServiceDecorator {
             this.isValid = true;
             launcherLog.debug("Loaded service {}", () -> this.service);
         } catch (IncompatibleEnvironmentException e) {
-            launcherLog.error("Service failed to load {}", e);
+            launcherLog.error("Service failed to load {}", this.service, e);
             this.isValid = false;
         }
     }
