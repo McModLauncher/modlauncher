@@ -23,4 +23,8 @@ public class ServiceLoaderStreamUtils {
     static <T> List<T> toList(ServiceLoader<T> services) {
         return StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
     }
+
+    static <K,T> Map<K,T> toMap(ServiceLoader<T> services, Function<T, K> keyFunction) {
+        return StreamSupport.stream(services.spliterator(), false).collect(Collectors.toMap(keyFunction, Function.identity()));
+    }
 }

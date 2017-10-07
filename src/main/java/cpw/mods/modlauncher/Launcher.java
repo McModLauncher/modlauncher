@@ -1,8 +1,10 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.serviceapi.*;
 
 import java.io.*;
+import java.util.*;
 
 import static cpw.mods.modlauncher.Logging.*;
 
@@ -19,17 +21,19 @@ public enum Launcher {
     private final NameMappingServiceHandler nameMappingServiceHandler;
     private final ArgumentHandler argumentHandler;
     private final LaunchServiceHandler launchService;
+    private final LaunchPluginHandler launchPlugins;
     private TransformingClassLoader classLoader;
 
     Launcher() {
         launcherLog.info("ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
-        this.environment = new Environment();
+        this.environment = new Environment(this);
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore);
         this.argumentHandler = new ArgumentHandler();
         this.nameMappingServiceHandler = new NameMappingServiceHandler();
+        this.launchPlugins = new LaunchPluginHandler();
     }
 
     public static void main(String... args) {
@@ -52,5 +56,9 @@ public enum Launcher {
 
     public Environment environment() {
         return this.environment;
+    }
+
+    public Optional<ILaunchPluginService> findLaunchPlugin(final String name) {
+        return launchPlugins.get(name);
     }
 }

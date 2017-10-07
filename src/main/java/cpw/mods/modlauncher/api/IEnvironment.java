@@ -1,5 +1,7 @@
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.modlauncher.serviceapi.*;
+
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
@@ -9,6 +11,8 @@ import java.util.function.*;
  */
 public interface IEnvironment {
     <T> Optional<T> getProperty(TypesafeMap.Key<T> key);
+
+    Optional<ILaunchPluginService> findLaunchPlugin(String name);
 
     final class Keys {
         public static final Supplier<TypesafeMap.Key<String>> VERSION = new TypesafeMap.KeyBuilder<>("version", String.class, IEnvironment.class);
