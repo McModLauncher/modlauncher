@@ -71,6 +71,11 @@ task testsJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
+    from sourceSets.api.allSource
+}
+
+jar {
+    from sourceSets.api.output
 }
 
 tasks.withType(JavaCompile) {
