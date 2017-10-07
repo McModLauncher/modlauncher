@@ -21,12 +21,12 @@ public class TransformationServiceDecorator {
 
     void onLoad(IEnvironment env, Set<String> otherServices) {
         try {
-            launcherLog.debug("Loading service {}", () -> this.service);
+            launcherLog.debug("Loading service {}", this.service::name);
             this.service.onLoad(env, otherServices);
             this.isValid = true;
-            launcherLog.debug("Loaded service {}", () -> this.service);
+            launcherLog.debug("Loaded service {}", this.service::name);
         } catch (IncompatibleEnvironmentException e) {
-            launcherLog.error("Service failed to load {}", this.service, e);
+            launcherLog.error("Service failed to load {}", this.service.name(), e);
             this.isValid = false;
         }
     }
@@ -36,13 +36,13 @@ public class TransformationServiceDecorator {
     }
 
     void onInitialize(IEnvironment environment) {
-        launcherLog.debug("Initializing transformation service {}", () -> this.service);
+        launcherLog.debug("Initializing transformation service {}", this.service::name);
         this.service.initialize(environment);
-        launcherLog.debug("Initialized transformation service {}", () -> this.service);
+        launcherLog.debug("Initialized transformation service {}", this.service::name);
     }
 
     public void gatherTransformers(TransformStore transformStore) {
-        launcherLog.debug("Initializing transformers for transformation service {}", () -> this.service);
+        launcherLog.debug("Initializing transformers for transformation service {}", this.service::name);
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
@@ -69,7 +69,7 @@ public class TransformationServiceDecorator {
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
             }
         }
-        launcherLog.debug("Initialized transformers for transformation service {}", () -> this.service);
+        launcherLog.debug("Initialized transformers for transformation service {}", this.service::name);
     }
 
     ITransformationService getService() {

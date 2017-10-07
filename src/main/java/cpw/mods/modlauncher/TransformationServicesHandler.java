@@ -18,7 +18,9 @@ class TransformationServicesHandler {
 
     TransformationServicesHandler(TransformStore transformStore) {
         transformationServices = ServiceLoader.load(ITransformationService.class);
-        launcherLog.info("Found services : {}", () -> ServiceLoaderStreamUtils.toList(transformationServices));
+        launcherLog.info("Found transformer services : [{}]", () ->
+                ServiceLoaderStreamUtils.toList(transformationServices).stream().
+                        map(ITransformationService::name).collect(Collectors.joining()));
 
         serviceLookup = StreamSupport.stream(transformationServices.spliterator(), false)
                 .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
