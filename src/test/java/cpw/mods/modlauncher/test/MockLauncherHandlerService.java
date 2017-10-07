@@ -1,6 +1,6 @@
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.serviceapi.*;
+import cpw.mods.modlauncher.api.*;
 
 import java.io.*;
 import java.util.concurrent.*;
