@@ -5,7 +5,6 @@ import org.junit.jupiter.api.*;
 import org.objectweb.asm.tree.*;
 
 import java.nio.file.*;
-import java.util.*;
 
 public class PluginTests {
 

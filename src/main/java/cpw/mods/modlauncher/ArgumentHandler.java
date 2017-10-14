@@ -2,9 +2,10 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
+import joptsimple.util.*;
 
 import javax.annotation.*;
-import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -12,9 +13,9 @@ public class ArgumentHandler {
     private String[] args;
     private OptionSet optionSet;
     private OptionSpec<String> profileOption;
-    private OptionSpec<File> gameDirOption;
-    private OptionSpec<File> assetsDirOption;
-    private OptionSpec<File> minecraftJarOption;
+    private OptionSpec<Path> gameDirOption;
+    private OptionSpec<Path> assetsDirOption;
+    private OptionSpec<Path> minecraftJarOption;
     private OptionSpec<String> nonOption;
     private OptionSpec<String> launchTarget;
 
@@ -26,9 +27,9 @@ public class ArgumentHandler {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         profileOption = parser.accepts("version", "The version we launched with").withRequiredArg();
-        gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().ofType(File.class);
-        assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().ofType(File.class);
-        minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().ofType(File.class).withValuesSeparatedBy(',');
+        gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
+        assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
+        minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
 
         parserConsumer.accept(parser);
@@ -40,8 +41,8 @@ public class ArgumentHandler {
         resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
-    File[] getSpecialJars() {
-        return this.optionSet.valuesOf(minecraftJarOption).toArray(new File[0]);
+    Path[] getSpecialJars() {
+        return this.optionSet.valuesOf(minecraftJarOption).stream().toArray(Path[]::new);
     }
 
     String getLaunchTarget() {

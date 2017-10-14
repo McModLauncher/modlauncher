@@ -5,7 +5,7 @@ import cpw.mods.modlauncher.serviceapi.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.launcherLog;
+import static cpw.mods.modlauncher.Logging.*;
 
 public class LaunchPluginHandler {
 

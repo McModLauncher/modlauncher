@@ -8,7 +8,7 @@ import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
 import javax.annotation.*;
-import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +26,7 @@ class ClassTransformerTests {
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, new byte[0], "test.MyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result),
-                () -> assertNotNull(new TransformingClassLoader(transformStore, new File(".")).getClass("test.MyClass", result)),
+                () -> assertNotNull(new TransformingClassLoader(transformStore, FileSystems.getDefault().getPath(".")).getClass("test.MyClass", result)),
                 () ->
                 {
                     ClassReader cr = new ClassReader(result);
@@ -47,7 +47,7 @@ class ClassTransformerTests {
         byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result1),
-                () -> assertNotNull(new TransformingClassLoader(transformStore, new File(".")).getClass("test.DummyClass", result1)),
+                () -> assertNotNull(new TransformingClassLoader(transformStore, FileSystems.getDefault().getPath(".")).getClass("test.DummyClass", result1)),
                 () ->
                 {
                     ClassReader cr = new ClassReader(result1);

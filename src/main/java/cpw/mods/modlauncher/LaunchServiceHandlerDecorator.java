@@ -2,7 +2,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 
-import java.io.*;
+import java.nio.file.*;
 
 /**
  * Decorates {@link ILaunchHandlerService} for use by the system
@@ -22,7 +22,7 @@ class LaunchServiceHandlerDecorator {
         }
     }
 
-    public File[] findTransformationTargets() {
+    public Path[] findTransformationTargets() {
         return this.service.identifyTransformationTargets();
     }
 }

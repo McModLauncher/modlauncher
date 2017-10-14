@@ -3,7 +3,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
 
-import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 import static cpw.mods.modlauncher.Logging.*;
@@ -48,7 +48,7 @@ public enum Launcher {
     private void run(String... args) {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
-        File[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
+        Path[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(specialJars);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.classLoader);

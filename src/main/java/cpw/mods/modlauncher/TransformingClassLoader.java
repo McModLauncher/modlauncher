@@ -2,6 +2,7 @@ package cpw.mods.modlauncher;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.*;
 import java.util.stream.*;
 
 import static cpw.mods.modlauncher.Logging.*;
@@ -22,11 +23,10 @@ public class TransformingClassLoader extends ClassLoader {
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
 
-    public TransformingClassLoader(TransformStore transformStore, File... specialJars) {
+    public TransformingClassLoader(TransformStore transformStore, Path... specialJars) {
         super();
         this.classTransformer = new ClassTransformer(transformStore);
-        this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toURI().toURL()))
-                .collect(Collectors.toList()).toArray(new URL[specialJars.length]);
+        this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
     }
 

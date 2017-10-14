@@ -2,7 +2,7 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.api.*;
 
-import java.io.*;
+import java.nio.file.*;
 import java.util.concurrent.*;
 
 /**
@@ -15,8 +15,8 @@ public class MockLauncherHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public File[] identifyTransformationTargets() {
-        return new File[0];
+    public Path[] identifyTransformationTargets() {
+        return new Path[0];
     }
 
     @Override

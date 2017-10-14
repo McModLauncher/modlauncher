@@ -5,6 +5,7 @@ import cpw.mods.modlauncher.api.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.file.*;
 import java.util.concurrent.*;
 
 /**
@@ -17,14 +18,14 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public File[] identifyTransformationTargets() {
+    public Path[] identifyTransformationTargets() {
         final URL resource = getClass().getClassLoader().getResource("net/minecraft/client/main/Main.class");
         try {
             JarURLConnection urlConnection = (JarURLConnection) resource.openConnection();
-            return new File[]{new File(urlConnection.getJarFile().getName())};
+            return new Path[]{FileSystems.getDefault().getPath(urlConnection.getJarFile().getName())};
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();
-            return new File[0];
+            return new Path[0];
         }
     }
 

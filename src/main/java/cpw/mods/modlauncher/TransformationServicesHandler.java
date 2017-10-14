@@ -3,7 +3,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 
-import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -38,7 +38,7 @@ class TransformationServicesHandler {
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(File... specialJars) {
+    TransformingClassLoader buildTransformingClassLoader(Path... specialJars) {
         return new TransformingClassLoader(transformStore, specialJars);
     }
 
