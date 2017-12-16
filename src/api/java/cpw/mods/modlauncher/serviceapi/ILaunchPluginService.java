@@ -1,5 +1,6 @@
 package cpw.mods.modlauncher.serviceapi;
 
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
 import java.nio.file.*;
@@ -36,9 +37,10 @@ public interface ILaunchPluginService {
      * but ordering between plugins is not known.
      *
      * @param classNode the classnode to process
+     * @param classType the name of the class
      * @return the processed classnode
      */
-    ClassNode processClass(ClassNode classNode);
+    ClassNode processClass(ClassNode classNode, final Type classType);
 
     /**
      * Get a plugin specific extension object from the plugin. This can be used to expose proprietary interfaces
@@ -48,4 +50,11 @@ public interface ILaunchPluginService {
      * @return An extension object
      */
     <T> T getExtension();
+
+    /**
+     * If this plugin wants to receive the {@link ClassNode} into {@link #processClass}
+     * @param classType the class to consider
+     * @return if this plugin wants to receive a call on processClass with the classNode
+     */
+    boolean handlesClass(Type classType);
 }

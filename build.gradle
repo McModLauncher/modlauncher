@@ -5,7 +5,7 @@ buildscript {
         // maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     }
     dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
     }
 }
 
@@ -26,7 +26,7 @@ sourceSets {
 }
 
 jacoco {
-    toolVersion = "0.7.6.201602180812"
+    toolVersion = "0.7.9"
 }
 
 group = 'cpw.mods'
@@ -35,19 +35,23 @@ archivesBaseName = 'modlauncher'
 version = '0.1-SNAPSHOT'
 //noinspection GroovyUnusedAssignment
 sourceCompatibility = 1.8
-
+targetCompatibility = 1.8
 
 dependencies {
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '1.3.9'
-    compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
-    apiCompile 'org.ow2.asm:asm-debug-all:5.2'
-    compile 'org.ow2.asm:asm-debug-all:5.2'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.9.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.9.0'
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    apiCompile 'org.ow2.asm:asm:6.0'
+    compile 'org.ow2.asm:asm:6.0'
+    apiCompile 'org.ow2.asm:asm-tree:6.0'
+    compile 'org.ow2.asm:asm-tree:6.0'
+    apiCompile 'org.ow2.asm:asm-commons:6.0'
+    compile 'org.ow2.asm:asm-commons:6.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.10.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.10.0'
     compile sourceSets.api.output
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.0"
-    testCompile(group: 'org.powermock', name: 'powermock-core', version: '1.6.6')
-    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.0.0"
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.2"
+    testCompile(group: 'org.powermock', name: 'powermock-core', version: '1.7.3')
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.0.2"
     testRuntime sourceSets.testJars.runtimeClasspath
 }
 

@@ -12,6 +12,9 @@ import java.util.concurrent.*;
  * Default launch handler service - will launch minecraft
  */
 public class DefaultLaunchHandlerService implements ILaunchHandlerService {
+    public static final String LAUNCH_PROPERTY = "minecraft.client.jar";
+    public static final String LAUNCH_PATH_STRING = System.getProperty(LAUNCH_PROPERTY);
+
     @Override
     public String name() {
         return "minecraft";
@@ -19,14 +22,11 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
 
     @Override
     public Path[] identifyTransformationTargets() {
-        final URL resource = getClass().getClassLoader().getResource("net/minecraft/client/main/Main.class");
-        try {
-            JarURLConnection urlConnection = (JarURLConnection) resource.openConnection();
-            return new Path[]{FileSystems.getDefault().getPath(urlConnection.getJarFile().getName())};
-        } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
-            return new Path[0];
+        if (LAUNCH_PATH_STRING == null) {
+            throw new IllegalStateException("Missing "+ LAUNCH_PROPERTY +" environment property. Update your launcher!");
         }
+
+        return new Path[] { FileSystems.getDefault().getPath(LAUNCH_PATH_STRING) };
     }
 
     @Override

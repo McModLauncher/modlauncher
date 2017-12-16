@@ -20,13 +20,13 @@ class ClassTransformerTests {
     @Test
     void testClassTransformer() throws Exception {
         final TransformStore transformStore = new TransformStore();
-        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore);
-
+        final LaunchPluginHandler lph = new LaunchPluginHandler();
+        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore, lph);
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer());
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, new byte[0], "test.MyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result),
-                () -> assertNotNull(new TransformingClassLoader(transformStore, FileSystems.getDefault().getPath(".")).getClass("test.MyClass", result)),
+                () -> assertNotNull(new TransformingClassLoader(transformStore, lph, FileSystems.getDefault().getPath(".")).getClass("test.MyClass", result)),
                 () ->
                 {
                     ClassReader cr = new ClassReader(result);
@@ -47,7 +47,7 @@ class ClassTransformerTests {
         byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result1),
-                () -> assertNotNull(new TransformingClassLoader(transformStore, FileSystems.getDefault().getPath(".")).getClass("test.DummyClass", result1)),
+                () -> assertNotNull(new TransformingClassLoader(transformStore, lph, FileSystems.getDefault().getPath(".")).getClass("test.DummyClass", result1)),
                 () ->
                 {
                     ClassReader cr = new ClassReader(result1);

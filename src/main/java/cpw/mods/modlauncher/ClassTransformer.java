@@ -14,14 +14,19 @@ import java.util.stream.*;
 public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
     private final TransformStore transformers;
+    private final LaunchPluginHandler pluginHandler;
 
-    ClassTransformer(TransformStore transformers) {
+    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler) {
         this.transformers = transformers;
+        this.pluginHandler = pluginHandler;
     }
 
     byte[] transform(byte[] inputClass, String className) {
         Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
-        if (!transformers.needsTransforming(className)) {
+
+        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc);
+
+        if (!transformers.needsTransforming(className) && plugins.isEmpty()) {
             return inputClass;
         }
 
@@ -40,6 +45,8 @@ public class ClassTransformer {
             digest = getSha256().digest(EMPTY);
             empty = true;
         }
+
+        clazz = pluginHandler.offerClassNodeToPlugins(plugins, clazz, classDesc);
         VotingContext context = new VotingContext(className, empty, digest);
 
         List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());

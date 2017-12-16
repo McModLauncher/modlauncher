@@ -23,9 +23,9 @@ public class TransformingClassLoader extends ClassLoader {
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
 
-    public TransformingClassLoader(TransformStore transformStore, Path... specialJars) {
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... specialJars) {
         super();
-        this.classTransformer = new ClassTransformer(transformStore);
+        this.classTransformer = new ClassTransformer(transformStore, pluginHandler);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
     }

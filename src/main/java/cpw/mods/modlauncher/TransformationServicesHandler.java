@@ -38,8 +38,8 @@ class TransformationServicesHandler {
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(Path... specialJars) {
-        return new TransformingClassLoader(transformStore, specialJars);
+    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, Path... specialJars) {
+        return new TransformingClassLoader(transformStore, pluginHandler, specialJars);
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {
