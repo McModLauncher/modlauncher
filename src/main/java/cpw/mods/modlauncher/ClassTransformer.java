@@ -49,25 +49,22 @@ public class ClassTransformer {
         clazz = pluginHandler.offerClassNodeToPlugins(plugins, clazz, classDesc);
         VotingContext context = new VotingContext(className, empty, digest);
 
-        List<FieldNode> fieldList = new ArrayList<>(clazz.fields != null ? clazz.fields.size() : 1);
+        List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
         // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
-        if (clazz.fields != null) {
-            for (FieldNode field : clazz.fields) {
-                List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
-                fieldList.add(this.performVote(fieldTransformers, field, context));
-            }
+        for (FieldNode field : clazz.fields) {
+            List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
+            fieldList.add(this.performVote(fieldTransformers, field, context));
         }
 
         // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
-        List<MethodNode> methodList = new ArrayList<>(clazz.methods != null ? clazz.methods.size() : 1);
-        if (clazz.methods != null) {
-            for (MethodNode method : clazz.methods) {
-                List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
-                methodList.add(this.performVote(methodTransformers, method, context));
-            }
+        List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
+        for (MethodNode method : clazz.methods) {
+            List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
+            methodList.add(this.performVote(methodTransformers, method, context));
         }
-        clazz.fields = fieldList.size() > 0 ? fieldList : null;
-        clazz.methods = methodList.size() > 0 ? methodList : null;
+
+        clazz.fields = fieldList;
+        clazz.methods = methodList;
         List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
