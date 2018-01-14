@@ -62,8 +62,10 @@ public class TransformationServiceDecorator {
             final TransformTargetLabel.LabelType labelType = TransformTargetLabel.LabelType.getTypeFor(type).orElseThrow(() -> new IllegalArgumentException("Invalid transformer type found"));
             for (ITransformer<?> xform : transformersByType.get(type)) {
                 final Set<ITransformer.Target> targets = xform.targets();
+                if (targets.isEmpty()) continue;
                 final Map<TransformTargetLabel.LabelType, List<TransformTargetLabel>> labelTypeListMap = targets.stream().map(TransformTargetLabel::new).collect(Collectors.groupingBy(TransformTargetLabel::getLabelType));
                 if (labelTypeListMap.keySet().size() > 1 || !labelTypeListMap.keySet().contains(labelType)) {
+                    launcherLog.error("Invalid target {} for transformer {}", labelType, xform);
                     throw new IllegalArgumentException("The transformer contains invalid targets");
                 }
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));

@@ -19,7 +19,7 @@ public class PluginTests {
             }
 
             @Override
-            public void addResource(final Path resource) {
+            public void addResource(final Path resource, final String name) {
 
             }
 
