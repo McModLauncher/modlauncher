@@ -29,8 +29,9 @@ public interface ILaunchPluginService {
      * Transformers may pass additional resources.
      *
      * @param resource The resource to be considered by this plugin.
+     * @param name A name for this resource.
      */
-    void addResource(Path resource);
+    void addResource(Path resource, String name);
 
     /**
      * Each class loaded is offered to the plugin for processing. All plugins will run before any transformers,
