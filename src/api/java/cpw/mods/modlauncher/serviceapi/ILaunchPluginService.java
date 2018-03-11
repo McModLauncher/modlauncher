@@ -24,12 +24,6 @@ public interface ILaunchPluginService {
     String name();
 
     /**
-     * A version number for this plugin.
-     * @return the version number of this plugin
-     */
-    String version();
-
-    /**
      * Adds a resource to this plugin for processing by it. Minecraft will always be the first resource offered.
      *
      * Transformers may pass additional resources.

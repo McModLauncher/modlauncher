@@ -9,7 +9,9 @@ buildscript {
     }
 }
 
-
+plugins {
+    id 'org.ajoberstar.grgit' version '2.1.1'
+}
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'maven'
 apply plugin: 'java'
@@ -78,6 +80,17 @@ task sourcesJar(type: Jar) {
 
 jar {
     from sourceSets.api.output
+    manifest {
+        attributes(["Specification-Title": "modlauncher",
+                    "Specification-Vendor": "Forge",
+                    "Specification-Version": "1", // We are version 1 of the modlauncher specification
+                    "Implementation-Title": project.name,
+                    "Implementation-Version": version,
+                    "Implementation-Vendor" :"Forge",
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                    "Git-Commit": grgit.head().getAbbreviatedId(8),
+                    "Git-Branch": grgit.branch.getCurrent().getName() ], "modlauncher")
+    }
 }
 
 tasks.withType(JavaCompile) {
