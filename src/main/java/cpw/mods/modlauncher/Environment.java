@@ -27,6 +27,11 @@ public final class Environment implements IEnvironment {
         return launcher.findLaunchPlugin(name);
     }
 
+    @Override
+    public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
+        return launcher.findLaunchHandler(name);
+    }
+
     TypesafeMap getAll() {
         return environment;
     }

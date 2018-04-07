@@ -61,4 +61,8 @@ public enum Launcher {
     public Optional<ILaunchPluginService> findLaunchPlugin(final String name) {
         return launchPlugins.get(name);
     }
+
+    public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
+        return launchService.findLaunchHandler(name);
+    }
 }
