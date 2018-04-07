@@ -38,7 +38,7 @@ public class ArgumentHandler {
         env.getAll().computeIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
         env.getAll().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
         env.getAll().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
-        env.getAll().computeIfAbsent(cpw.mods.modlauncher.api.IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
+        env.getAll().computeIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
         resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
