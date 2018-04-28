@@ -17,7 +17,7 @@ class LaunchServiceHandler {
 
     public LaunchServiceHandler() {
         launchHandlerServices = ServiceLoader.load(ILaunchHandlerService.class);
-        launcherLog.info("Found launch services [{}]", () ->
+        launcherLog.info(MODLAUNCHER,"Found launch services [{}]", () ->
                 ServiceLoaderStreamUtils.toList(launchHandlerServices).stream().
                         map(ILaunchHandlerService::name).collect(Collectors.joining(",")));
         launchHandlerLookup = StreamSupport.stream(launchHandlerServices.spliterator(), false)

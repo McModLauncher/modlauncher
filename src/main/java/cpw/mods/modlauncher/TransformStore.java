@@ -41,7 +41,7 @@ public class TransformStore {
 
     @SuppressWarnings("unchecked")
     <T> void addTransformer(TransformTargetLabel targetLabel, ITransformer<T> transformer) {
-        launcherLog.debug("Adding transformer {} to {}", () -> transformer, () -> targetLabel);
+        launcherLog.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
         classNeedsTransforming.add(new TransformTargetLabel(targetLabel.getClassName().getInternalName()));
         final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getLabelType());
         transformList.getTransformers().computeIfAbsent(targetLabel, v -> new ArrayList<>()).add(transformer);

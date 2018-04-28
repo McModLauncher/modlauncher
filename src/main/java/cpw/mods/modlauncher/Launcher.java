@@ -25,7 +25,7 @@ public enum Launcher {
     private TransformingClassLoader classLoader;
 
     Launcher() {
-        launcherLog.info("ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
+        launcherLog.info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
@@ -37,7 +37,7 @@ public enum Launcher {
     }
 
     public static void main(String... args) {
-        launcherLog.info("ModLauncher running: args {}", () -> args);
+        launcherLog.info(MODLAUNCHER,"ModLauncher running: args {}", () -> args);
         INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
     }
 

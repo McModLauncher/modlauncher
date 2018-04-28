@@ -18,7 +18,7 @@ class TransformationServicesHandler {
 
     TransformationServicesHandler(TransformStore transformStore) {
         transformationServices = ServiceLoader.load(ITransformationService.class);
-        launcherLog.info("Found transformer services : [{}]", () ->
+        launcherLog.info(MODLAUNCHER,"Found transformer services : [{}]", () ->
                 ServiceLoaderStreamUtils.toList(transformationServices).stream().
                         map(ITransformationService::name).collect(Collectors.joining()));
 
@@ -43,7 +43,7 @@ class TransformationServicesHandler {
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {
-        launcherLog.debug("Configuring option handling for services");
+        launcherLog.debug(MODLAUNCHER,"Configuring option handling for services");
 
         argumentHandler.processArguments(environment, this::computeArgumentsForServices, this::offerArgumentResultsToServices);
     }
@@ -61,13 +61,13 @@ class TransformationServicesHandler {
     }
 
     private void initialiseServiceTransformers() {
-        launcherLog.debug("Transformation services loading transformers");
+        launcherLog.debug(MODLAUNCHER,"Transformation services loading transformers");
 
         serviceLookup.values().forEach(s -> s.gatherTransformers(transformStore));
     }
 
     private void initialiseTransformationServices(Environment environment) {
-        launcherLog.debug("Transformation services initializing");
+        launcherLog.debug(MODLAUNCHER,"Transformation services initializing");
 
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
@@ -75,15 +75,15 @@ class TransformationServicesHandler {
     private void validateTransformationServices() throws RuntimeException {
         final Stream<TransformationServiceDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
         if (failedServices.count() > 0) {
-            launcherLog.error("Found {} services that failed to load", failedServices::count);
-            launcherLog.error("Failed services : {}", () -> failedServices.map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
+            launcherLog.error(MODLAUNCHER,"Found {} services that failed to load", failedServices::count);
+            launcherLog.error(MODLAUNCHER,"Failed services : {}", () -> failedServices.map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
             //TODO enrich exception with data from unhappy services
             throw new RuntimeException("Invalid Service found");
         }
     }
 
     private void loadTransformationServices(Environment environment) {
-        launcherLog.debug("Transformation services loading");
+        launcherLog.debug(MODLAUNCHER,"Transformation services loading");
 
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
     }

@@ -17,7 +17,7 @@ public class LaunchPluginHandler {
     public LaunchPluginHandler() {
         ServiceLoader<ILaunchPluginService> services = ServiceLoader.load(ILaunchPluginService.class);
         plugins = ServiceLoaderStreamUtils.toMap(services, ILaunchPluginService::name);
-        launcherLog.info("Found launch plugins: [{}]", ()-> plugins.keySet().stream().collect(Collectors.joining()));
+        launcherLog.info(MODLAUNCHER,"Found launch plugins: [{}]", ()-> plugins.keySet().stream().collect(Collectors.joining()));
     }
     public Optional<ILaunchPluginService> get(final String name) {
         return Optional.ofNullable(plugins.get(name));
@@ -25,7 +25,7 @@ public class LaunchPluginHandler {
 
     public List<String> getPluginsTransforming(final Type className) {
         return plugins.entrySet().stream().filter(p -> p.getValue().handlesClass(className)).
-                peek(e->launcherLog.debug("LaunchPluginService {} wants to handle {}", e.getKey(), className)).
+                peek(e->launcherLog.debug(LAUNCHPLUGIN,"LaunchPluginService {} wants to handle {}", e.getKey(), className)).
                 collect(ArrayList<String>::new, (l,e) -> l.add(e.getKey()), ArrayList::addAll);
     }
 
@@ -33,7 +33,7 @@ public class LaunchPluginHandler {
         ClassNode intermediate = node;
         for (String plugin: pluginNames) {
             final ILaunchPluginService iLaunchPluginService = plugins.get(plugin);
-            launcherLog.debug("LauncherPluginService {} transforming {}", plugin, className);
+            launcherLog.debug(LAUNCHPLUGIN,"LauncherPluginService {} transforming {}", plugin, className);
             intermediate = iLaunchPluginService.processClass(intermediate, className);
         }
         return intermediate;

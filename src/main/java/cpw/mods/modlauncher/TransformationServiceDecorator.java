@@ -21,12 +21,12 @@ public class TransformationServiceDecorator {
 
     void onLoad(IEnvironment env, Set<String> otherServices) {
         try {
-            launcherLog.debug("Loading service {}", this.service::name);
+            launcherLog.debug(MODLAUNCHER,"Loading service {}", this.service::name);
             this.service.onLoad(env, otherServices);
             this.isValid = true;
-            launcherLog.debug("Loaded service {}", this.service::name);
+            launcherLog.debug(MODLAUNCHER,"Loaded service {}", this.service::name);
         } catch (IncompatibleEnvironmentException e) {
-            launcherLog.error("Service failed to load {}", this.service.name(), e);
+            launcherLog.error(MODLAUNCHER,"Service failed to load {}", this.service.name(), e);
             this.isValid = false;
         }
     }
@@ -36,13 +36,13 @@ public class TransformationServiceDecorator {
     }
 
     void onInitialize(IEnvironment environment) {
-        launcherLog.debug("Initializing transformation service {}", this.service::name);
+        launcherLog.debug(MODLAUNCHER,"Initializing transformation service {}", this.service::name);
         this.service.initialize(environment);
-        launcherLog.debug("Initialized transformation service {}", this.service::name);
+        launcherLog.debug(MODLAUNCHER,"Initialized transformation service {}", this.service::name);
     }
 
     public void gatherTransformers(TransformStore transformStore) {
-        launcherLog.debug("Initializing transformers for transformation service {}", this.service::name);
+        launcherLog.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
@@ -65,13 +65,13 @@ public class TransformationServiceDecorator {
                 if (targets.isEmpty()) continue;
                 final Map<TransformTargetLabel.LabelType, List<TransformTargetLabel>> labelTypeListMap = targets.stream().map(TransformTargetLabel::new).collect(Collectors.groupingBy(TransformTargetLabel::getLabelType));
                 if (labelTypeListMap.keySet().size() > 1 || !labelTypeListMap.keySet().contains(labelType)) {
-                    launcherLog.error("Invalid target {} for transformer {}", labelType, xform);
+                    launcherLog.error(MODLAUNCHER,"Invalid target {} for transformer {}", labelType, xform);
                     throw new IllegalArgumentException("The transformer contains invalid targets");
                 }
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
             }
         }
-        launcherLog.debug("Initialized transformers for transformation service {}", this.service::name);
+        launcherLog.debug(MODLAUNCHER,"Initialized transformers for transformation service {}", this.service::name);
     }
 
     ITransformationService getService() {

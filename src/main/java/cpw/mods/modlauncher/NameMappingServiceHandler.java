@@ -16,7 +16,7 @@ class NameMappingServiceHandler {
 
     public NameMappingServiceHandler() {
         namingServices = ServiceLoader.load(INameMappingService.class);
-        launcherLog.info("Found naming services {}", () -> ServiceLoaderStreamUtils.toList(namingServices));
+        launcherLog.info(MODLAUNCHER,"Found naming services {}", () -> ServiceLoaderStreamUtils.toList(namingServices));
         namingLookup = StreamSupport.stream(namingServices.spliterator(), false)
                 .collect(Collectors.toMap(INameMappingService::mappingName, NameMappingServiceDecorator::new));
     }
