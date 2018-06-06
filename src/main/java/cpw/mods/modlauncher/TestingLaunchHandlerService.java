@@ -24,7 +24,7 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader) {
+    public Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader) {
         try {
             Class<?> callableLaunch = Class.forName(System.getProperty("test.harness.callable"));
             final MethodHandles.Lookup lookup = MethodHandles.lookup();

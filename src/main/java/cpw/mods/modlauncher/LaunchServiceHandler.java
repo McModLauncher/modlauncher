@@ -27,7 +27,7 @@ class LaunchServiceHandler {
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
-    private void launch(String target, String[] arguments, ClassLoader classLoader) {
+    private void launch(String target, String[] arguments, ITransformingClassLoader classLoader) {
         launchHandlerLookup.get(target).launch(arguments, classLoader);
     }
 

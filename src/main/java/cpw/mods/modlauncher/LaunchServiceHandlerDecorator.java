@@ -14,7 +14,7 @@ class LaunchServiceHandlerDecorator {
         this.service = service;
     }
 
-    public void launch(String[] arguments, ClassLoader classLoader) {
+    public void launch(String[] arguments, ITransformingClassLoader classLoader) {
         try {
             this.service.launchService(arguments, classLoader).call();
         } catch (Exception e) {

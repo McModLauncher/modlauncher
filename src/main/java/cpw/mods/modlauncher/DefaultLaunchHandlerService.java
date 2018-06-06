@@ -30,10 +30,10 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader) {
+    public Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader) {
 
         return () -> {
-            final Class<?> mcClass = Class.forName("net.minecraft.client.main.Main", true, launchClassLoader);
+            final Class<?> mcClass = Class.forName("net.minecraft.client.main.Main", true, launchClassLoader.getInstance());
             final Method mcClassMethod = mcClass.getMethod("main", String[].class);
             mcClassMethod.invoke(null, (Object) arguments);
             return null;
