@@ -1,8 +1,11 @@
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.ITransformingClassLoader;
+
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
+import java.util.function.Predicate;
 import java.util.stream.*;
 
 import static cpw.mods.modlauncher.Logging.*;
@@ -13,7 +16,7 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
  * <p>
  * Somewhat modeled on code from https://dzone.com/articles/java-classloader-handling
  */
-public class TransformingClassLoader extends ClassLoader {
+public class TransformingClassLoader extends ClassLoader implements ITransformingClassLoader {
     static {
         // We're capable of loading classes in parallel
         ClassLoader.registerAsParallelCapable();
@@ -22,17 +25,23 @@ public class TransformingClassLoader extends ClassLoader {
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
+    private Predicate<String> targetPackageFilter;
 
     public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... specialJars) {
         super();
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
+        this.targetPackageFilter = (s)->true;
     }
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
+            if (!targetPackageFilter.test(name)) {
+                launcherLog.debug(CLASSLOADING, "Delegating to parent {}", name);
+                return super.loadClass(name, resolve);
+            }
             try {
                 launcherLog.debug(CLASSLOADING, "Loading {}", name);
                 return delegatedClassLoader.findClass(name);
@@ -42,6 +51,11 @@ public class TransformingClassLoader extends ClassLoader {
                 launcherLog.debug(CLASSLOADING, "Loaded {}", name);
             }
         }
+    }
+
+    @Override
+    public void setTargetPackageFilter(Predicate<String> filter) {
+        this.targetPackageFilter = filter;
     }
 
     @SuppressWarnings("unchecked")

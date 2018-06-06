@@ -11,5 +11,5 @@ public interface ILaunchHandlerService {
 
     Path[] identifyTransformationTargets();
 
-    Callable<Void> launchService(String[] arguments, ClassLoader launchClassLoader);
+    Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader);
 }

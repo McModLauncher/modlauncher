@@ -11,7 +11,6 @@ import java.util.stream.*;
 import static cpw.mods.modlauncher.Logging.*;
 
 public class LaunchPluginHandler {
-
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler() {
