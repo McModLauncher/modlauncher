@@ -1,10 +1,10 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.serviceapi.*;
+import org.checkerframework.checker.nullness.qual.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
-import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 

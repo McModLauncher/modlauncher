@@ -1,8 +1,8 @@
 package cpw.mods.modlauncher.api;
 
 import joptsimple.*;
+import org.checkerframework.checker.nullness.qual.*;
 
-import javax.annotation.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -19,7 +19,7 @@ public interface ITransformationService {
      *
      * @return the name of the mod service
      */
-    @Nonnull
+    @NonNull
     String name();
 
     /**
@@ -54,14 +54,14 @@ public interface ITransformationService {
      */
     void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException;
 
-    @Nonnull
-    List<ITransformer> transformers();
+    @NonNull
+    List<ITransformer<?>> transformers();
 
     interface OptionResult {
-        @Nonnull
+        @NonNull
         <V> V value(OptionSpec<V> options);
 
-        @Nonnull
+        @NonNull
         <V> List<V> values(OptionSpec<V> options);
     }
 

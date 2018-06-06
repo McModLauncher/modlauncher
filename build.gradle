@@ -40,7 +40,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    compile group: 'org.checkerframework', name: 'checker-qual', version: '2.5.1'
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
     apiCompile 'org.ow2.asm:asm:6.0'
     compile 'org.ow2.asm:asm:6.0'

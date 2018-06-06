@@ -1,4 +1,5 @@
-@ParametersAreNonnullByDefault
+@DefaultQualifier(value = NonNull.class)
 package cpw.mods.modlauncher.api;
 
-import javax.annotation.*;
+import org.checkerframework.checker.nullness.qual.*;
+import org.checkerframework.framework.qual.*;

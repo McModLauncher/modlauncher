@@ -43,9 +43,9 @@ public class TransformationServiceDecorator {
 
     public void gatherTransformers(TransformStore transformStore) {
         launcherLog.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
-        final List<ITransformer> transformers = this.service.transformers();
+        final List<ITransformer<?>> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
-        final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
+        final Map<Type, List<ITransformer<?>>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
                 t ->
                 {
                     final Type[] genericInterfaces = t.getClass().getGenericInterfaces();

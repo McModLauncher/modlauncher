@@ -2,12 +2,12 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
+import org.checkerframework.checker.nullness.qual.*;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
-import javax.annotation.*;
 import java.nio.file.*;
 import java.util.*;
 
@@ -60,20 +60,20 @@ class ClassTransformerTests {
 
     private ITransformer<FieldNode> fieldNodeTransformer1() {
         return new ITransformer<FieldNode>() {
-            @Nonnull
+            @NonNull
             @Override
             public FieldNode transform(FieldNode input, ITransformerVotingContext context) {
                 input.value = "CHEESE";
                 return input;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public Set<Target> targets() {
                 return Collections.emptySet();
@@ -83,7 +83,7 @@ class ClassTransformerTests {
 
     private ITransformer<ClassNode> classTransformer() {
         return new ITransformer<ClassNode>() {
-            @Nonnull
+            @NonNull
             @Override
             public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
                 FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC, "testfield", "Ljava/lang/String;", null, null);
@@ -91,13 +91,13 @@ class ClassTransformerTests {
                 return input;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public Set<Target> targets() {
                 return Collections.emptySet();
