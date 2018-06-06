@@ -7,5 +7,5 @@ public interface ITransformingClassLoader {
         return (ClassLoader) this;
     }
 
-    void setTargetPackageFilter(Predicate<String> filter);
+    void addTargetPackageFilter(Predicate<String> filter);
 }

@@ -32,7 +32,9 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
-        this.targetPackageFilter = (s)->true;
+        final Predicate<String> java = s -> s.startsWith("java.");
+        final Predicate<String> javax = s -> s.startsWith("javax.");
+        this.targetPackageFilter = java.negate().or(javax.negate());
     }
 
     @Override
@@ -54,8 +56,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     @Override
-    public void setTargetPackageFilter(Predicate<String> filter) {
-        this.targetPackageFilter = filter;
+    public void addTargetPackageFilter(Predicate<String> filter) {
+        this.targetPackageFilter = this.targetPackageFilter.or(filter);
     }
 
     @SuppressWarnings("unchecked")
