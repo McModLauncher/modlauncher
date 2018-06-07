@@ -23,7 +23,7 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
     public Path[] identifyTransformationTargets() {
         return Arrays.stream(System.getProperty("test.harness").split(",")).
                 map(FileSystems.getDefault()::getPath).
-                toArray(a->new Path[0]);
+                toArray(Path[]::new);
     }
 
     @Override
