@@ -5,6 +5,7 @@ import cpw.mods.modlauncher.api.*;
 import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.function.*;
 
@@ -20,7 +21,9 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
 
     @Override
     public Path[] identifyTransformationTargets() {
-        return new Path[] { FileSystems.getDefault().getPath(System.getProperty("test.harness")) };
+        return Arrays.stream(System.getProperty("test.harness").split(",")).
+                map(FileSystems.getDefault()::getPath).
+                toArray(a->new Path[0]);
     }
 
     @Override
