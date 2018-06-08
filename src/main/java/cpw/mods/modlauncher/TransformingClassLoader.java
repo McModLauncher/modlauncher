@@ -34,7 +34,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.delegatedClassLoader = new DelegatedClassLoader();
         final Predicate<String> java = s -> s.startsWith("java.");
         final Predicate<String> javax = s -> s.startsWith("javax.");
-        this.targetPackageFilter = java.negate().or(javax.negate());
+        final Predicate<String> log4j = s -> s.startsWith("org.apache.logging.log4j.");
+        this.targetPackageFilter = java.negate().or(javax.negate()).or(log4j.negate());
     }
 
     @Override
