@@ -26,7 +26,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
     private static final List<String> SKIP_PACKAGE_PREFIXES = Arrays.asList(
             "java.", "javax.", "org.objectweb.asm.", "org.apache.logging.log4j."
-            );
+    );
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
@@ -60,7 +60,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
     @Override
     public void addTargetPackageFilter(Predicate<String> filter) {
-        this.targetPackageFilter = this.targetPackageFilter.or(filter);
+        this.targetPackageFilter = this.targetPackageFilter.and(filter);
     }
 
     @SuppressWarnings("unchecked")
