@@ -5,6 +5,8 @@ import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.*;
 
@@ -22,6 +24,9 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         ClassLoader.registerAsParallelCapable();
     }
 
+    private static final List<String> SKIP_PACKAGE_PREFIXES = Arrays.asList(
+            "java.", "javax.", "org.objectweb.asm.", "org.apache.logging.log4j."
+            );
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
@@ -32,11 +37,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
-        final Predicate<String> java = s -> s.startsWith("java.");
-        final Predicate<String> javax = s -> s.startsWith("javax.");
-        final Predicate<String> asm = s -> s.startsWith("org.objectweb.asm.");
-        final Predicate<String> log4j = s -> s.startsWith("org.apache.logging.log4j.");
-        this.targetPackageFilter = java.negate().or(javax.negate()).or(log4j.negate()).or(asm.negate());
+        this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().anyMatch(s::startsWith);
     }
 
     @Override
