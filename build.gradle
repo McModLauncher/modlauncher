@@ -1,20 +1,9 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        // The following is only necessary if you want to use SNAPSHOT releases.
-        // maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
-    }
-}
-
 plugins {
     id 'org.ajoberstar.grgit' version '2.2.1'
 }
-apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'java-library'
 apply plugin: 'maven'
-apply plugin: 'java'
+apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'jacoco'
 
@@ -27,8 +16,12 @@ sourceSets {
     testJars
 }
 
+test {
+    useJUnitPlatform()
+}
+
 jacoco {
-    toolVersion = "0.7.9"
+    toolVersion = "0.8.1"
 }
 
 group = 'cpw.mods'
@@ -40,21 +33,21 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
-    apiCompile 'org.ow2.asm:asm:6.0'
-    compile 'org.ow2.asm:asm:6.0'
-    apiCompile 'org.ow2.asm:asm-tree:6.0'
-    compile 'org.ow2.asm:asm-tree:6.0'
-    apiCompile 'org.ow2.asm:asm-commons:6.0'
-    compile 'org.ow2.asm:asm-commons:6.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.10.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.10.0'
-    compile sourceSets.api.output
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.2"
-    testCompile(group: 'org.powermock', name: 'powermock-core', version: '1.7.3')
-    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.0.2"
-    testRuntime sourceSets.testJars.runtimeClasspath
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+    implementation("net.sf.jopt-simple:jopt-simple:5.0.4")
+    api("org.ow2.asm:asm:6.2")
+    api("org.ow2.asm:asm-tree:6.2")
+    api("org.ow2.asm:asm-commons:6.2")
+    apiImplementation("org.ow2.asm:asm:6.2")
+    apiImplementation("org.ow2.asm:asm-tree:6.2")
+    apiImplementation("org.ow2.asm:asm-commons:6.2")
+    implementation("org.apache.logging.log4j:log4j-api:2.11.0")
+    implementation("org.apache.logging.log4j:log4j-core:2.11.0")
+    implementation(sourceSets.api.output)
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
+    testImplementation("org.powermock:powermock-core:1.7.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+    testImplementation(sourceSets.testJars.runtimeClasspath)
 }
 
 task apiJar(type: Jar) {
@@ -78,29 +71,34 @@ task sourcesJar(type: Jar) {
     from sourceSets.api.allSource
 }
 
+
+ext.sharedManifest = manifest {
+    attributes(["Specification-Title": "modlauncher",
+                "Specification-Vendor": "Forge",
+                "Specification-Version": "1.0", // We are version 1 of the modlauncher specification
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
+                "Implementation-Vendor" :"Forge",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "Git-Commit": grgit.head().getAbbreviatedId(8),
+                "Git-Branch": grgit.branch.current().getName() ],
+            "cpw/mods/modlauncher/api/")
+    attributes(["Specification-Title": "modlauncherserviceapi",
+                "Specification-Vendor": "Forge",
+                "Specification-Version": "1.0", // We are version 1 of the modlauncher serviceapi specification
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
+                "Implementation-Vendor" :"Forge",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "Git-Commit": grgit.head().getAbbreviatedId(8),
+                "Git-Branch": grgit.branch.current().getName() ],
+            "cpw/mods/modlauncher/serviceapi/")
+}
+
 jar {
     from sourceSets.api.output
-    manifest {
-        attributes(["Specification-Title": "modlauncher",
-                    "Specification-Vendor": "Forge",
-                    "Specification-Version": "1.0", // We are version 1 of the modlauncher specification
-                    "Implementation-Title": project.name,
-                    "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
-                    "Implementation-Vendor" :"Forge",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                    "Git-Commit": grgit.head().getAbbreviatedId(8),
-                    "Git-Branch": grgit.branch.getCurrent().getName() ],
-                "cpw/mods/modlauncher/api/")
-        attributes(["Specification-Title": "modlauncherserviceapi",
-                    "Specification-Vendor": "Forge",
-                    "Specification-Version": "1.0", // We are version 1 of the modlauncher serviceapi specification
-                    "Implementation-Title": project.name,
-                    "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
-                    "Implementation-Vendor" :"Forge",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                    "Git-Commit": grgit.head().getAbbreviatedId(8),
-                    "Git-Branch": grgit.branch.getCurrent().getName() ],
-                "cpw/mods/modlauncher/serviceapi/")
+    manifest = project.manifest {
+        from sharedManifest
     }
 }
 
@@ -116,44 +114,39 @@ artifacts {
     archives sourcesJar
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        if (project.hasProperty('forgeMavenPassword'))
-        {
-            repository(url: "http://files.minecraftforge.net/maven/manage/upload") {
-                authentication(userName: project.getProperty('forgeMavenUser'), password: project.getProperty('forgeMavenPassword'))
-            }
-        } else {
-            repository(url: 'file://localhost/' + project.file('repo').getAbsolutePath())
-        }
-        pom {
-            groupId = project.group
-            artifactId = project.archivesBaseName
-            project {
-                name project.archivesBaseName
-                packaging 'jar'
-                description 'Mod Launcher'
-                url 'https://github.com/cpw/modlauncher'
-
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Mod Launcher'
+                description = 'Common ModLauncher framework'
+                url = 'https://github.com/cpw/modlauncher'
                 scm {
-                    url 'https://github.com/cpw/modlauncher'
-                    connection 'scm:git:git://github.com/cpw/modlauncher.git'
-                    developerConnection 'scm:git:git@github.com:cpw/modlauncher.git'
+                    url = 'https://github.com/cpw/modlauncher'
+                    connection = 'scm:git:git://github.com/cpw/modlauncher.git'
+                    developerConnection = 'scm:git:git@github.com:cpw/modlauncher.git'
                 }
-
                 issueManagement {
-                    system 'github'
-                    url 'https://github.com/cpw/modlauncher/issues'
+                    system = 'github'
+                    url = 'https://github.com/cpw/modlauncher/issues'
                 }
 
                 developers {
                     developer {
-                        id 'cpw'
-                        name 'cpw'
-                        roles { role 'developer' }
+                        id = 'cpw'
+                        name = 'cpw'
                     }
                 }
             }
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username project.properties.forgeMavenUser?:'fake'
+                password project.properties.forgeMavenPassword?:'news'
+            }
+            url "http://files.minecraftforge.net/maven/manage/upload"
         }
     }
 }

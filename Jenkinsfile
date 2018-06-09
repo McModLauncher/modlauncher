@@ -1,38 +1,25 @@
-#!/usr/bin/env groovy
-
 pipeline {
-    agent {
-        label 'java8'
-    }
-
-    post {
-        always {
-            junit allowEmptyResults: true, testResults: 'build/test-results/**/*.xml'
-        }
-    }
-
-    environment {
-        GRADLE_OPTIONS = "--no-daemon --rerun-tasks -PBUILD_NUMBER=${env.BUILD_NUMBER} -PBRANCH='${env.BRANCH_NAME}'"
-    }
-
+    agent any
     stages {
-        stage('Checkout') {
+        stage('fetch') {
             steps {
-                sh "rm -Rv build || true"
+                git(url: 'https://github.com/cpw/modlauncher.git', changelog: true)
             }
         }
-
-        stage('Build & Test') {
+        stage('buildandtest') {
             steps {
-                sh "./gradlew ${env.GRADLE_OPTIONS} clean build test"
+                sh './gradlew cleanTest test'
+                junit 'build/test-results/test/*.xml'
+                jacoco sourcePattern: '**/src/*/java'
             }
         }
-
-        stage('Coverage') {
+        stage('publish') {
+            environment {
+                FORGE_MAVEN = credentials('forge-maven-cpw-user')
+            }
             steps {
-                sh "./gradlew ${env.GRADLE_OPTIONS} jacocoTestReport"
-
-                step([$class: 'JacocoPublisher'])
+                sh './gradlew publish -PforgeMavenUser=${FORGE_MAVEN_USR} -PforgeMavenPassword=${FORGE_MAVEN_PSW}'
+                sh 'curl --user ${FORGE_MAVEN} http://files.minecraftforge.net/maven/manage/promote/latest/cpw.mods.modlauncher/${BUILD_NUMBER}'
             }
         }
     }
