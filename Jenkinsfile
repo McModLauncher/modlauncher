@@ -9,8 +9,6 @@ pipeline {
         stage('buildandtest') {
             steps {
                 sh './gradlew cleanTest test'
-                junit 'build/test-results/test/*.xml'
-                jacoco sourcePattern: '**/src/*/java'
             }
         }
         stage('publish') {
@@ -21,6 +19,12 @@ pipeline {
                 sh './gradlew publish -PforgeMavenUser=${FORGE_MAVEN_USR} -PforgeMavenPassword=${FORGE_MAVEN_PSW}'
                 sh 'curl --user ${FORGE_MAVEN} http://files.minecraftforge.net/maven/manage/promote/latest/cpw.mods.modlauncher/${BUILD_NUMBER}'
             }
+        }
+    }
+    post {
+        always {
+            junit 'build/test-results/**/*.xml'
+            jacoco sourcePattern: '**/src/*/java'
         }
     }
 }
