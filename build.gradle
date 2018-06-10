@@ -115,6 +115,10 @@ artifacts {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            from components.java
+            artifact apiJar
+            artifact apiSourcesJar
+            artifact sourcesJar
             pom {
                 name = 'Mod Launcher'
                 description = 'Common ModLauncher framework'
