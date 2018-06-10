@@ -76,10 +76,9 @@ class TransformationServicesHandler {
     }
 
     private void validateTransformationServices() throws RuntimeException {
-        final Stream<TransformationServiceDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
-        if (failedServices.count() > 0) {
-            LOGGER.error(MODLAUNCHER,"Found {} services that failed to load", failedServices::count);
-            LOGGER.error(MODLAUNCHER,"Failed services : {}", () -> failedServices.map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
+        if (serviceLookup.values().stream().filter(d -> !d.isValid()).count() > 0) {
+            LOGGER.error(MODLAUNCHER,"Found {} services that failed to load", serviceLookup.values().stream().filter(d -> !d.isValid())::count);
+            LOGGER.error(MODLAUNCHER,"Failed services : {}", () -> serviceLookup.values().stream().filter(d -> !d.isValid()).map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
             //TODO enrich exception with data from unhappy services
             throw new RuntimeException("Invalid Service found");
         }
