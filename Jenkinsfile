@@ -1,13 +1,14 @@
 pipeline {
     agent {
         docker {
-            image 'gradle:latest'
-            args '-v gradlecache:/home/gradle/.gradle'
+            image 'gradlewrapper:latest'
+            args '-v gradlecache:/gradlecache'
         }
     }
     environment {
-        GRADLE_ARGS = '--no-daemon --info'
+        GRADLE_ARGS = '-Dorg.gradle.daemon.idletimeout=5000'
     }
+
     stages {
         stage('fetch') {
             steps {
@@ -31,9 +32,9 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-            junit 'build/test-results/**/*.xml'
-            jacoco sourcePattern: '**/src/*/java'
+          archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+          junit 'build/test-results/*/*.xml'
+          jacoco sourcePattern: '**/src/*/java'
         }
     }
 }
