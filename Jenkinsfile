@@ -6,7 +6,7 @@ pipeline {
         }
     }
     environment {
-        GRADLE_OPTS='--no-daemon --info'
+        GRADLE_ARGS = '--no-daemon --info'
     }
     stages {
         stage('fetch') {
@@ -16,7 +16,7 @@ pipeline {
         }
         stage('buildandtest') {
             steps {
-                sh './gradlew --refresh-dependencies --continue build test'
+                sh './gradlew ${GRADLE_ARGS} --refresh-dependencies --continue build test'
             }
         }
         stage('publish') {
@@ -24,7 +24,7 @@ pipeline {
                 FORGE_MAVEN = credentials('forge-maven-cpw-user')
             }
             steps {
-                sh './gradlew publish -PforgeMavenUser=${FORGE_MAVEN_USR} -PforgeMavenPassword=${FORGE_MAVEN_PSW}'
+                sh './gradlew ${GRADLE_ARGS} publish -PforgeMavenUser=${FORGE_MAVEN_USR} -PforgeMavenPassword=${FORGE_MAVEN_PSW}'
                 sh 'curl --user ${FORGE_MAVEN} http://files.minecraftforge.net/maven/manage/promote/latest/cpw.mods.modlauncher/${BUILD_NUMBER}'
             }
         }
