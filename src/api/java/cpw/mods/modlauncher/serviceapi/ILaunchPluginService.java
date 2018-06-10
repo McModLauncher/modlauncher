@@ -55,7 +55,8 @@ public interface ILaunchPluginService {
     /**
      * If this plugin wants to receive the {@link ClassNode} into {@link #processClass}
      * @param classType the class to consider
+     * @param isEmpty if the class is empty at present (indicates no backing file found)
      * @return if this plugin wants to receive a call on processClass with the classNode
      */
-    boolean handlesClass(Type classType);
+    boolean handlesClass(Type classType, final boolean isEmpty);
 }

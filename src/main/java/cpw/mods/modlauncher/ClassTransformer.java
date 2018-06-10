@@ -24,7 +24,7 @@ public class ClassTransformer {
     byte[] transform(byte[] inputClass, String className) {
         Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
 
-        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc);
+        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc, inputClass.length == 0);
 
         if (!transformers.needsTransforming(className) && plugins.isEmpty()) {
             return inputClass;

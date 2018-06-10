@@ -25,8 +25,8 @@ public class LaunchPluginHandler {
         return Optional.ofNullable(plugins.get(name));
     }
 
-    public List<String> getPluginsTransforming(final Type className) {
-        return plugins.entrySet().stream().filter(p -> p.getValue().handlesClass(className)).
+    public List<String> getPluginsTransforming(final Type className, final boolean isEmpty) {
+        return plugins.entrySet().stream().filter(p -> p.getValue().handlesClass(className, isEmpty)).
                 peek(e-> LOGGER.debug(LAUNCHPLUGIN,"LaunchPluginService {} wants to handle {}", e.getKey(), className)).
                 collect(ArrayList<String>::new, (l,e) -> l.add(e.getKey()), ArrayList::addAll);
     }
