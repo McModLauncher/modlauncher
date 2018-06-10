@@ -1,6 +1,8 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.*;
@@ -19,6 +21,9 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
  * Somewhat modeled on code from https://dzone.com/articles/java-classloader-handling
  */
 public class TransformingClassLoader extends ClassLoader implements ITransformingClassLoader {
+
+    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+
     static {
         // We're capable of loading classes in parallel
         ClassLoader.registerAsParallelCapable();
@@ -44,16 +49,16 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             if (!targetPackageFilter.test(name)) {
-                launcherLog.debug(CLASSLOADING, "Delegating to parent {}", name);
+                LOGGER.debug(CLASSLOADING, "Delegating to parent {}", name);
                 return super.loadClass(name, resolve);
             }
             try {
-                launcherLog.debug(CLASSLOADING, "Loading {}", name);
+                LOGGER.debug(CLASSLOADING, "Loading {}", name);
                 return delegatedClassLoader.findClass(name);
             } catch (ClassNotFoundException | SecurityException e) {
                 return super.loadClass(name, resolve);
             } finally {
-                launcherLog.debug(CLASSLOADING, "Loaded {}", name);
+                LOGGER.debug(CLASSLOADING, "Loaded {}", name);
             }
         }
     }
@@ -105,7 +110,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         protected Class<?> findClass(final String name) throws ClassNotFoundException {
             final Class<?> existingClass = super.findLoadedClass(name);
             if (existingClass != null) {
-                launcherLog.debug(CLASSLOADING, "Found existing class {}", name);
+                LOGGER.debug(CLASSLOADING, "Found existing class {}", name);
                 return existingClass;
             }
             final String path = name.replace('.', '/').concat(".class");
@@ -130,10 +135,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
             classBytes = classTransformer.transform(classBytes, name);
             if (classBytes.length > 0) {
-                launcherLog.debug(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
+                LOGGER.debug(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
                 return defineClass(name, classBytes, 0, classBytes.length);
             } else {
-                launcherLog.debug(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
+                LOGGER.debug(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
                 throw new ClassNotFoundException();
             }

@@ -1,6 +1,8 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.*;
 import java.util.*;
@@ -12,12 +14,13 @@ import static cpw.mods.modlauncher.Logging.*;
  * Identifies the launch target and dispatches to it
  */
 class LaunchServiceHandler {
+    private static final Logger LOGGER = LogManager.getLogger("Launcher");
     private final ServiceLoader<ILaunchHandlerService> launchHandlerServices;
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 
     public LaunchServiceHandler() {
         launchHandlerServices = ServiceLoader.load(ILaunchHandlerService.class);
-        launcherLog.info(MODLAUNCHER,"Found launch services [{}]", () ->
+        LOGGER.info(MODLAUNCHER,"Found launch services [{}]", () ->
                 ServiceLoaderStreamUtils.toList(launchHandlerServices).stream().
                         map(ILaunchHandlerService::name).collect(Collectors.joining(",")));
         launchHandlerLookup = StreamSupport.stream(launchHandlerServices.spliterator(), false)

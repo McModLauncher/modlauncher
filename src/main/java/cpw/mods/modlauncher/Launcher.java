@@ -2,6 +2,8 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.*;
 import java.util.*;
@@ -14,6 +16,7 @@ import static cpw.mods.modlauncher.Logging.*;
 public enum Launcher {
     INSTANCE;
 
+    private static final Logger LOGGER = LogManager.getLogger("Launcher");
     private final TypesafeMap blackboard;
     private final TransformationServicesHandler transformationServicesHandler;
     private final Environment environment;
@@ -25,7 +28,7 @@ public enum Launcher {
     private TransformingClassLoader classLoader;
 
     Launcher() {
-        launcherLog.info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
+        LogManager.getLogger("Launcher").info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
@@ -37,7 +40,7 @@ public enum Launcher {
     }
 
     public static void main(String... args) {
-        launcherLog.info(MODLAUNCHER,"ModLauncher running: args {}", () -> args);
+        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> args);
         INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
     }
 
