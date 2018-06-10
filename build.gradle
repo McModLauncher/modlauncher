@@ -25,10 +25,8 @@ jacoco {
 }
 
 group = 'cpw.mods'
-//noinspection GroovyUnusedAssignment
-archivesBaseName = 'modlauncher'
 version = '0.1-SNAPSHOT'
-//noinspection GroovyUnusedAssignment
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
