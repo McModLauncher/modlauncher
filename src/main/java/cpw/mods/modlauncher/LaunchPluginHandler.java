@@ -10,10 +10,10 @@ import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 
 public class LaunchPluginHandler {
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler() {

@@ -32,6 +32,11 @@ pipeline {
             }
         }
         stage('publish') {
+            when {
+                not {
+                    changeRequest()
+                }
+            }
             environment {
                 FORGE_MAVEN = credentials('forge-maven-cpw-user')
             }

@@ -8,13 +8,13 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 
 /**
  * Decorates {@link cpw.mods.modlauncher.api.ITransformationService} to track state and other runtime metadata.
  */
 public class TransformationServiceDecorator {
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ITransformationService service;
     private boolean isValid;
 

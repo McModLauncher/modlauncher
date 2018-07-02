@@ -8,13 +8,13 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 
 /**
  * Identifies the launch target and dispatches to it
  */
 class LaunchServiceHandler {
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ServiceLoader<ILaunchHandlerService> launchHandlerServices;
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 

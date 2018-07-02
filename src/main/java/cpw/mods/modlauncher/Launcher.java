@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.nio.file.*;
 import java.util.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 
 /**
  * Entry point for the ModLauncher.
@@ -16,7 +16,7 @@ import static cpw.mods.modlauncher.Logging.*;
 public enum Launcher {
     INSTANCE;
 
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final TypesafeMap blackboard;
     private final TransformationServicesHandler transformationServicesHandler;
     private final Environment environment;
@@ -28,7 +28,7 @@ public enum Launcher {
     private TransformingClassLoader classLoader;
 
     Launcher() {
-        LogManager.getLogger("Launcher").info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
+        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);

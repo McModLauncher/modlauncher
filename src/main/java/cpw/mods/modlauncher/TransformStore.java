@@ -7,13 +7,13 @@ import org.objectweb.asm.tree.*;
 
 import java.util.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 
 /**
  * Transformer store - holds all the transformers
  */
 public class TransformStore {
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Set<TransformTargetLabel> classNeedsTransforming = new HashSet<>();
     private final EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers;
 

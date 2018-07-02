@@ -10,11 +10,11 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.*;
 
 class TransformationServicesHandler {
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ServiceLoader<ITransformationService> transformationServices;
     private final Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;

@@ -46,12 +46,12 @@ dependencies {
     apiImplementation("org.ow2.asm:asm:6.2")
     apiImplementation("org.ow2.asm:asm-tree:6.2")
     apiImplementation("org.ow2.asm:asm-commons:6.2")
-    implementation("org.apache.logging.log4j:log4j-api:2.11.0")
-    implementation("org.apache.logging.log4j:log4j-core:2.11.0")
+    implementation("org.apache.logging.log4j:log4j-api:2.11.+")
+    implementation("org.apache.logging.log4j:log4j-core:2.11.+")
     implementation(sourceSets.api.output)
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
-    testImplementation("org.powermock:powermock-core:1.7.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.+")
+    testImplementation("org.powermock:powermock-core:1.7.+")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.2.+")
     testImplementation(sourceSets.testJars.runtimeClasspath)
 }
 

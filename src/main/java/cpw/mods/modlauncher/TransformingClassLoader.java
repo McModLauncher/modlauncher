@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
 
 /**
@@ -22,7 +22,7 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
  */
 public class TransformingClassLoader extends ClassLoader implements ITransformingClassLoader {
 
-    private static final Logger LOGGER = LogManager.getLogger("Launcher");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     static {
         // We're capable of loading classes in parallel
