@@ -31,6 +31,7 @@ class LaunchServiceHandler {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
     private void launch(String target, String[] arguments, ITransformingClassLoader classLoader) {
+        LOGGER.info(MODLAUNCHER, "Launching target {} with arguments {}", target, Arrays.asList(arguments));
         launchHandlerLookup.get(target).launch(arguments, classLoader);
     }
 
@@ -40,10 +41,18 @@ class LaunchServiceHandler {
         launch(launchTarget, args, classLoader);
     }
 
-    public Path[] identifyTransformationTargets(ArgumentHandler argumentHandler) {
+    Path[] identifyTransformationTargets(final ArgumentHandler argumentHandler) {
         final String launchTarget = argumentHandler.getLaunchTarget();
         final Path[] transformationTargets = launchHandlerLookup.get(launchTarget).findTransformationTargets();
         final Path[] specialJar = argumentHandler.getSpecialJars();
         return Stream.concat(Arrays.stream(transformationTargets), Arrays.stream(specialJar)).toArray(Path[]::new);
+    }
+
+    void validateLaunchTarget(final ArgumentHandler argumentHandler) {
+        if (!launchHandlerLookup.containsKey(argumentHandler.getLaunchTarget())) {
+            LOGGER.error(MODLAUNCHER, "Cannot find launch target {}, unable to launch",
+                    argumentHandler.getLaunchTarget());
+            throw new RuntimeException("Cannot find launch target");
+        }
     }
 }
