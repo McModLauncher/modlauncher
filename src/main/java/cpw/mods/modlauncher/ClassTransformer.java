@@ -1,6 +1,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import org.apache.logging.log4j.LogManager;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
@@ -73,18 +74,15 @@ public class ClassTransformer {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5) {
             @Override
             protected String getCommonSuperClass(final String type1, final String type2) {
-                ClassLoader classLoader = getTransformingClassLoader() == null? ClassTransformer.this.getClass().getClassLoader() : getTransformingClassLoader();
+                LogManager.getLogger().info("Class 1 {}, Class 2 {}", type1, type2);
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 Class<?> class1;
-                try {
-                    class1 = Class.forName(type1.replace('/', '.'), false, classLoader);
-                } catch (Exception e) {
-                    throw new TypeNotPresentException(type1, e);
-                }
                 Class<?> class2;
                 try {
+                    class1 = Class.forName(type1.replace('/', '.'), false, classLoader);
                     class2 = Class.forName(type2.replace('/', '.'), false, classLoader);
                 } catch (Exception e) {
-                    throw new TypeNotPresentException(type2, e);
+                    throw new TypeNotPresentException(type1, e);
                 }
                 if (class1.isAssignableFrom(class2)) {
                     return type1;
