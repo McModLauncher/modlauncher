@@ -21,7 +21,7 @@ class ClassTransformerTests {
     void testClassTransformer() throws Exception {
         final TransformStore transformStore = new TransformStore();
         final LaunchPluginHandler lph = new LaunchPluginHandler();
-        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore, lph);
+        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer());
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, new byte[0], "test.MyClass");
         assertAll("Class loads and is valid",

@@ -15,10 +15,12 @@ public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
     private final TransformStore transformers;
     private final LaunchPluginHandler pluginHandler;
+    private final TransformingClassLoader transformingClassLoader;
 
-    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler) {
+    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler, final TransformingClassLoader transformingClassLoader) {
         this.transformers = transformers;
         this.pluginHandler = pluginHandler;
+        this.transformingClassLoader = transformingClassLoader;
     }
 
     byte[] transform(byte[] inputClass, String className) {
@@ -68,7 +70,38 @@ public class ClassTransformer {
         List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5) {
+            @Override
+            protected String getCommonSuperClass(final String type1, final String type2) {
+                ClassLoader classLoader = getTransformingClassLoader() == null? ClassTransformer.this.getClass().getClassLoader() : getTransformingClassLoader();
+                Class<?> class1;
+                try {
+                    class1 = Class.forName(type1.replace('/', '.'), false, classLoader);
+                } catch (Exception e) {
+                    throw new TypeNotPresentException(type1, e);
+                }
+                Class<?> class2;
+                try {
+                    class2 = Class.forName(type2.replace('/', '.'), false, classLoader);
+                } catch (Exception e) {
+                    throw new TypeNotPresentException(type2, e);
+                }
+                if (class1.isAssignableFrom(class2)) {
+                    return type1;
+                }
+                if (class2.isAssignableFrom(class1)) {
+                    return type2;
+                }
+                if (class1.isInterface() || class2.isInterface()) {
+                    return "java/lang/Object";
+                } else {
+                    do {
+                        class1 = class1.getSuperclass();
+                    } while (!class1.isAssignableFrom(class2));
+                    return class1.getName().replace('.', '/');
+                }
+            }
+        };
         clazz.accept(cw);
 
         return cw.toByteArray();
@@ -109,5 +142,9 @@ public class ClassTransformer {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("HUH");
         }
+    }
+
+    public TransformingClassLoader getTransformingClassLoader() {
+        return transformingClassLoader;
     }
 }

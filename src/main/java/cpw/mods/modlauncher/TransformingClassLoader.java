@@ -39,7 +39,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
     public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... specialJars) {
         super();
-        this.classTransformer = new ClassTransformer(transformStore, pluginHandler);
+        this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader();
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
