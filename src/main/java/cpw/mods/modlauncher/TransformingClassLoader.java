@@ -73,6 +73,11 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         return (Class<T>) super.defineClass(name, bytes, 0, bytes.length);
     }
 
+    @Override
+    protected URL findResource(final String name) {
+        return delegatedClassLoader.findResource(name);
+    }
+
     static class AutoURLConnection implements AutoCloseable {
         private final URLConnection urlConnection;
         private final InputStream inputStream;
@@ -128,6 +133,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                         remain -= read;
                     }
                 } catch (IOException e) {
+                    LOGGER.error(CLASSLOADING,"Failed to load bytes for class {} at {}", name, classResource, e);
                     throw new ClassNotFoundException("blargh", e);
                 }
             } else {

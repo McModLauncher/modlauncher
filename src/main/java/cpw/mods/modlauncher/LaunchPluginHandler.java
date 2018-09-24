@@ -19,7 +19,7 @@ public class LaunchPluginHandler {
     public LaunchPluginHandler() {
         ServiceLoader<ILaunchPluginService> services = ServiceLoader.load(ILaunchPluginService.class);
         plugins = ServiceLoaderStreamUtils.toMap(services, ILaunchPluginService::name);
-        LOGGER.info(MODLAUNCHER,"Found launch plugins: [{}]", ()-> plugins.keySet().stream().collect(Collectors.joining(",")));
+        LOGGER.info(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
     }
     public Optional<ILaunchPluginService> get(final String name) {
         return Optional.ofNullable(plugins.get(name));

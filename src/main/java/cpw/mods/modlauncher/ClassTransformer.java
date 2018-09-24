@@ -1,7 +1,6 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
-import org.apache.logging.log4j.LogManager;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
@@ -71,35 +70,7 @@ public class ClassTransformer {
         List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5) {
-            @Override
-            protected String getCommonSuperClass(final String type1, final String type2) {
-                LogManager.getLogger().info("Class 1 {}, Class 2 {}", type1, type2);
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                Class<?> class1;
-                Class<?> class2;
-                try {
-                    class1 = Class.forName(type1.replace('/', '.'), false, classLoader);
-                    class2 = Class.forName(type2.replace('/', '.'), false, classLoader);
-                } catch (Exception e) {
-                    throw new TypeNotPresentException(type1, e);
-                }
-                if (class1.isAssignableFrom(class2)) {
-                    return type1;
-                }
-                if (class2.isAssignableFrom(class1)) {
-                    return type2;
-                }
-                if (class1.isInterface() || class2.isInterface()) {
-                    return "java/lang/Object";
-                } else {
-                    do {
-                        class1 = class1.getSuperclass();
-                    } while (!class1.isAssignableFrom(class2));
-                    return class1.getName().replace('.', '/');
-                }
-            }
-        };
+        ClassWriter cw = new TransformerClassWriter(this, clazz);
         clazz.accept(cw);
 
         return cw.toByteArray();
@@ -145,4 +116,5 @@ public class ClassTransformer {
     public TransformingClassLoader getTransformingClassLoader() {
         return transformingClassLoader;
     }
+
 }

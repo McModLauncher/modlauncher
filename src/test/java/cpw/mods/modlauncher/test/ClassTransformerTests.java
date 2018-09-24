@@ -86,6 +86,7 @@ class ClassTransformerTests {
             @Nonnull
             @Override
             public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
+                input.superName="java/lang/Object";
                 FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC, "testfield", "Ljava/lang/String;", null, null);
                 input.fields.add(fn);
                 return input;
