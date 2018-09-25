@@ -2,23 +2,26 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.Logging.*;
+import static cpw.mods.modlauncher.LogMarkers.*;
 import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.*;
 
 class TransformationServicesHandler {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ServiceLoader<ITransformationService> transformationServices;
     private final Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
 
     TransformationServicesHandler(TransformStore transformStore) {
         transformationServices = ServiceLoader.load(ITransformationService.class);
-        launcherLog.info(MODLAUNCHER,"Found transformer services : [{}]", () ->
+        LOGGER.info(MODLAUNCHER,"Found transformer services : [{}]", () ->
                 ServiceLoaderStreamUtils.toList(transformationServices).stream().
                         map(ITransformationService::name).collect(Collectors.joining()));
 
@@ -43,7 +46,7 @@ class TransformationServicesHandler {
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {
-        launcherLog.debug(MODLAUNCHER,"Configuring option handling for services");
+        LOGGER.debug(MODLAUNCHER,"Configuring option handling for services");
 
         argumentHandler.processArguments(environment, this::computeArgumentsForServices, this::offerArgumentResultsToServices);
     }
@@ -61,29 +64,28 @@ class TransformationServicesHandler {
     }
 
     private void initialiseServiceTransformers() {
-        launcherLog.debug(MODLAUNCHER,"Transformation services loading transformers");
+        LOGGER.debug(MODLAUNCHER,"Transformation services loading transformers");
 
         serviceLookup.values().forEach(s -> s.gatherTransformers(transformStore));
     }
 
     private void initialiseTransformationServices(Environment environment) {
-        launcherLog.debug(MODLAUNCHER,"Transformation services initializing");
+        LOGGER.debug(MODLAUNCHER,"Transformation services initializing");
 
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
 
     private void validateTransformationServices() throws RuntimeException {
-        final Stream<TransformationServiceDecorator> failedServices = serviceLookup.values().stream().filter(d -> !d.isValid());
-        if (failedServices.count() > 0) {
-            launcherLog.error(MODLAUNCHER,"Found {} services that failed to load", failedServices::count);
-            launcherLog.error(MODLAUNCHER,"Failed services : {}", () -> failedServices.map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
+        if (serviceLookup.values().stream().filter(d -> !d.isValid()).count() > 0) {
+            LOGGER.error(MODLAUNCHER,"Found {} services that failed to load", serviceLookup.values().stream().filter(d -> !d.isValid())::count);
+            LOGGER.error(MODLAUNCHER,"Failed services : {}", () -> serviceLookup.values().stream().filter(d -> !d.isValid()).map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
             //TODO enrich exception with data from unhappy services
             throw new RuntimeException("Invalid Service found");
         }
     }
 
     private void loadTransformationServices(Environment environment) {
-        launcherLog.debug(MODLAUNCHER,"Transformation services loading");
+        LOGGER.debug(MODLAUNCHER,"Transformation services loading");
 
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
     }

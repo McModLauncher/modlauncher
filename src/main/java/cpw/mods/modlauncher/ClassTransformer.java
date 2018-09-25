@@ -15,16 +15,18 @@ public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
     private final TransformStore transformers;
     private final LaunchPluginHandler pluginHandler;
+    private final TransformingClassLoader transformingClassLoader;
 
-    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler) {
+    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler, final TransformingClassLoader transformingClassLoader) {
         this.transformers = transformers;
         this.pluginHandler = pluginHandler;
+        this.transformingClassLoader = transformingClassLoader;
     }
 
     byte[] transform(byte[] inputClass, String className) {
         Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
 
-        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc);
+        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc, inputClass.length == 0);
 
         if (!transformers.needsTransforming(className) && plugins.isEmpty()) {
             return inputClass;
@@ -68,7 +70,7 @@ public class ClassTransformer {
         List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
         clazz = this.performVote(classTransformers, clazz, context);
 
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5);
+        ClassWriter cw = new TransformerClassWriter(this, clazz);
         clazz.accept(cw);
 
         return cw.toByteArray();
@@ -110,4 +112,9 @@ public class ClassTransformer {
             throw new RuntimeException("HUH");
         }
     }
+
+    public TransformingClassLoader getTransformingClassLoader() {
+        return transformingClassLoader;
+    }
+
 }

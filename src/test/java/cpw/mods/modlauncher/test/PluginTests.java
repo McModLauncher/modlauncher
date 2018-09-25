@@ -34,7 +34,7 @@ public class PluginTests {
             }
 
             @Override
-            public boolean handlesClass(final Type classType) {
+            public boolean handlesClass(final Type classType, final boolean isEmpty) {
                 return true;
             }
         };

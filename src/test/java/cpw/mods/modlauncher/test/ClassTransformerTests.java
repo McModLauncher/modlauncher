@@ -21,7 +21,7 @@ class ClassTransformerTests {
     void testClassTransformer() throws Exception {
         final TransformStore transformStore = new TransformStore();
         final LaunchPluginHandler lph = new LaunchPluginHandler();
-        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, transformStore, lph);
+        final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer());
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, new byte[0], "test.MyClass");
         assertAll("Class loads and is valid",
@@ -86,6 +86,7 @@ class ClassTransformerTests {
             @Nonnull
             @Override
             public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
+                input.superName="java/lang/Object";
                 FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC, "testfield", "Ljava/lang/String;", null, null);
                 input.fields.add(fn);
                 return input;
