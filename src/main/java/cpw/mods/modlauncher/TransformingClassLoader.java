@@ -41,7 +41,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         super();
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this);
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
-        this.delegatedClassLoader = new DelegatedClassLoader();
+        this.delegatedClassLoader = new DelegatedClassLoader(this);
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
     }
 
@@ -101,14 +101,23 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         }
     }
 
-    private class DelegatedClassLoader extends URLClassLoader {
-        DelegatedClassLoader() {
-            super(specialJars);
+    // No longer an inner class due to required static nature of registerAsParallelCapable
+    private static class DelegatedClassLoader extends URLClassLoader {
+    	
+    	static {
+    		ClassLoader.registerAsParallelCapable();
+    	}
+    	
+    	private final TransformingClassLoader parent;
+    	
+        DelegatedClassLoader(TransformingClassLoader parent) {
+            super(parent.specialJars);
+            this.parent = parent;
         }
 
         @Override
         protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            return TransformingClassLoader.this.loadClass(name, resolve);
+            return parent.loadClass(name, resolve);
         }
 
         @Override
@@ -139,7 +148,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             } else {
                 classBytes = new byte[0];
             }
-            classBytes = classTransformer.transform(classBytes, name);
+            classBytes = parent.classTransformer.transform(classBytes, name);
             if (classBytes.length > 0) {
                 LOGGER.debug(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
                 return defineClass(name, classBytes, 0, classBytes.length);
