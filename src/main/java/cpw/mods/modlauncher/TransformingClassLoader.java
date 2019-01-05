@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.jar.*;
 import java.util.stream.*;
@@ -36,6 +37,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
+    private final Function<String,URL> classBytesFinder;
     private Predicate<String> targetPackageFilter;
 
     public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... specialJars) {
@@ -44,6 +46,15 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.specialJars = Stream.of(specialJars).map(rethrowFunction(f -> f.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader(this);
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
+        this.classBytesFinder = this::locateResource;
+    }
+
+    public TransformingClassLoader(TransformingClassLoader parent, Function<String,URL> classBytesFinder) {
+        this.classTransformer = parent.classTransformer;
+        this.specialJars = new URL[0];
+        this.delegatedClassLoader = parent.delegatedClassLoader;
+        this.targetPackageFilter = parent.targetPackageFilter;
+        this.classBytesFinder = classBytesFinder;
     }
 
     @Override
@@ -55,13 +66,17 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
             try {
                 LOGGER.debug(CLASSLOADING, "Loading {}", name);
-                return delegatedClassLoader.findClass(name);
+                return delegatedClassLoader.findClass(name, this.classBytesFinder);
             } catch (ClassNotFoundException | SecurityException e) {
                 return super.loadClass(name, resolve);
             } finally {
                 LOGGER.debug(CLASSLOADING, "Loaded {}", name);
             }
         }
+    }
+
+    public Class<?> getLoadedClass(String name) {
+        return delegatedClassLoader.getLoadedClass(name);
     }
 
     @Override
@@ -72,6 +87,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     @SuppressWarnings("unchecked")
     public <T> Class<T> getClass(String name, byte[] bytes) {
         return (Class<T>) super.defineClass(name, bytes, 0, bytes.length);
+    }
+
+    public Class<?> loadClass(String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
+        return delegatedClassLoader.findClass(name, classBytesFinder);
     }
 
     @Override
@@ -114,6 +133,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         }
     }
 
+    protected URL locateResource(String path) {
+        return delegatedClassLoader.findResource(path);
+    }
+
     private static class DelegatedClassLoader extends URLClassLoader {
         static {
             ClassLoader.registerAsParallelCapable();
@@ -126,13 +149,22 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             this.tcl = cl;
         }
 
+
         @Override
         protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
             return tcl.loadClass(name, resolve);
         }
 
+        Class<?> getLoadedClass(String name) {
+            return findLoadedClass(name);
+        }
+
         @Override
         protected Class<?> findClass(final String name) throws ClassNotFoundException {
+            return findClass(name, tcl.classBytesFinder);
+        }
+
+        protected Class<?> findClass(final String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
             final Class<?> existingClass = super.findLoadedClass(name);
             if (existingClass != null) {
                 LOGGER.debug(CLASSLOADING, "Found existing class {}", name);
@@ -140,7 +172,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
             final String path = name.replace('.', '/').concat(".class");
 
-            final URL classResource = findResource(path);
+            final URL classResource = classBytesFinder.apply(path);
             byte[] classBytes;
             Manifest jarManifest = null;
             if (classResource != null) {
