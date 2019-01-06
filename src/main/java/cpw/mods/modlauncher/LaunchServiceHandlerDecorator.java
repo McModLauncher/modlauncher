@@ -22,8 +22,8 @@ class LaunchServiceHandlerDecorator {
         }
     }
 
-    public Path[] findTransformationTargets() {
-        return this.service.identifyTransformationTargets();
+    public void configureTransformationClassLoaderBuilder(ITransformingClassLoaderBuilder builder) {
+        this.service.configureTransformationClassLoader(builder);
     }
 
     ILaunchHandlerService getService() {

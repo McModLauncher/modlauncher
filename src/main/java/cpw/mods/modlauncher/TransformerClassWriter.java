@@ -1,5 +1,7 @@
 package cpw.mods.modlauncher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class TransformerClassWriter extends ClassWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final HashMap<String,String> classParents = new HashMap<>();
     private static final HashMap<String, Set<String>> classHierarchies = new HashMap<>();
     private static final HashMap<String, Boolean> isInterface = new HashMap<>();
@@ -55,16 +58,18 @@ class TransformerClassWriter extends ClassWriter {
 
     private void computeHierarchy(final String className, final ClassTransformer classTransformer) {
         final String target = className.replace('.', '/').concat(".class");
+        InputStream resource = null;
         try {
-            final InputStream resource = classTransformer.getTransformingClassLoader().getResourceAsStream(target);
+            resource = classTransformer.getTransformingClassLoader().getResourceAsStream(target);
             final ClassReader classReader = new ClassReader(resource);
             classReader.accept(new SuperCollectingVisitor(classTransformer), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load hierarchy member "+ className, e);
+            LOGGER.fatal("Class {} unable to find resource {}", className, resource);
+            throw new RuntimeException("Failed to load hierarchy member " + className, e);
         } catch (NullPointerException e) {
             // discard NPE - it's because the classloader doesn't exist in testing
             classParents.put(className, "java/lang/Object");
-            classHierarchies.put(className, Stream.of(className,"java/lang/Object").collect(Collectors.toSet()));
+            classHierarchies.put(className, Stream.of(className, "java/lang/Object").collect(Collectors.toSet()));
             return;
         }
     }

@@ -41,11 +41,12 @@ class LaunchServiceHandler {
         launch(launchTarget, args, classLoader);
     }
 
-    Path[] identifyTransformationTargets(final ArgumentHandler argumentHandler) {
+    TransformingClassLoaderBuilder identifyTransformationTargets(final ArgumentHandler argumentHandler) {
         final String launchTarget = argumentHandler.getLaunchTarget();
-        final Path[] transformationTargets = launchHandlerLookup.get(launchTarget).findTransformationTargets();
-        final Path[] specialJar = argumentHandler.getSpecialJars();
-        return Stream.concat(Arrays.stream(transformationTargets), Arrays.stream(specialJar)).toArray(Path[]::new);
+        final TransformingClassLoaderBuilder builder = new TransformingClassLoaderBuilder();
+        Arrays.stream(argumentHandler.getSpecialJars()).forEach(builder::addTransformationPath);
+        launchHandlerLookup.get(launchTarget).configureTransformationClassLoaderBuilder(builder);
+        return builder;
     }
 
     void validateLaunchTarget(final ArgumentHandler argumentHandler) {

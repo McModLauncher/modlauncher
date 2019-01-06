@@ -3,7 +3,6 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 
 import java.lang.invoke.*;
-import java.lang.reflect.*;
 import java.nio.file.*;
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -20,10 +19,10 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Path[] identifyTransformationTargets() {
-        return Arrays.stream(System.getProperty("test.harness").split(",")).
+    public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
+        Arrays.stream(System.getProperty("test.harness").split(",")).
                 map(FileSystems.getDefault()::getPath).
-                toArray(Path[]::new);
+                forEach(builder::addTransformationPath);
     }
 
     @Override

@@ -52,8 +52,8 @@ public enum Launcher {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
         this.launchService.validateLaunchTarget(this.argumentHandler);
-        Path[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
-        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, specialJars);
+        final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
+        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.classLoader);
     }
