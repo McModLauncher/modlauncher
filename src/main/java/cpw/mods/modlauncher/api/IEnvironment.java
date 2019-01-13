@@ -20,6 +20,15 @@ public interface IEnvironment {
     <T> Optional<T> getProperty(TypesafeMap.Key<T> key);
 
     /**
+     * Compute a new value for insertion into the environment, if not already present.
+     *
+     * @param key to insert
+     * @param valueFunction the supplier of a value
+     * @param <T> Type of key
+     * @return The value of the key
+     */
+    <T> T computePropertyIfAbsent(TypesafeMap.Key<T> key, final Function<? super TypesafeMap.Key<T>, ? extends T> valueFunction);
+    /**
      * Find the named {@link ILaunchPluginService}
      *
      * @param name name to lookup
@@ -36,9 +45,14 @@ public interface IEnvironment {
     Optional<ILaunchHandlerService> findLaunchHandler(String name);
 
     final class Keys {
-        public static final Supplier<TypesafeMap.Key<String>> VERSION = new TypesafeMap.KeyBuilder<>("version", String.class, IEnvironment.class);
-        public static final Supplier<TypesafeMap.Key<Path>> GAMEDIR = new TypesafeMap.KeyBuilder<>("gamedir", Path.class, IEnvironment.class);
-        public static final Supplier<TypesafeMap.Key<Path>> ASSETSDIR = new TypesafeMap.KeyBuilder<>("assetsdir", Path.class, IEnvironment.class);
-        public static final Supplier<TypesafeMap.Key<String>> LAUNCHTARGET = new TypesafeMap.KeyBuilder<>("launchtarget", String.class, IEnvironment.class);
+        public static final Supplier<TypesafeMap.Key<String>> VERSION = buildKey("version", String.class);
+        public static final Supplier<TypesafeMap.Key<Path>> GAMEDIR = buildKey("gamedir", Path.class);
+        public static final Supplier<TypesafeMap.Key<Path>> ASSETSDIR = buildKey("assetsdir", Path.class);
+        public static final Supplier<TypesafeMap.Key<String>> LAUNCHTARGET = buildKey("launchtarget", String.class);
+    }
+
+
+    static <T> Supplier<TypesafeMap.Key<T>> buildKey(String name, Class<T> clazz) {
+        return new TypesafeMap.KeyBuilder<>(name, clazz, IEnvironment.class);
     }
 }

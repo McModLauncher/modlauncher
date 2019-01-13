@@ -96,20 +96,20 @@ ext.sharedManifest = manifest {
                 "Specification-Vendor": "Forge",
                 "Specification-Version": "1.0", // We are version 1 of the modlauncher specification
                 "Implementation-Title": project.name,
-                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
+                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().abbreviatedId}",
                 "Implementation-Vendor" :"Forge",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "Git-Commit": grgit.head().getAbbreviatedId(8),
+                "Git-Commit": grgit.head().abbreviatedId,
                 "Git-Branch": grgit.branch.current().getName() ],
             "cpw/mods/modlauncher/api/")
     attributes(["Specification-Title": "modlauncherserviceapi",
                 "Specification-Vendor": "Forge",
                 "Specification-Version": "1.0", // We are version 1 of the modlauncher serviceapi specification
                 "Implementation-Title": project.name,
-                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().getAbbreviatedId(8)}",
+                "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().abbreviatedId}",
                 "Implementation-Vendor" :"Forge",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "Git-Commit": grgit.head().getAbbreviatedId(8),
+                "Git-Commit": grgit.head().abbreviatedId,
                 "Git-Branch": grgit.branch.current().getName() ],
             "cpw/mods/modlauncher/serviceapi/")
 }

@@ -35,15 +35,15 @@ public class ArgumentHandler {
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
         this.optionSet = parser.parse(this.args);
-        env.getAll().computeIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
-        env.getAll().computeIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
-        env.getAll().computeIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
-        env.getAll().computeIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
+        env.computePropertyIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
         resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
     Path[] getSpecialJars() {
-        return this.optionSet.valuesOf(minecraftJarOption).stream().toArray(Path[]::new);
+        return this.optionSet.valuesOf(minecraftJarOption).toArray(new Path[0]);
     }
 
     String getLaunchTarget() {
