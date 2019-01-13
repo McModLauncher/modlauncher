@@ -1,6 +1,7 @@
 plugins {
-    id 'org.ajoberstar.reckon' version '0.8.0'
-    id 'org.ajoberstar.grgit' version '2.2.1'
+    id 'org.ajoberstar.reckon' version '0.9.0'
+    id 'org.ajoberstar.grgit' version '3.0.0'
+    id "com.github.ben-manes.versions" version '0.20.0'
 }
 apply plugin: 'java-library'
 apply plugin: 'maven'
@@ -24,12 +25,25 @@ reckon {
 
 reckonTagCreate.dependsOn check
 
+dependencyUpdates.resolutionStrategy {
+    componentSelection { rules ->
+        rules.all { ComponentSelection selection ->
+            boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm', 'preview'].any { qualifier ->
+                selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
+            }
+            if (rejected) {
+                selection.reject('Release candidate')
+            }
+        }
+    }
+}
+
 test {
     useJUnitPlatform()
 }
 
 jacoco {
-    toolVersion = "0.8.1"
+    toolVersion = "0.8.2"
 }
 
 group = 'cpw.mods'
@@ -49,29 +63,29 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.11.+")
     implementation("org.apache.logging.log4j:log4j-core:2.11.+")
     implementation(sourceSets.api.output)
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.+")
-    testImplementation("org.powermock:powermock-core:1.7.+")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.2.+")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.+")
+    testImplementation("org.powermock:powermock-core:2.0.+")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.+")
     testImplementation(sourceSets.testJars.runtimeClasspath)
 }
 
 task apiJar(type: Jar) {
-    classifier = 'api'
+    archiveClassifier = 'api'
     from sourceSets.api.output
 }
 
 task apiSourcesJar(type: Jar) {
-    classifier = 'apisource'
+    archiveClassifier = 'apisource'
     from sourceSets.api.allSource
 }
 
 task testsJar(type: Jar) {
-    classifier = 'testsjar'
+    archiveClassifier = 'testsjar'
     from sourceSets.testJars.output
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
     from sourceSets.api.allSource
 }
