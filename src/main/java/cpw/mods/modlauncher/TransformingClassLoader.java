@@ -72,12 +72,13 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                 return super.loadClass(name, resolve);
             }
             try {
-                LOGGER.debug(CLASSLOADING, "Loading {}", name);
-                return delegatedClassLoader.findClass(name, this.classBytesFinder);
+                LOGGER.debug(CLASSLOADING, "Attempting to load {}", name);
+                final Class<?> loadedClass = delegatedClassLoader.findClass(name, this.classBytesFinder);
+                LOGGER.debug(CLASSLOADING, "Class loaded for {}", name);
+                return loadedClass;
             } catch (ClassNotFoundException | SecurityException e) {
+                LOGGER.debug(CLASSLOADING, "Delegating to parent classloader {}", name);
                 return super.loadClass(name, resolve);
-            } finally {
-                LOGGER.debug(CLASSLOADING, "Loaded {}", name);
             }
         }
     }
