@@ -31,8 +31,20 @@ class LaunchServiceHandler {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
     private void launch(String target, String[] arguments, ITransformingClassLoader classLoader) {
-        LOGGER.info(MODLAUNCHER, "Launching target {} with arguments {}", target, Arrays.asList(arguments));
+        LOGGER.info(MODLAUNCHER, "Launching target {} with arguments {}", target, hideAccessToken(arguments));
         launchHandlerLookup.get(target).launch(arguments, classLoader);
+    }
+
+    private List<String> hideAccessToken(String[] arguments) {
+        final ArrayList<String> output = new ArrayList<>();
+        for (int i = 0; i < arguments.length; i++) {
+            if (i > 0 && Objects.equals(arguments[i-1], "--accessToken")) {
+                output.add("❄❄❄❄❄❄❄❄");
+            } else {
+                output.add(arguments[i]);
+            }
+        }
+        return output;
     }
 
     public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader) {
