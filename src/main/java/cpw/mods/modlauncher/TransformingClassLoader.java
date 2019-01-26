@@ -218,9 +218,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                 int i = name.lastIndexOf('.');
                 String pkgname = i > 0 ? name.substring(0, i) : "";
                 // Check if package already loaded.
-                if (getPackage(pkgname) == null) {
-                    definePackage(pkgname, jarManifest);
-                }
+                tryDefinePackage(pkgname, jarManifest);
 
                 return defineClass(name, classBytes, 0, classBytes.length);
             } else {
@@ -230,45 +228,54 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
         }
 
-        Package definePackage(String name, @Nullable Manifest man) throws IllegalArgumentException
+        Package tryDefinePackage(String name, @Nullable Manifest man) throws IllegalArgumentException
         {
-            String path = name.replace('.', '/').concat("/");
-            String specTitle = null, specVersion = null, specVendor = null;
-            String implTitle = null, implVersion = null, implVendor = null;
+            if (getPackage(name) == null) {
+                synchronized (this) {
+                    if (getPackage(name) != null) return getPackage(name);
 
-            if (man != null) {
-                Attributes attr = man.getAttributes(path);
-                if (attr != null) {
-                    specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
-                    specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-                    specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-                    implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-                    implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                    implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+                    String path = name.replace('.', '/').concat("/");
+                    String specTitle = null, specVersion = null, specVendor = null;
+                    String implTitle = null, implVersion = null, implVendor = null;
+
+                    if (man != null) {
+                        Attributes attr = man.getAttributes(path);
+                        if (attr != null) {
+                            specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
+                            specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
+                            specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
+                            implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+                            implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                            implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+                        }
+                        attr = man.getMainAttributes();
+                        if (attr != null) {
+                            if (specTitle == null) {
+                                specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
+                            }
+                            if (specVersion == null) {
+                                specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
+                            }
+                            if (specVendor == null) {
+                                specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
+                            }
+                            if (implTitle == null) {
+                                implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+                            }
+                            if (implVersion == null) {
+                                implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                            }
+                            if (implVendor == null) {
+                                implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+                            }
+                        }
+                    }
+                    return definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, null);
                 }
-                attr = man.getMainAttributes();
-                if (attr != null) {
-                    if (specTitle == null) {
-                        specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
-                    }
-                    if (specVersion == null) {
-                        specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-                    }
-                    if (specVendor == null) {
-                        specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-                    }
-                    if (implTitle == null) {
-                        implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-                    }
-                    if (implVersion == null) {
-                        implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                    }
-                    if (implVendor == null) {
-                        implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
-                    }
-                }
+
+            } else {
+                return getPackage(name);
             }
-            return definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, null);
         }
 
     }
