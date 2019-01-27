@@ -40,7 +40,7 @@ public enum Launcher {
     }
 
     public static void main(String... args) {
-        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> args);
+        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
     }
 

@@ -35,7 +35,7 @@ class LaunchServiceHandler {
         launchHandlerLookup.get(target).launch(arguments, classLoader);
     }
 
-    private List<String> hideAccessToken(String[] arguments) {
+    static List<String> hideAccessToken(String[] arguments) {
         final ArrayList<String> output = new ArrayList<>();
         for (int i = 0; i < arguments.length; i++) {
             if (i > 0 && Objects.equals(arguments[i-1], "--accessToken")) {
