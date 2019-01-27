@@ -68,16 +68,16 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             if (!targetPackageFilter.test(name)) {
-                LOGGER.debug(CLASSLOADING, "Delegating to parent {}", name);
+                LOGGER.trace(CLASSLOADING, "Delegating to parent {}", name);
                 return super.loadClass(name, resolve);
             }
             try {
-                LOGGER.debug(CLASSLOADING, "Attempting to load {}", name);
+                LOGGER.trace(CLASSLOADING, "Attempting to load {}", name);
                 final Class<?> loadedClass = delegatedClassLoader.findClass(name, this.classBytesFinder);
-                LOGGER.debug(CLASSLOADING, "Class loaded for {}", name);
+                LOGGER.trace(CLASSLOADING, "Class loaded for {}", name);
                 return loadedClass;
             } catch (ClassNotFoundException | SecurityException e) {
-                LOGGER.debug(CLASSLOADING, "Delegating to parent classloader {}", name);
+                LOGGER.trace(CLASSLOADING, "Delegating to parent classloader {}", name);
                 return super.loadClass(name, resolve);
             }
         }
@@ -185,7 +185,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         protected Class<?> findClass(final String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
             final Class<?> existingClass = super.findLoadedClass(name);
             if (existingClass != null) {
-                LOGGER.debug(CLASSLOADING, "Found existing class {}", name);
+                LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
                 return existingClass;
             }
             final String path = name.replace('.', '/').concat(".class");
@@ -205,15 +205,15 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     }
                     jarManifest = urlConnection.getJarManifest();
                 } catch (IOException e) {
-                    LOGGER.error(CLASSLOADING,"Failed to load bytes for class {} at {}", name, classResource, e);
-                    throw new ClassNotFoundException("blargh", e);
+                    LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {}", name, classResource, e);
+                    throw new ClassNotFoundException("Failed to find class bytes for "+name, e);
                 }
             } else {
                 classBytes = new byte[0];
             }
             classBytes = tcl.classTransformer.transform(classBytes, name);
             if (classBytes.length > 0) {
-                LOGGER.debug(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
+                LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
 
                 int i = name.lastIndexOf('.');
                 String pkgname = i > 0 ? name.substring(0, i) : "";
@@ -222,7 +222,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
                 return defineClass(name, classBytes, 0, classBytes.length);
             } else {
-                LOGGER.debug(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
+                LOGGER.trace(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
                 throw new ClassNotFoundException();
             }
