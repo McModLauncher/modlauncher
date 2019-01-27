@@ -21,7 +21,7 @@ class TransformationServicesHandler {
 
     TransformationServicesHandler(TransformStore transformStore) {
         transformationServices = ServiceLoader.load(ITransformationService.class);
-        LOGGER.info(MODLAUNCHER,"Found transformer services : [{}]", () ->
+        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () ->
                 ServiceLoaderStreamUtils.toList(transformationServices).stream().
                         map(ITransformationService::name).collect(Collectors.joining()));
 

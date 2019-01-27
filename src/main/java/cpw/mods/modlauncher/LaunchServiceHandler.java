@@ -20,7 +20,7 @@ class LaunchServiceHandler {
 
     public LaunchServiceHandler() {
         launchHandlerServices = ServiceLoader.load(ILaunchHandlerService.class);
-        LOGGER.info(MODLAUNCHER,"Found launch services [{}]", () ->
+        LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () ->
                 ServiceLoaderStreamUtils.toList(launchHandlerServices).stream().
                         map(ILaunchHandlerService::name).collect(Collectors.joining(",")));
         launchHandlerLookup = StreamSupport.stream(launchHandlerServices.spliterator(), false)
@@ -31,7 +31,7 @@ class LaunchServiceHandler {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
     private void launch(String target, String[] arguments, ITransformingClassLoader classLoader) {
-        LOGGER.info(MODLAUNCHER, "Launching target {} with arguments {}", target, hideAccessToken(arguments));
+        LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
         launchHandlerLookup.get(target).launch(arguments, classLoader);
     }
 
