@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
 import javax.annotation.*;
+import java.lang.reflect.Constructor;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
@@ -34,7 +35,8 @@ class TransformingClassLoaderTests {
         LaunchPluginHandler lph = new LaunchPluginHandler();
         TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(transformStore);
-        TransformingClassLoader tcl = new TransformingClassLoader(transformStore, lph, FileSystems.getDefault().getPath("."));
+        final Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, transformStore.getClass(), lph.getClass(), Path[].class);
+        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, new Path[] {FileSystems.getDefault().getPath(".")});
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");

@@ -33,14 +33,21 @@ class TransformationServiceDecoratorTests {
         Set<TransformTargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");
         assertAll(
                 () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.CLASS)),
-                () -> assertTrue(transformers.get(TransformTargetLabel.LabelType.CLASS).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == classNodeTransformer)),
+                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.CLASS)).values().stream().flatMap(Collection::stream).allMatch(s -> s == classNodeTransformer)),
                 () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheese.Puffs"))),
                 () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.METHOD)),
-                () -> assertTrue(transformers.get(TransformTargetLabel.LabelType.METHOD).getTransformers().values().stream().flatMap(Collection::stream).allMatch(s -> s == methodNodeTransformer)),
+                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.METHOD)).values().stream().flatMap(Collection::stream).allMatch(s -> s == methodNodeTransformer)),
                 () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheesy.PuffMethod")))
         );
     }
 
+    private static <T> Map<TransformTargetLabel, List<ITransformer<T>>> getTransformers(TransformList<T> list) {
+        try {
+            return Whitebox.invokeMethod(list, "getTransformers");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     private static class ClassNodeTransformer implements ITransformer<ClassNode> {
         @Nonnull
         @Override

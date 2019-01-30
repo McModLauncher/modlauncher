@@ -4,6 +4,8 @@ import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Environment implementation class
@@ -32,7 +34,8 @@ public final class Environment implements IEnvironment {
         return launcher.findLaunchHandler(name);
     }
 
-    TypesafeMap getAll() {
-        return environment;
+    @Override
+    public <T> T computePropertyIfAbsent(final TypesafeMap.Key<T> key, final Function<? super TypesafeMap.Key<T>, ? extends T> valueFunction) {
+        return environment.computeIfAbsent(key, valueFunction);
     }
 }

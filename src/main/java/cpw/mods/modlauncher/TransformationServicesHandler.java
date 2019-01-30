@@ -21,7 +21,7 @@ class TransformationServicesHandler {
 
     TransformationServicesHandler(TransformStore transformStore) {
         transformationServices = ServiceLoader.load(ITransformationService.class);
-        LOGGER.info(MODLAUNCHER,"Found transformer services : [{}]", () ->
+        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () ->
                 ServiceLoaderStreamUtils.toList(transformationServices).stream().
                         map(ITransformationService::name).collect(Collectors.joining()));
 
@@ -41,8 +41,8 @@ class TransformationServicesHandler {
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, Path... specialJars) {
-        return new TransformingClassLoader(transformStore, pluginHandler, specialJars);
+    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder) {
+        return new TransformingClassLoader(transformStore, pluginHandler, builder);
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {

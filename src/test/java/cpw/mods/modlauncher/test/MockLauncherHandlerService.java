@@ -15,8 +15,8 @@ public class MockLauncherHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Path[] identifyTransformationTargets() {
-        return new Path[0];
+    public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
+        return;
     }
 
     @Override

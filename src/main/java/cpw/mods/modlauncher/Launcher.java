@@ -40,7 +40,7 @@ public enum Launcher {
     }
 
     public static void main(String... args) {
-        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> args);
+        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
     }
 
@@ -52,8 +52,8 @@ public enum Launcher {
         this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
         this.launchService.validateLaunchTarget(this.argumentHandler);
-        Path[] specialJars = this.launchService.identifyTransformationTargets(this.argumentHandler);
-        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, specialJars);
+        final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
+        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.classLoader);
     }

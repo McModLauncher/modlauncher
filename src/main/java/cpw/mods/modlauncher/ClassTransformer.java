@@ -113,8 +113,7 @@ public class ClassTransformer {
         }
     }
 
-    public TransformingClassLoader getTransformingClassLoader() {
+    TransformingClassLoader getTransformingClassLoader() {
         return transformingClassLoader;
     }
-
 }

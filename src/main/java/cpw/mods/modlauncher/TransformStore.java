@@ -27,19 +27,19 @@ public class TransformStore {
     List<ITransformer<FieldNode>> getTransformersFor(String className, FieldNode field) {
         TransformTargetLabel tl = new TransformTargetLabel(className, field.name);
         TransformList<FieldNode> transformerlist = TransformTargetLabel.LabelType.FIELD.getFromMap(this.transformers);
-        return transformerlist.getTransformers().computeIfAbsent(tl, v -> new ArrayList<>());
+        return transformerlist.getTransformersForLabel(tl);
     }
 
     List<ITransformer<MethodNode>> getTransformersFor(String className, MethodNode method) {
         TransformTargetLabel tl = new TransformTargetLabel(className, method.name, method.desc);
         TransformList<MethodNode> transformerlist = TransformTargetLabel.LabelType.METHOD.getFromMap(this.transformers);
-        return transformerlist.getTransformers().computeIfAbsent(tl, v -> new ArrayList<>());
+        return transformerlist.getTransformersForLabel(tl);
     }
 
     List<ITransformer<ClassNode>> getTransformersFor(String className) {
         TransformTargetLabel tl = new TransformTargetLabel(className);
         TransformList<ClassNode> transformerlist = TransformTargetLabel.LabelType.CLASS.getFromMap(this.transformers);
-        return transformerlist.getTransformers().computeIfAbsent(tl, v -> new ArrayList<>());
+        return transformerlist.getTransformersForLabel(tl);
     }
 
     @SuppressWarnings("unchecked")
@@ -47,7 +47,7 @@ public class TransformStore {
         LOGGER.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
         classNeedsTransforming.add(new TransformTargetLabel(targetLabel.getClassName().getInternalName()));
         final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getLabelType());
-        transformList.getTransformers().computeIfAbsent(targetLabel, v -> new ArrayList<>()).add(transformer);
+        transformList.addTransformer(targetLabel, transformer);
     }
 
     boolean needsTransforming(String className) {

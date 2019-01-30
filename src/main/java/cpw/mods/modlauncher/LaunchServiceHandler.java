@@ -20,7 +20,7 @@ class LaunchServiceHandler {
 
     public LaunchServiceHandler() {
         launchHandlerServices = ServiceLoader.load(ILaunchHandlerService.class);
-        LOGGER.info(MODLAUNCHER,"Found launch services [{}]", () ->
+        LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () ->
                 ServiceLoaderStreamUtils.toList(launchHandlerServices).stream().
                         map(ILaunchHandlerService::name).collect(Collectors.joining(",")));
         launchHandlerLookup = StreamSupport.stream(launchHandlerServices.spliterator(), false)
@@ -32,8 +32,20 @@ class LaunchServiceHandler {
     }
 
     private <L extends ClassLoader & ITransformingClassLoader> void launch(String target, String[] arguments, L classLoader) {
-        LOGGER.info(MODLAUNCHER, "Launching target {} with arguments {}", target, Arrays.asList(arguments));
+        LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
         launchHandlerLookup.get(target).launch(arguments, classLoader);
+    }
+
+    static List<String> hideAccessToken(String[] arguments) {
+        final ArrayList<String> output = new ArrayList<>();
+        for (int i = 0; i < arguments.length; i++) {
+            if (i > 0 && Objects.equals(arguments[i-1], "--accessToken")) {
+                output.add("❄❄❄❄❄❄❄❄");
+            } else {
+                output.add(arguments[i]);
+            }
+        }
+        return output;
     }
 
     public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader) {
@@ -42,11 +54,12 @@ class LaunchServiceHandler {
         launch(launchTarget, args, classLoader);
     }
 
-    Path[] identifyTransformationTargets(final ArgumentHandler argumentHandler) {
+    TransformingClassLoaderBuilder identifyTransformationTargets(final ArgumentHandler argumentHandler) {
         final String launchTarget = argumentHandler.getLaunchTarget();
-        final Path[] transformationTargets = launchHandlerLookup.get(launchTarget).findTransformationTargets();
-        final Path[] specialJar = argumentHandler.getSpecialJars();
-        return Stream.concat(Arrays.stream(transformationTargets), Arrays.stream(specialJar)).toArray(Path[]::new);
+        final TransformingClassLoaderBuilder builder = new TransformingClassLoaderBuilder();
+        Arrays.stream(argumentHandler.getSpecialJars()).forEach(builder::addTransformationPath);
+        launchHandlerLookup.get(launchTarget).configureTransformationClassLoaderBuilder(builder);
+        return builder;
     }
 
     void validateLaunchTarget(final ArgumentHandler argumentHandler) {

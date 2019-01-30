@@ -109,7 +109,7 @@ public final class TypesafeMap {
         private final Class<T> clazz;
         private Key<T> key;
 
-        KeyBuilder(String name, Class<T> clazz, Class<?> owner) {
+        public KeyBuilder(String name, Class<T> clazz, Class<?> owner) {
             this.name = name;
             this.clazz = clazz;
             this.owner = owner;
