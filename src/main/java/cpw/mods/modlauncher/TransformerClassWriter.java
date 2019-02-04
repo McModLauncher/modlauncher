@@ -63,6 +63,7 @@ class TransformerClassWriter extends ClassWriter {
             resource = classTransformer.getTransformingClassLoader().getResourceAsStream(target);
             final ClassReader classReader = new ClassReader(resource);
             classReader.accept(new SuperCollectingVisitor(classTransformer), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+            resource.close();
         } catch (IOException e) {
             LOGGER.fatal("Class {} unable to find resource {}", className, resource);
             throw new RuntimeException("Failed to load hierarchy member " + className, e);
