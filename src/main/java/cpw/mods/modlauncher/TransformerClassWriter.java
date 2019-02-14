@@ -70,7 +70,9 @@ class TransformerClassWriter extends ClassWriter {
             // discard NPE - it's because the classloader doesn't exist in testing
             classParents.put(className, "java/lang/Object");
             classHierarchies.put(className, Stream.of(className, "java/lang/Object").collect(Collectors.toSet()));
-            return;
+        }
+        finally {
+            try {resource.close();} catch (NullPointerException | IOException e) {}
         }
     }
 
