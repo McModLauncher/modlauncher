@@ -62,7 +62,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     private <I,R> Function<I,R> alternate(@Nullable Function<I,Optional<R>> first, @Nullable Function<I,Optional<R>> second) {
         if (second == null) return input-> first.apply(input).orElse(null);
         if (first == null) return input-> second.apply(input).orElse(null);
-        return input -> first.apply(input).orElse(second.apply(input).orElse(null));
+        return input -> first.apply(input).orElseGet(() -> second.apply(input).orElse(null));
     }
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
