@@ -27,8 +27,9 @@ public class ClassTransformer {
         Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
 
         List<String> plugins = pluginHandler.getPluginsTransforming(classDesc, inputClass.length == 0);
+        boolean hasTransformers = transformers.needsTransforming(className);
 
-        if (!transformers.needsTransforming(className) && plugins.isEmpty()) {
+        if (!hasTransformers && plugins.isEmpty()) {
             return inputClass;
         }
 
@@ -48,27 +49,31 @@ public class ClassTransformer {
             empty = true;
         }
 
-        clazz = pluginHandler.offerClassNodeToPlugins(plugins, clazz, classDesc);
-        VotingContext context = new VotingContext(className, empty, digest);
+        ClassNode afterPlugins = pluginHandler.offerClassNodeToPlugins(plugins, clazz, classDesc);
+        if (afterPlugins == null && !hasTransformers) return inputClass; //No transformers present and no plugin indicated a change - do not rewrite class node
+        else if (afterPlugins != null) clazz = afterPlugins;
 
-        List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
-        // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
-        for (FieldNode field : clazz.fields) {
-            List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
-            fieldList.add(this.performVote(fieldTransformers, field, context));
+        if (hasTransformers) { //Skip this if only plugins need to transform
+            VotingContext context = new VotingContext(className, empty, digest);
+            List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
+            // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
+            for (FieldNode field : clazz.fields) {
+                List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
+                fieldList.add(performVote(fieldTransformers, field, context));
+            }
+
+            // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
+            List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
+            for (MethodNode method : clazz.methods) {
+                List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
+                methodList.add(performVote(methodTransformers, method, context));
+            }
+
+            clazz.fields = fieldList;
+            clazz.methods = methodList;
+            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
+            clazz = performVote(classTransformers, clazz, context);
         }
-
-        // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
-        List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
-        for (MethodNode method : clazz.methods) {
-            List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
-            methodList.add(this.performVote(methodTransformers, method, context));
-        }
-
-        clazz.fields = fieldList;
-        clazz.methods = methodList;
-        List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
-        clazz = this.performVote(classTransformers, clazz, context);
 
         ClassWriter cw = new TransformerClassWriter(this, clazz);
         clazz.accept(cw);
@@ -76,7 +81,7 @@ public class ClassTransformer {
         return cw.toByteArray();
     }
 
-    private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context) {
+    private static <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context) {
         do {
             final Stream<TransformerVote<T>> voteResultStream = transformers.stream().map(t -> gatherVote(t, context));
             final Map<TransformerVoteResult, List<TransformerVote<T>>> results = voteResultStream.collect(Collectors.groupingBy(TransformerVote::getResult));
@@ -100,7 +105,7 @@ public class ClassTransformer {
         return node;
     }
 
-    private <T> TransformerVote<T> gatherVote(ITransformer<T> transformer, VotingContext context) {
+    private static <T> TransformerVote<T> gatherVote(ITransformer<T> transformer, VotingContext context) {
         TransformerVoteResult vr = transformer.castVote(context);
         return new TransformerVote<>(vr, transformer);
     }

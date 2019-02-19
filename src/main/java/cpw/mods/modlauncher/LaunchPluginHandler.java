@@ -31,13 +31,22 @@ public class LaunchPluginHandler {
                 collect(ArrayList<String>::new, (l,e) -> l.add(e.getKey()), ArrayList::addAll);
     }
 
+    /**
+     * @return The classnode with the changes, or null if no changes occured
+     */
+    @Nullable
     public ClassNode offerClassNodeToPlugins(final List<String> pluginNames, @Nullable final ClassNode node, final Type className) {
         ClassNode intermediate = node;
+        boolean transformed = false;
         for (String plugin: pluginNames) {
             final ILaunchPluginService iLaunchPluginService = plugins.get(plugin);
             LOGGER.debug(LAUNCHPLUGIN,"LauncherPluginService {} transforming {}", plugin, className);
-            intermediate = iLaunchPluginService.processClass(intermediate, className);
+            ClassNode afterPlugin = iLaunchPluginService.processClass(intermediate, className);
+            if (afterPlugin != null) { //Code returned a class node - assume it changed
+                intermediate = afterPlugin;
+                transformed = true;
+            }
         }
-        return intermediate;
+        return transformed ? intermediate : null;
     }
 }

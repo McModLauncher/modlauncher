@@ -39,7 +39,7 @@ public interface ILaunchPluginService {
      *
      * @param classNode the classnode to process
      * @param classType the name of the class
-     * @return the processed classnode
+     * @return the processed classnode, or null if the class node did not change
      */
     ClassNode processClass(ClassNode classNode, final Type classType);
 

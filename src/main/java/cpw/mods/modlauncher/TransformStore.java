@@ -14,7 +14,7 @@ import static cpw.mods.modlauncher.LogMarkers.*;
  */
 public class TransformStore {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Set<TransformTargetLabel> classNeedsTransforming = new HashSet<>();
+    private final Set<String> classNeedsTransforming = new HashSet<>();
     private final EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers;
 
     public TransformStore() {
@@ -45,12 +45,12 @@ public class TransformStore {
     @SuppressWarnings("unchecked")
     <T> void addTransformer(TransformTargetLabel targetLabel, ITransformer<T> transformer) {
         LOGGER.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
-        classNeedsTransforming.add(new TransformTargetLabel(targetLabel.getClassName().getInternalName()));
+        classNeedsTransforming.add(targetLabel.getClassName().getInternalName());
         final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getLabelType());
         transformList.addTransformer(targetLabel, transformer);
     }
 
     boolean needsTransforming(String className) {
-        return classNeedsTransforming.contains(new TransformTargetLabel(className));
+        return classNeedsTransforming.contains(className);
     }
 }
