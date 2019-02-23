@@ -26,10 +26,18 @@ public class LaunchPluginHandler {
     }
 
     public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty) {
-        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> phaseObjectEnumMap = new EnumMap<>(ILaunchPluginService.Phase.class);
-        plugins.forEach((n,pl)-> pl.handlesClass(className, isEmpty).forEach(ph->phaseObjectEnumMap.computeIfAbsent(ph, e->new ArrayList<>()).add(pl)));
-        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap.entrySet().stream().map(e->e.getKey().toString()+":"+ e.getValue()));
-        return phaseObjectEnumMap;
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> out = plugins.values().stream()
+                .collect(
+                        () -> new EnumMap<>(ILaunchPluginService.Phase.class),
+                        (map, plugin) -> {
+                            plugin.handlesClass(className, isEmpty)
+                                    .forEach(phase -> map.computeIfAbsent(phase, ph->new ArrayList<>()).add(plugin));
+                        },
+                        EnumMap::putAll
+                );
+
+        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", () -> out);
+        return out;
     }
 
     public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className) {
