@@ -1,11 +1,13 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
 import java.security.*;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.*;
 
 /**
@@ -24,51 +26,64 @@ public class ClassTransformer {
     }
 
     byte[] transform(byte[] inputClass, String className) {
-        Type classDesc = Type.getObjectType(className.replaceAll("\\.", "/"));
+        Type classDesc = Type.getObjectType(className.replace('.', '/'));
 
-        List<String> plugins = pluginHandler.getPluginsTransforming(classDesc, inputClass.length == 0);
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0);
 
-        if (!transformers.needsTransforming(className) && plugins.isEmpty()) {
+        final boolean needsTransforming = transformers.needsTransforming(className);
+        if (!needsTransforming && launchPluginTransformerSet.isEmpty()) {
             return inputClass;
         }
 
-        ClassNode clazz = new ClassNode(Opcodes.ASM5);
-        byte[] digest;
+        ClassNode clazz = new ClassNode(Opcodes.ASM6);
+        Supplier<byte[]> digest;
         boolean empty;
         if (inputClass.length > 0) {
             final ClassReader classReader = new ClassReader(inputClass);
             classReader.accept(clazz, 0);
-            digest = getSha256().digest(inputClass);
+            digest = ()->getSha256().digest(inputClass);
             empty = false;
         } else {
             clazz.name = classDesc.getInternalName();
             clazz.version = 52;
             clazz.superName = "java/lang/Object";
-            digest = getSha256().digest(EMPTY);
+            digest = ()->getSha256().digest(EMPTY);
             empty = true;
         }
 
-        clazz = pluginHandler.offerClassNodeToPlugins(plugins, clazz, classDesc);
-        VotingContext context = new VotingContext(className, empty, digest);
-
-        List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
-        // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
-        for (FieldNode field : clazz.fields) {
-            List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
-            fieldList.add(this.performVote(fieldTransformers, field, context));
+        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc);
+        if (!preresult && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
+            // Shortcut if there's no further work to do
+            return inputClass;
         }
 
-        // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
-        List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
-        for (MethodNode method : clazz.methods) {
-            List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
-            methodList.add(this.performVote(methodTransformers, method, context));
+        if (needsTransforming) {
+            VotingContext context = new VotingContext(className, empty, digest);
+
+            List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
+            // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
+            for (FieldNode field : clazz.fields) {
+                List<ITransformer<FieldNode>> fieldTransformers = new ArrayList<>(transformers.getTransformersFor(className, field));
+                fieldList.add(this.performVote(fieldTransformers, field, context));
+            }
+
+            // it's probably possible to inject "dummy" methods into this list for spawning new methods without class transform
+            List<MethodNode> methodList = new ArrayList<>(clazz.methods.size());
+            for (MethodNode method : clazz.methods) {
+                List<ITransformer<MethodNode>> methodTransformers = new ArrayList<>(transformers.getTransformersFor(className, method));
+                methodList.add(this.performVote(methodTransformers, method, context));
+            }
+
+            clazz.fields = fieldList;
+            clazz.methods = methodList;
+            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
+            clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        clazz.fields = fieldList;
-        clazz.methods = methodList;
-        List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
-        clazz = this.performVote(classTransformers, clazz, context);
+        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc);
+        if (!preresult && !postresult && !needsTransforming) {
+            return inputClass;
+        }
 
         ClassWriter cw = new TransformerClassWriter(this, clazz);
         clazz.accept(cw);

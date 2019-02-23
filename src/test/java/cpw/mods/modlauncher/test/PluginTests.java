@@ -6,6 +6,7 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
 import java.nio.file.*;
+import java.util.EnumSet;
 
 public class PluginTests {
 
@@ -24,8 +25,8 @@ public class PluginTests {
             }
 
             @Override
-            public ClassNode processClass(final ClassNode classNode, final Type classType) {
-                return null;
+            public boolean processClass(final Phase phase, final ClassNode classNode, final Type classType) {
+                return false;
             }
 
             @Override
@@ -34,8 +35,8 @@ public class PluginTests {
             }
 
             @Override
-            public boolean handlesClass(final Type classType, final boolean isEmpty) {
-                return true;
+            public EnumSet<Phase> handlesClass(final Type classType, final boolean isEmpty) {
+                return EnumSet.of(Phase.BEFORE);
             }
         };
 

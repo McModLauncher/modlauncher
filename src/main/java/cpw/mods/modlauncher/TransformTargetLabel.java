@@ -22,7 +22,7 @@ public final class TransformTargetLabel {
         this(target.getClassName(), target.getElementName(), target.getElementDescriptor(), LabelType.valueOf(target.getTargetType().name()));
     }
     private TransformTargetLabel(String className, String elementName, String elementDescriptor, LabelType labelType) {
-        this.className = Type.getObjectType(className.replaceAll("\\.", "/"));
+        this.className = Type.getObjectType(className.replace('.', '/'));
         this.elementName = elementName;
         this.elementDescriptor = elementDescriptor.length() > 0 ? Type.getMethodType(elementDescriptor) : Type.VOID_TYPE;
         this.labelType = labelType;

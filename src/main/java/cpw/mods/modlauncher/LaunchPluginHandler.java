@@ -25,19 +25,17 @@ public class LaunchPluginHandler {
         return Optional.ofNullable(plugins.get(name));
     }
 
-    public List<String> getPluginsTransforming(final Type className, final boolean isEmpty) {
-        return plugins.entrySet().stream().filter(p -> p.getValue().handlesClass(className, isEmpty)).
-                peek(e-> LOGGER.debug(LAUNCHPLUGIN,"LaunchPluginService {} wants to handle {}", e.getKey(), className)).
-                collect(ArrayList<String>::new, (l,e) -> l.add(e.getKey()), ArrayList::addAll);
+    public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty) {
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> phaseObjectEnumMap = new EnumMap<>(ILaunchPluginService.Phase.class);
+        plugins.forEach((n,pl)-> pl.handlesClass(className, isEmpty).forEach(ph->phaseObjectEnumMap.computeIfAbsent(ph, e->new ArrayList<>()).add(pl)));
+        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap.entrySet().stream().map(e->e.getKey().toString()+":"+ e.getValue()));
+        return phaseObjectEnumMap;
     }
 
-    public ClassNode offerClassNodeToPlugins(final List<String> pluginNames, @Nullable final ClassNode node, final Type className) {
-        ClassNode intermediate = node;
-        for (String plugin: pluginNames) {
-            final ILaunchPluginService iLaunchPluginService = plugins.get(plugin);
-            LOGGER.debug(LAUNCHPLUGIN,"LauncherPluginService {} transforming {}", plugin, className);
-            intermediate = iLaunchPluginService.processClass(intermediate, className);
-        }
-        return intermediate;
+    public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className) {
+        return plugins.stream().
+                peek(iLaunchPluginService -> LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transforming {}", iLaunchPluginService.name(), className)).
+                map(iLaunchPluginService -> iLaunchPluginService.processClass(phase, node, className)).
+                reduce(Boolean.FALSE, Boolean::logicalOr);
     }
 }
