@@ -20,23 +20,16 @@ class TransformationServicesHandler {
     private final TransformStore transformStore;
 
     TransformationServicesHandler(TransformStore transformStore) {
-        transformationServices = ServiceLoader.load(ITransformationService.class);
-        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () ->
-                ServiceLoaderStreamUtils.toList(transformationServices).stream().
-                        map(ITransformationService::name).collect(Collectors.joining()));
-
-        serviceLookup = StreamSupport.stream(transformationServices.spliterator(), false)
-                .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
-
+        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
+        serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
+        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
         this.transformStore = transformStore;
     }
 
     void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
         loadTransformationServices(environment);
         validateTransformationServices();
-
         processArguments(argumentHandler, environment);
-
         initialiseTransformationServices(environment);
         initialiseServiceTransformers();
     }
@@ -75,12 +68,12 @@ class TransformationServicesHandler {
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
 
-    private void validateTransformationServices() throws RuntimeException {
+    private void validateTransformationServices() {
         if (serviceLookup.values().stream().filter(d -> !d.isValid()).count() > 0) {
-            LOGGER.error(MODLAUNCHER,"Found {} services that failed to load", serviceLookup.values().stream().filter(d -> !d.isValid())::count);
-            LOGGER.error(MODLAUNCHER,"Failed services : {}", () -> serviceLookup.values().stream().filter(d -> !d.isValid()).map(TransformationServiceDecorator::getService).collect(Collectors.toList()));
-            //TODO enrich exception with data from unhappy services
-            throw new RuntimeException("Invalid Service found");
+            final List<ITransformationService> services = serviceLookup.values().stream().filter(d -> !d.isValid()).map(TransformationServiceDecorator::getService).collect(Collectors.toList());
+            final String names = services.stream().map(ITransformationService::name).collect(Collectors.joining(","));
+            LOGGER.error(MODLAUNCHER,"Found {} services that failed to load : [{}]", services.size(), names);
+            throw new InvalidLauncherSetupException("Invalid Services found "+names);
         }
     }
 

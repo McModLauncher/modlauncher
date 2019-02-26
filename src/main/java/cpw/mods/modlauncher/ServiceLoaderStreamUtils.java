@@ -1,5 +1,6 @@
 package cpw.mods.modlauncher;
 
+
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -25,6 +26,22 @@ public class ServiceLoaderStreamUtils {
     }
 
     public static <K,T> Map<K,T> toMap(ServiceLoader<T> services, Function<T, K> keyFunction) {
-        return StreamSupport.stream(services.spliterator(), false).collect(Collectors.toMap(keyFunction, Function.identity()));
+        return toMap(services, keyFunction, Function.identity());
+    }
+
+    public static <K,V,T> Map<K,V> toMap(ServiceLoader<T> services, Function<T, K> keyFunction, Function<T, V> valueFunction) {
+        return StreamSupport.stream(services.spliterator(), false).collect(Collectors.toMap(keyFunction, valueFunction));
+    }
+
+    public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, Consumer<ServiceConfigurationError> errorHandler) {
+        final ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz);
+        for (Iterator<T> iterator = serviceLoader.iterator(); iterator.hasNext(); ) {
+            try {
+                iterator.next();
+            } catch (ServiceConfigurationError e) {
+                errorHandler.accept(e);
+            }
+        }
+        return serviceLoader;
     }
 }

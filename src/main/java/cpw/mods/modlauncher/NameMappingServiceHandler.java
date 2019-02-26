@@ -18,9 +18,8 @@ class NameMappingServiceHandler {
     private final Map<String, NameMappingServiceDecorator> namingLookup;
 
     public NameMappingServiceHandler() {
-        namingServices = ServiceLoader.load(INameMappingService.class);
-        LOGGER.debug(MODLAUNCHER,"Found naming services {}", () -> ServiceLoaderStreamUtils.toList(namingServices));
-        namingLookup = StreamSupport.stream(namingServices.spliterator(), false)
-                .collect(Collectors.toMap(INameMappingService::mappingName, NameMappingServiceDecorator::new));
+        namingServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(INameMappingService.class, serviceConfigurationError -> LOGGER.fatal("Encountered serious error loading naming service, expect problems", serviceConfigurationError));
+        namingLookup = ServiceLoaderStreamUtils.toMap(namingServices, INameMappingService::mappingName, NameMappingServiceDecorator::new);
+        LOGGER.debug(MODLAUNCHER,"Found naming services {}", () -> String.join(",", namingLookup.keySet()));
     }
 }

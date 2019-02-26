@@ -8,7 +8,6 @@ import org.objectweb.asm.tree.*;
 
 import javax.annotation.*;
 import java.util.*;
-import java.util.stream.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -17,10 +16,12 @@ public class LaunchPluginHandler {
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler() {
-        ServiceLoader<ILaunchPluginService> services = ServiceLoader.load(ILaunchPluginService.class);
+        ServiceLoader<ILaunchPluginService> services = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ILaunchPluginService.class,
+                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e));
         plugins = ServiceLoaderStreamUtils.toMap(services, ILaunchPluginService::name);
         LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
     }
+
     public Optional<ILaunchPluginService> get(final String name) {
         return Optional.ofNullable(plugins.get(name));
     }

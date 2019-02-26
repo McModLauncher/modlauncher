@@ -19,12 +19,9 @@ class LaunchServiceHandler {
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 
     public LaunchServiceHandler() {
-        launchHandlerServices = ServiceLoader.load(ILaunchHandlerService.class);
-        LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () ->
-                ServiceLoaderStreamUtils.toList(launchHandlerServices).stream().
-                        map(ILaunchHandlerService::name).collect(Collectors.joining(",")));
-        launchHandlerLookup = StreamSupport.stream(launchHandlerServices.spliterator(), false)
-                .collect(Collectors.toMap(ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new));
+        launchHandlerServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ILaunchHandlerService.class, serviceConfigurationError -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
+        launchHandlerLookup = ServiceLoaderStreamUtils.toMap(launchHandlerServices, ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new);
+        LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () -> String.join(",",launchHandlerLookup.keySet()));
     }
 
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {

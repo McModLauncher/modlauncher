@@ -3,9 +3,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.nio.file.*;
 import java.util.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
@@ -13,10 +11,8 @@ import static cpw.mods.modlauncher.LogMarkers.*;
 /**
  * Entry point for the ModLauncher.
  */
-public enum Launcher {
-    INSTANCE;
-
-    private static final Logger LOGGER = LogManager.getLogger();
+public class Launcher {
+    public static Launcher INSTANCE;
     private final TypesafeMap blackboard;
     private final TransformationServicesHandler transformationServicesHandler;
     private final Environment environment;
@@ -27,7 +23,8 @@ public enum Launcher {
     private final LaunchPluginHandler launchPlugins;
     private TransformingClassLoader classLoader;
 
-    Launcher() {
+    private Launcher() {
+        INSTANCE = this;
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
@@ -40,8 +37,9 @@ public enum Launcher {
     }
 
     public static void main(String... args) {
-        LOGGER.info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
-        INSTANCE.run(args); // args --fml.myfmlarg1=<fish> --ll.myfunkyname=<>
+        ValidateLibraries.validate();
+        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
+        new Launcher().run(args);
     }
 
     public final TypesafeMap blackboard() {
