@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.*;
 
 import javax.annotation.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -29,7 +30,7 @@ public class LaunchPluginHandler {
     public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty) {
         final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> phaseObjectEnumMap = new EnumMap<>(ILaunchPluginService.Phase.class);
         plugins.forEach((n,pl)-> pl.handlesClass(className, isEmpty).forEach(ph->phaseObjectEnumMap.computeIfAbsent(ph, e->new ArrayList<>()).add(pl)));
-        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap.entrySet().stream().map(e->e.getKey().toString()+":"+ e.getValue()));
+        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap);
         return phaseObjectEnumMap;
     }
 

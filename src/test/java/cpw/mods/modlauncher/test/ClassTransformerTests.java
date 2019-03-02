@@ -2,6 +2,13 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.MarkerManager;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.filter.MarkerFilter;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
@@ -19,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClassTransformerTests {
     @Test
     void testClassTransformer() throws Exception {
+//        Configurator.setRootLevel(Level.TRACE);
+//        System.setProperty("modlauncher.logging.marker.classdump", "ACCEPT");
+        MarkerManager.getMarker("CLASSDUMP");
+        Configurator.setLevel(ClassTransformer.class.getName(), Level.TRACE);
         final TransformStore transformStore = new TransformStore();
         final LaunchPluginHandler lph = new LaunchPluginHandler();
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});

@@ -2,19 +2,26 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import org.apache.logging.log4j.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.*;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.*;
+
+import static cpw.mods.modlauncher.LogMarkers.MODLAUNCHER;
 
 /**
  * Transforms classes using the supplied launcher services
  */
 public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
+    private static final Logger LOGGER = LogManager.getLogger();
     private final TransformStore transformers;
     private final LaunchPluginHandler pluginHandler;
     private final TransformingClassLoader transformingClassLoader;
@@ -87,8 +94,34 @@ public class ClassTransformer {
 
         ClassWriter cw = new TransformerClassWriter(this, clazz);
         clazz.accept(cw);
-
+        if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
+            dumpClass(cw.toByteArray(), className);
+        }
         return cw.toByteArray();
+    }
+
+    private static Path tempDir;
+    private void dumpClass(final byte[] clazz, String className) {
+        if (tempDir == null) {
+            synchronized (ClassTransformer.class) {
+                if (tempDir == null) {
+                    try {
+                        tempDir = Files.createTempDirectory("classDump");
+                    } catch (IOException e) {
+                        LOGGER.error(MODLAUNCHER, "Failed to create temporary directory");
+                        return;
+                    }
+                }
+            }
+        }
+        try {
+            // file of form <classname><stringofnumbers>.class in temporary directory
+            final Path tempFile = Files.createTempFile(tempDir, className, ".class");
+            Files.write(tempFile, clazz);
+            LOGGER.info(MODLAUNCHER, "Wrote {} byte class file {} to {}", clazz.length, className, tempFile);
+        } catch (IOException e) {
+            LOGGER.error(MODLAUNCHER, "Failed to write class file {}", className, e);
+        }
     }
 
     private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context) {
