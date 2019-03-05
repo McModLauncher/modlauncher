@@ -75,8 +75,19 @@ public class ArgumentHandler {
     }
 
     public String[] buildArgumentList() {
-        String[] ret = new String[this.args.length];
-        System.arraycopy(this.args, 0, ret, 0, this.args.length);
-        return ret;
+        ArrayList<String> args = new ArrayList<>();
+        addOptionToString(profileOption, optionSet, args);
+        addOptionToString(gameDirOption, optionSet, args);
+        addOptionToString(assetsDirOption, optionSet, args);
+        List<?> nonOptionList = this.optionSet.nonOptionArguments();
+        nonOptionList.stream().map(Object::toString).forEach(args::add);
+        return args.toArray(new String[0]);
+    }
+
+    private void addOptionToString(OptionSpec<?> option, OptionSet optionSet, List<String> appendTo) {
+        if (optionSet.has(option)) {
+            appendTo.add("--"+option.options().get(0));
+            appendTo.add(option.value(optionSet).toString());
+        }
     }
 }
