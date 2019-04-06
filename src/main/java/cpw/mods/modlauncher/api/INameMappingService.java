@@ -4,13 +4,15 @@ import java.util.*;
 import java.util.function.*;
 
 /**
- * Expose known naming domains into the system, to allow for modules to
- * lookup alternative namings.
- * notch namemappings will always be available. srg and mcp will be available in certain environments.
+ * Expose known naming domains into the system, to allow for modules to lookup alternative namings.
+ *
+ * mojang, srg and mcp will be available in certain environments.
  */
 public interface INameMappingService {
     /**
      * The name of this namemapping.
+     *
+     * E.G. srgtomcp
      *
      * @return a unique name for this mapping
      */
@@ -24,23 +26,20 @@ public interface INameMappingService {
     String mappingVersion();
 
     /**
-     * The set of mapping targets this namemapping understands.
-     * Trivially, you should understand yourself.
+     * The source and target you support. If your target is not the active naming, you will be ignored.
      *
-     * @return A set of other mapping targets you can translate to.
+     * @return A key (source naming) value (target naming) pair representing your source to target translation.
      */
-    Set<String> understanding();
+    Map.Entry<String,String> understanding();
 
     /**
-     * A function mapping a name to another name, for the given domain
-     * and naming target.
+     * A function mapping a name to another name, for the given domain.
      *
-     * @param domain The naming domain
-     * @param target The target from {@link #understanding} for which
-     *               we wish to map the names
+     * The input string will be the name in the source naming, you should return the name in the target naming.
+     *
      * @return A function mapping names
      */
-    Function<String, String> namingFunction(Domain domain, String target);
+    BiFunction<Domain, String, String> namingFunction();
 
-    enum Domain {CLASS, METHOD, FIELD}
+    enum Domain { CLASS, METHOD, FIELD }
 }

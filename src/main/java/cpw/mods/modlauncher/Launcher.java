@@ -5,6 +5,7 @@ import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
+import java.util.function.BiFunction;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -48,7 +49,7 @@ public class Launcher {
 
     private void run(String... args) {
         this.argumentHandler.setArgs(args);
-        this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment);
+        this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder);
@@ -60,11 +61,15 @@ public class Launcher {
         return this.environment;
     }
 
-    public Optional<ILaunchPluginService> findLaunchPlugin(final String name) {
+    Optional<ILaunchPluginService> findLaunchPlugin(final String name) {
         return launchPlugins.get(name);
     }
 
-    public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
+    Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
         return launchService.findLaunchHandler(name);
+    }
+
+    Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(final String targetMapping) {
+        return nameMappingServiceHandler.findNameTranslator(targetMapping);
     }
 }

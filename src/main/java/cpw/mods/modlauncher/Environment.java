@@ -4,8 +4,8 @@ import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Environment implementation class
@@ -32,6 +32,11 @@ public final class Environment implements IEnvironment {
     @Override
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
         return launcher.findLaunchHandler(name);
+    }
+
+    @Override
+    public Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(final String targetMapping) {
+        return launcher.findNameMapping(targetMapping);
     }
 
     @Override

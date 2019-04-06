@@ -26,11 +26,15 @@ class TransformationServicesHandler {
         this.transformStore = transformStore;
     }
 
-    void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
+    void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
         loadTransformationServices(environment);
         validateTransformationServices();
         processArguments(argumentHandler, environment);
         initialiseTransformationServices(environment);
+        // force the naming to "mojang" if nothing has been populated during transformer setup
+        environment.computePropertyIfAbsent(IEnvironment.Keys.NAMING.get(), a-> "mojang");
+        nameMappingServiceHandler.bindNamingServices(environment.getProperty(Environment.Keys.NAMING.get()).orElse("mojang"));
+        runScanningTransformationServices(environment);
         initialiseServiceTransformers();
     }
 
@@ -66,6 +70,12 @@ class TransformationServicesHandler {
         LOGGER.debug(MODLAUNCHER,"Transformation services initializing");
 
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
+    }
+
+    private void runScanningTransformationServices(Environment environment) {
+        LOGGER.debug(MODLAUNCHER,"Transformation services begin scanning");
+
+        serviceLookup.values().forEach(s -> s.runScan(environment));
     }
 
     private void validateTransformationServices() {

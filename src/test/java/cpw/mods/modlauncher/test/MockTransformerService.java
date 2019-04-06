@@ -41,6 +41,11 @@ public class MockTransformerService implements ITransformationService {
     }
 
     @Override
+    public void beginScanning(final IEnvironment environment) {
+        // noop
+    }
+
+    @Override
     public void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException {
 
     }

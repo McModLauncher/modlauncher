@@ -35,13 +35,20 @@ public interface ITransformationService {
     }
 
     /**
-     * Initialize your service. Scan for mods (but don't classload them), identify metadata that might drive
-     * game functionality.
+     * Initialize your service.
      *
      * @param environment environment - query state from here to determine viability
      */
     void initialize(IEnvironment environment);
 
+
+    /**
+     * Scan for mods (but don't classload them), identify metadata that might drive
+     * game functionality.
+     *
+     * @param environment environment
+     */
+    void beginScanning(IEnvironment environment);
     /**
      * Load your service. Called immediately on loading with a list of other services found.
      * Use to identify and immediately indicate incompatibilities with other services, and environment

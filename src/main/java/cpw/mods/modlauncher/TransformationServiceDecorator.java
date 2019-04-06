@@ -80,4 +80,10 @@ public class TransformationServiceDecorator {
     ITransformationService getService() {
         return service;
     }
+
+    void runScan(final Environment environment) {
+        LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
+        this.service.beginScanning(environment);
+        LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
+    }
 }
