@@ -73,7 +73,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
             try {
                 LOGGER.trace(CLASSLOADING, "Attempting to load {}", name);
-                final Class<?> loadedClass = delegatedClassLoader.findClass(name, this.classBytesFinder);
+                final Class<?> loadedClass = loadClass(name, this.classBytesFinder);
                 LOGGER.trace(CLASSLOADING, "Class loaded for {}", name);
                 return loadedClass;
             } catch (ClassNotFoundException | SecurityException e) {
@@ -98,7 +98,13 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     public Class<?> loadClass(String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
-        return delegatedClassLoader.findClass(name, classBytesFinder);
+        final Class<?> existingClass = getLoadedClass(name);
+        if (existingClass != null) {
+            LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
+            return existingClass;
+        }
+        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder);
+        return defineClass(name, classBytes, 0, classBytes.length);
     }
 
     private Optional<Manifest> findManifest(URLConnection urlConnection) {
@@ -175,19 +181,14 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
         @Override
         protected Class<?> findClass(final String name) throws ClassNotFoundException {
-            return findClass(name, tcl.classBytesFinder);
+            return tcl.findClass(name);
         }
 
         public URL findResource(final String name, Function<String,URL> byteFinder) {
             return byteFinder.apply(name);
         }
 
-        protected Class<?> findClass(final String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
-            final Class<?> existingClass = super.findLoadedClass(name);
-            if (existingClass != null) {
-                LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
-                return existingClass;
-            }
+        protected byte[] findClass(final String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
             final String path = name.replace('.', '/').concat(".class");
 
             final URL classResource = classBytesFinder.apply(path);
@@ -220,7 +221,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                 // Check if package already loaded.
                 tryDefinePackage(pkgname, jarManifest);
 
-                return defineClass(name, classBytes, 0, classBytes.length);
+                return classBytes;
             } else {
                 LOGGER.trace(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
