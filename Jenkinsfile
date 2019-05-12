@@ -14,7 +14,7 @@ pipeline {
     stages {
         stage('fetch') {
             steps {
-                git(url: 'https://github.com/cpw/modlauncher.git', changelog: true)
+                checkout scm
             }
         }
         stage('buildandtest') {
