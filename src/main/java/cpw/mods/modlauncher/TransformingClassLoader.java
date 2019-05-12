@@ -84,7 +84,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     public Class<?> getLoadedClass(String name) {
-        return delegatedClassLoader.getLoadedClass(name);
+        return findLoadedClass(name);
     }
 
     @Override

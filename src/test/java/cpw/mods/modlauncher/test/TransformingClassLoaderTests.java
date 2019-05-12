@@ -40,6 +40,9 @@ class TransformingClassLoaderTests {
         final Class<?> aClass = Class.forName("cheese.Puffs", true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");
+
+        final Class<?> newClass = tcl.loadClass("cheese.Puffs");
+        assertEquals(aClass, newClass, "Class instance is the same from Class.forName and tcl.loadClass");
     }
 
     private static class ClassNodeTransformer implements ITransformer<ClassNode> {
