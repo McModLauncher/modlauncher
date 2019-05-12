@@ -231,9 +231,9 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
 
         Package tryDefinePackage(String name, @Nullable Manifest man) throws IllegalArgumentException
         {
-            if (getPackage(name) == null) {
+            if (tcl.getPackage(name) == null) {
                 synchronized (this) {
-                    if (getPackage(name) != null) return getPackage(name);
+                    if (tcl.getPackage(name) != null) return tcl.getPackage(name);
 
                     String path = name.replace('.', '/').concat("/");
                     String specTitle = null, specVersion = null, specVendor = null;
@@ -271,11 +271,11 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                             }
                         }
                     }
-                    return definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, null);
+                    return tcl.definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, null);
                 }
 
             } else {
-                return getPackage(name);
+                return tcl.getPackage(name);
             }
         }
 
