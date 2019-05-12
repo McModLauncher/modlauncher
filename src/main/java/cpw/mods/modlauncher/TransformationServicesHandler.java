@@ -1,10 +1,13 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
 import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
@@ -15,14 +18,11 @@ import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.*;
 
 class TransformationServicesHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ServiceLoader<ITransformationService> transformationServices;
-    private final Map<String, TransformationServiceDecorator> serviceLookup;
+    private ServiceLoader<ITransformationService> transformationServices;
+    private Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
 
     TransformationServicesHandler(TransformStore transformStore) {
-        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
-        serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
-        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
         this.transformStore = transformStore;
     }
 
@@ -91,5 +91,30 @@ class TransformationServicesHandler {
         LOGGER.debug(MODLAUNCHER,"Transformation services loading");
 
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
+    }
+
+    void discoverServices(final Path gameDir) {
+        LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
+        final ServiceLoader<ITransformerDiscoveryService> discoveryServices = errorHandlingServiceLoader(ITransformerDiscoveryService.class, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", serviceConfigurationError));
+        final List<Path> additionalPaths = map(discoveryServices, s -> s.candidates(gameDir)).flatMap(Collection::stream).collect(Collectors.toList());
+        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", additionalPaths);
+        TransformerClassLoader cl = new TransformerClassLoader(((URLClassLoader)getClass().getClassLoader()).getURLs());
+        additionalPaths.stream().map(LamdbaExceptionUtils.rethrowFunction(p->p.toUri().toURL())).forEach(cl::addURL);
+        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, cl, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
+        serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
+        LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
+
+    }
+
+
+    private static class TransformerClassLoader extends URLClassLoader {
+        TransformerClassLoader(final URL[] urls) {
+            super(urls);
+        }
+
+        @Override
+        protected void addURL(final URL url) {
+            super.addURL(url);
+        }
     }
 }

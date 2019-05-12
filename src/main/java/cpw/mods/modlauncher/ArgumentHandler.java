@@ -19,8 +19,13 @@ public class ArgumentHandler {
     private OptionSpec<String> nonOption;
     private OptionSpec<String> launchTarget;
 
-    void setArgs(String[] args) {
+    Path setArgs(String[] args) {
         this.args = args;
+        final OptionParser parser = new OptionParser();
+        final ArgumentAcceptingOptionSpec<Path> gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
+        parser.allowsUnrecognizedOptions();
+        final OptionSet optionSet = parser.parse(args);
+        return optionSet.valueOf(gameDir);
     }
 
     void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {

@@ -30,8 +30,8 @@
         <Logger level="INFO" name="com.mojang"/>
         <Logger level="INFO" name="net.minecraft"/>
         <Root level="all">
-            <AppenderRef ref="SysOut" level="INFO"/>
-            <AppenderRef ref="File" level="INFO"/>
+            <AppenderRef ref="SysOut" level="DEBUG"/>
+            <AppenderRef ref="File" level="DEBUG"/>
             <AppenderRef ref="DebugFile" level="TRACE"/>
         </Root>
     </Loggers>

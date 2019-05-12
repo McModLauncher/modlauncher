@@ -1,6 +1,7 @@
 package cpw.mods.modlauncher;
 
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -21,6 +22,10 @@ public class ServiceLoaderStreamUtils {
         StreamSupport.stream(services.spliterator(), parallel).forEach(consumer);
     }
 
+    public static <T, U> Stream<U> map(ServiceLoader<T> services, Function<T, U> function) {
+        return StreamSupport.stream(services.spliterator(), false).map(function);
+    }
+
     public static <T> List<T> toList(ServiceLoader<T> services) {
         return StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
     }
@@ -34,7 +39,11 @@ public class ServiceLoaderStreamUtils {
     }
 
     public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, Consumer<ServiceConfigurationError> errorHandler) {
-        final ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz);
+        return errorHandlingServiceLoader(clazz, null, errorHandler);
+    }
+
+    public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, @Nullable ClassLoader cl, Consumer<ServiceConfigurationError> errorHandler) {
+        final ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz, cl);
         for (Iterator<T> iterator = serviceLoader.iterator(); iterator.hasNext(); ) {
             try {
                 iterator.next();

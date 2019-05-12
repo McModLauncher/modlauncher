@@ -4,6 +4,7 @@ import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -48,7 +49,8 @@ public class Launcher {
     }
 
     private void run(String... args) {
-        this.argumentHandler.setArgs(args);
+        final Path gameDir = this.argumentHandler.setArgs(args);
+        this.transformationServicesHandler.discoverServices(gameDir);
         this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
