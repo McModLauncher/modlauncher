@@ -38,8 +38,8 @@ class TransformationServicesHandler {
         initialiseServiceTransformers();
     }
 
-    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder) {
-        return new TransformingClassLoader(transformStore, pluginHandler, builder);
+    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment) {
+        return new TransformingClassLoader(transformStore, pluginHandler, builder, environment);
     }
 
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {

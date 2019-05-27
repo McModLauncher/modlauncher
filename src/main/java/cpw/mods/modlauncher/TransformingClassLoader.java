@@ -1,5 +1,6 @@
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,9 +50,11 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.manifestFinder = input -> this.findManifest(input).orElse(null);
     }
 
-    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder) {
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder, final Environment environment) {
         super();
-        this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this);
+        TransformerAuditTrail tat = new TransformerAuditTrail();
+        environment.computePropertyIfAbsent(IEnvironment.Keys.AUDITTRAIL.get(), v->tat);
+        this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this, tat);
         this.specialJars = builder.getSpecialJarsAsURLs();
         this.delegatedClassLoader = new DelegatedClassLoader(this);
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);

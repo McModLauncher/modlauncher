@@ -32,11 +32,11 @@ class TransformationServiceDecoratorTests {
         EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers = Whitebox.getInternalState(store, "transformers");
         Set<TransformTargetLabel> targettedClasses = Whitebox.getInternalState(store, "classNeedsTransforming");
         assertAll(
-                () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.CLASS)),
-                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.CLASS)).values().stream().flatMap(Collection::stream).allMatch(s -> s == classNodeTransformer)),
+                () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.CLASS), "transformers contains class"),
+                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.CLASS)).values().stream().flatMap(Collection::stream).allMatch(s -> Whitebox.getInternalState(s,"wrapped") == classNodeTransformer)),
                 () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheese.Puffs"))),
                 () -> assertTrue(transformers.containsKey(TransformTargetLabel.LabelType.METHOD)),
-                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.METHOD)).values().stream().flatMap(Collection::stream).allMatch(s -> s == methodNodeTransformer)),
+                () -> assertTrue(getTransformers(transformers.get(TransformTargetLabel.LabelType.METHOD)).values().stream().flatMap(Collection::stream).allMatch(s -> Whitebox.getInternalState(s,"wrapped") == methodNodeTransformer)),
                 () -> assertTrue(targettedClasses.contains(new TransformTargetLabel("cheesy.PuffMethod")))
         );
     }

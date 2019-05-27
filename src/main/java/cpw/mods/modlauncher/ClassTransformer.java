@@ -25,11 +25,17 @@ public class ClassTransformer {
     private final TransformStore transformers;
     private final LaunchPluginHandler pluginHandler;
     private final TransformingClassLoader transformingClassLoader;
+    private final TransformerAuditTrail auditTrail;
 
-    ClassTransformer(TransformStore transformers, LaunchPluginHandler pluginHandler, final TransformingClassLoader transformingClassLoader) {
-        this.transformers = transformers;
+    ClassTransformer(TransformStore transformStore, LaunchPluginHandler pluginHandler, final TransformingClassLoader transformingClassLoader) {
+        this(transformStore, pluginHandler, transformingClassLoader, new TransformerAuditTrail());
+    }
+
+    ClassTransformer(final TransformStore transformStore, final LaunchPluginHandler pluginHandler, final TransformingClassLoader transformingClassLoader, final TransformerAuditTrail tat) {
+        this.transformers = transformStore;
         this.pluginHandler = pluginHandler;
         this.transformingClassLoader = transformingClassLoader;
+        this.auditTrail = tat;
     }
 
     byte[] transform(byte[] inputClass, String className) {
@@ -58,7 +64,7 @@ public class ClassTransformer {
             empty = true;
         }
 
-        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc);
+        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail);
         if (!preresult && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
             // Shortcut if there's no further work to do
             return inputClass;
@@ -87,7 +93,7 @@ public class ClassTransformer {
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc);
+        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail);
         if (!preresult && !postresult && !needsTransforming) {
             return inputClass;
         }
@@ -137,6 +143,7 @@ public class ClassTransformer {
             if (results.containsKey(TransformerVoteResult.YES)) {
                 final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
+                auditTrail.addTransformerAuditTrail(context.getClassName(), ((TransformerHolder)transformer).owner(), transformer);
                 transformers.remove(transformer);
                 continue;
             }

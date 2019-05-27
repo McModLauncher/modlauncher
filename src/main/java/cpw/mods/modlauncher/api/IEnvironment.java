@@ -72,6 +72,10 @@ public interface IEnvironment {
          * The naming scheme in use. Populated at startup. See: {@link INameMappingService}
          */
         public static final Supplier<TypesafeMap.Key<String>> NAMING = buildKey("naming", String.class);
+        /**
+         * The audit trail for transformers applied to a class. See {@link ITransformerAuditTrail}
+         */
+        public static final Supplier<TypesafeMap.Key<ITransformerAuditTrail>> AUDITTRAIL = buildKey("audittrail", ITransformerAuditTrail.class);
     }
 
 

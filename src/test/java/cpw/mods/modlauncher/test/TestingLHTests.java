@@ -1,6 +1,7 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
+import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.*;
 
 import java.util.concurrent.*;
@@ -16,6 +17,12 @@ public class TestingLHTests {
         calledback = false;
         TestCallback.callable = () -> {
             calledback = true;
+            new Runnable() {
+                @Override
+                public void run() {
+                    LogManager.getLogger().info("Hello", new Throwable());
+                }
+            }.run();
             return null;
         };
         Launcher.main("--version", "1.0", "--launchTarget", "testharness");

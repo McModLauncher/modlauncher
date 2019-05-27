@@ -34,9 +34,10 @@ public class LaunchPluginHandler {
         return phaseObjectEnumMap;
     }
 
-    public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className) {
+    public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail) {
         return plugins.stream().
                 peek(iLaunchPluginService -> LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transforming {}", iLaunchPluginService.name(), className)).
+                peek(iLaunchPluginService -> auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase)).
                 map(iLaunchPluginService -> iLaunchPluginService.processClass(phase, node, className)).
                 reduce(Boolean.FALSE, Boolean::logicalOr);
     }

@@ -17,4 +17,8 @@ public class VotingContext implements ITransformerVotingContext {
         this.classExists = classExists;
         this.sha256 = sha256sum;
     }
+
+    public String getClassName() {
+        return className;
+    }
 }

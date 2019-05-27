@@ -8,6 +8,9 @@ import java.util.*;
  * it is designated to target.
  */
 public interface ITransformer<T> {
+
+    String[] DEFAULT_LABEL = {"default"};
+
     /**
      * Transform the input to the ITransformer's desire. The context from the last vote is
      * provided as well.
@@ -57,6 +60,12 @@ public interface ITransformer<T> {
     @Nonnull
     Set<Target> targets();
 
+    /**
+     * @return A string array for uniquely identifying this transformer instance within the service.
+     */
+    default String[] labels() {
+        return DEFAULT_LABEL;
+    }
     /**
      * Specifies the target type for the {@link Target}. Note that the type of the transformer T
      * dictates what are acceptable targets for this transformer.

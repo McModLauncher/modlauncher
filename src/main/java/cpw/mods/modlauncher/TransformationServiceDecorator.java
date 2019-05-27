@@ -71,7 +71,7 @@ public class TransformationServiceDecorator {
                     LOGGER.error(MODLAUNCHER,"Invalid target {} for transformer {}", labelType, xform);
                     throw new IllegalArgumentException("The transformer contains invalid targets");
                 }
-                labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform));
+                labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform, service));
             }
         }
         LOGGER.debug(MODLAUNCHER,"Initialized transformers for transformation service {}", this.service::name);
