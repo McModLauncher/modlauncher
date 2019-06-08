@@ -35,10 +35,14 @@ public class LaunchPluginHandler {
     }
 
     public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail) {
-        return plugins.stream().
-                peek(iLaunchPluginService -> LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transforming {}", iLaunchPluginService.name(), className)).
-                peek(iLaunchPluginService -> auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase)).
-                map(iLaunchPluginService -> iLaunchPluginService.processClass(phase, node, className)).
-                reduce(Boolean.FALSE, Boolean::logicalOr);
+        boolean needsWrite = false;
+        for (ILaunchPluginService iLaunchPluginService : plugins) {
+            LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transforming {}", iLaunchPluginService.name(), className);
+            if (iLaunchPluginService.processClass(phase, node, className)) {
+                auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
+                needsWrite = true;
+            }
+        }
+        return needsWrite;
     }
 }
