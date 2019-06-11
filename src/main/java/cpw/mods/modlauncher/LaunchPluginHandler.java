@@ -34,11 +34,16 @@ public class LaunchPluginHandler {
         return phaseObjectEnumMap;
     }
 
-    public boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail) {
-        return plugins.stream().
-                peek(iLaunchPluginService -> LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transforming {}", iLaunchPluginService.name(), className)).
-                peek(iLaunchPluginService -> auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase)).
-                map(iLaunchPluginService -> iLaunchPluginService.processClass(phase, node, className)).
-                reduce(Boolean.FALSE, Boolean::logicalOr);
+    boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail) {
+        boolean needsRewriting = false;
+        for (ILaunchPluginService iLaunchPluginService : plugins) {
+            LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService.name(), className.getClassName());
+            if (iLaunchPluginService.processClass(phase, node, className)) {
+                auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
+                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {}", iLaunchPluginService.name(), className.getClassName());
+                needsRewriting = true;
+            }
+        }
+        return needsRewriting;
     }
 }
