@@ -45,7 +45,7 @@ public class Launcher {
 
     private Launcher() {
         INSTANCE = this;
-        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher starting: java version {}", () -> System.getProperty("java.version"));
+        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher starting: java version {} by {}", () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);

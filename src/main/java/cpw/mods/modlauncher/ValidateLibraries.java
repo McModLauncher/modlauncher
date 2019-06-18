@@ -26,6 +26,13 @@ import java.util.stream.Collectors;
 
 class ValidateLibraries {
     static void validate() {
+        if (System.getProperty("java.vendor").contains("OpenJ9")) {
+            System.err.println("You are attempting to run with an unsupported Java Virtual Machine : "+System.getProperty("java.vendor"));
+            System.err.println("Please visit https://adoptopenjdk.net and install the HotSpot variant.");
+            System.err.println("OpenJ9 is incompatible with several of the transformation behaviours that we rely on to work.");
+            throw new IllegalStateException("Open J9 is not supported");
+        }
+
         List<Map.Entry<String,String>> toCheck = Arrays.asList(
                 pair("log4j", "org.apache.logging.log4j.LogManager"),
                 pair("asm", "org.objectweb.asm.ClassVisitor"),
