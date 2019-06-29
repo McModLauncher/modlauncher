@@ -32,7 +32,9 @@ public class ExtraDataTextRenderer implements TextRenderer {
 
     ExtraDataTextRenderer(final TextRenderer wrapped) {
         this.wrapped = wrapped;
-        this.auditData = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.AUDITTRAIL.get());
+        this.auditData = Optional.ofNullable(Launcher.INSTANCE).
+                map(Launcher::environment).
+                flatMap(env -> env.getProperty(IEnvironment.Keys.AUDITTRAIL.get()));
     }
 
     @Override
