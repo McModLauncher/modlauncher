@@ -23,7 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.*;
+import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
@@ -103,5 +106,27 @@ public class TransformationServiceDecorator {
         LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
         this.service.beginScanning(environment);
         LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
+    }
+
+    Function<String,Optional<URL>> getClassLoader() {
+        final Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> entry = this.service.additionalClassesLocator();
+        if (entry == null) return null;
+        final HashSet<String> packagePrefixes = new HashSet<>(entry.getKey());
+        final Set<String> badPrefixes = packagePrefixes.stream().filter(s -> !(s.endsWith(".") && s.indexOf('.') > 0)).collect(Collectors.toSet());
+        if (!badPrefixes.isEmpty()) {
+            badPrefixes.forEach(s->LOGGER.error("Illegal prefix specified for {} : {}", this.service.name(), s));
+            throw new IllegalArgumentException("Bad prefixes specified");
+        }
+
+        return s -> getOptionalClassURL(entry.getKey(), entry.getValue(), s);
+    }
+
+    private Optional<URL> getOptionalClassURL(final Set<String> prefixes, final Supplier<Function<String, Optional<URL>>> classFinder, final String className) {
+        for (String pfx : prefixes) {
+            if (className.startsWith(pfx)) {
+                return classFinder.get().apply(className);
+            }
+        }
+        return Optional.empty();
     }
 }

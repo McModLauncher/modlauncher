@@ -25,6 +25,7 @@ import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
@@ -45,6 +46,12 @@ class TransformationServicesHandler {
         this.transformStore = transformStore;
     }
 
+    private static <I, R> Function<I,Optional<R>> alternate(@Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
+        if (second == null) return first;
+        if (first == null) return second;
+        return input -> Optional.ofNullable(first.apply(input)).orElseGet(() -> Optional.ofNullable(second.apply(input)).orElse(Optional.empty()));
+    }
+
     void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
         loadTransformationServices(environment);
         validateTransformationServices();
@@ -58,6 +65,14 @@ class TransformationServicesHandler {
     }
 
     TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment) {
+        final List<Function<String, Optional<URL>>> classLocatorList = serviceLookup.values().stream().map(TransformationServiceDecorator::getClassLoader).filter(Objects::nonNull).collect(Collectors.toList());
+        Function<String, Optional<URL>> classBytesLocator = builder.getClassBytesLocator();
+
+        for (Function<String, Optional<URL>> transformerClassLocator : classLocatorList) {
+            classBytesLocator = alternate(classBytesLocator, transformerClassLocator);
+        }
+
+        builder.setClassBytesLocator(classBytesLocator);
         return new TransformingClassLoader(transformStore, pluginHandler, builder, environment);
     }
 

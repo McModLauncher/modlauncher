@@ -68,7 +68,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.manifestFinder = input -> this.findManifest(input).orElse(null);
     }
 
-    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder, final Environment environment) {
+    TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder, final Environment environment) {
         super();
         TransformerAuditTrail tat = new TransformerAuditTrail();
         environment.computePropertyIfAbsent(IEnvironment.Keys.AUDITTRAIL.get(), v->tat);
@@ -80,7 +80,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.manifestFinder = alternate(builder.getManifestLocator(), this::findManifest);
     }
 
-    private <I,R> Function<I,R> alternate(@Nullable Function<I,Optional<R>> first, @Nullable Function<I,Optional<R>> second) {
+    private static <I, R> Function<I,R> alternate(@Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
         if (second == null) return input-> first.apply(input).orElse(null);
         if (first == null) return input-> second.apply(input).orElse(null);
         return input -> first.apply(input).orElseGet(() -> second.apply(input).orElse(null));
