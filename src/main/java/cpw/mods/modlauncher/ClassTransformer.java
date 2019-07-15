@@ -89,7 +89,7 @@ public class ClassTransformer {
         }
 
         if (needsTransforming) {
-            VotingContext context = new VotingContext(className, empty, digest);
+            VotingContext context = new VotingContext(className, empty, digest, auditTrail.getActivityFor(className));
 
             List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
             // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
@@ -149,15 +149,19 @@ public class ClassTransformer {
     }
 
     private <T> T performVote(List<ITransformer<T>> transformers, T node, VotingContext context) {
+        context.setNode(node);
         do {
             final Stream<TransformerVote<T>> voteResultStream = transformers.stream().map(t -> gatherVote(t, context));
             final Map<TransformerVoteResult, List<TransformerVote<T>>> results = voteResultStream.collect(Collectors.groupingBy(TransformerVote::getResult));
+            // Someone rejected the current state. We're done here, and cannot proceed.
             if (results.containsKey(TransformerVoteResult.REJECT)) {
                 throw new VoteRejectedException(results.get(TransformerVoteResult.REJECT), node.getClass());
             }
+            // Remove all the "NO" voters - they don't wish to participate in further voting rounds
             if (results.containsKey(TransformerVoteResult.NO)) {
                 transformers.removeAll(results.get(TransformerVoteResult.NO).stream().map(TransformerVote::getTransformer).collect(Collectors.toList()));
             }
+            // If there's at least one YES voter, let's apply the first one we find, remove them, and continue.
             if (results.containsKey(TransformerVoteResult.YES)) {
                 final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
@@ -165,6 +169,7 @@ public class ClassTransformer {
                 transformers.remove(transformer);
                 continue;
             }
+            // If we get here and find a DEFER, it means everyone just voted to DEFER. That's an untenable state and we cannot proceed.
             if (results.containsKey(TransformerVoteResult.DEFER)) {
                 throw new VoteDeadlockException(results.get(TransformerVoteResult.DEFER), node.getClass());
             }

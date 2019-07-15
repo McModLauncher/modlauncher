@@ -21,6 +21,7 @@ package cpw.mods.modlauncher.api;
 import joptsimple.*;
 
 import javax.annotation.*;
+import java.net.URL;
 import java.util.*;
 import java.util.function.*;
 
@@ -79,8 +80,31 @@ public interface ITransformationService {
      */
     void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException;
 
+    /**
+     * The {@link ITransformer} is the fundamental operator of the system.
+     *
+     * @return A list of transformers for your ITransformationService. This is called after {@link #onLoad(IEnvironment, Set)}
+     * and {@link #initialize(IEnvironment)}, so you can return an appropriate Transformer set for the environment
+     * you find yourself in.
+     */
     @Nonnull
     List<ITransformer> transformers();
+
+    /**
+     * Allow transformation services to provide additional classes when asked for.
+     *
+     * Rules:
+     * The Strings in the set must end with a dot. They must have at least one dot. They cannot include "net.minecraft."
+     * "net.minecraftforge.". Conflicts with other ITransformationServices will result in an immediate crash.
+     *
+     * @return a set of strings (tested with "startsWith" for classNames in "internal" format (my.package.Clazz))
+     * with a function that receives the full classname and returns an Optional URL for loading that class. The null
+     * return value means no classlocator will be used for this transformation service.
+     *
+     */
+    default Map.Entry<Set<String>,Supplier<Function<String, Optional<URL>>>> additionalClassesLocator() {
+        return null;
+    }
 
     interface OptionResult {
         @Nonnull
@@ -89,5 +113,4 @@ public interface ITransformationService {
         @Nonnull
         <V> List<V> values(OptionSpec<V> options);
     }
-
 }

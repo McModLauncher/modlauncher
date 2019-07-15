@@ -18,20 +18,24 @@
 
 package cpw.mods.modlauncher.api;
 
-import java.util.List;
+public interface ITransformerActivity {
+    String[] getContext();
 
-public interface ITransformerAuditTrail {
-    /**
-     * Retrieve the list of activities for the specified class
-     * @param className Class name
-     * @return a read only list of activities
-     */
-    List<ITransformerActivity> getActivityFor(String className);
+    Type getType();
 
-    /**
-     * Retrieve a formatted string summarizing actions for the supplied class
-     * @param clazz The class
-     * @return A formatted string
-     */
-    String getAuditString(String clazz);
+    String getActivityString();
+
+    enum Type {
+        PLUGIN("pl"), TRANSFORMER("xf");
+
+        private final String label;
+
+        Type(final String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
 }
