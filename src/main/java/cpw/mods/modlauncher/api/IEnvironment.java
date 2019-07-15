@@ -94,10 +94,14 @@ public interface IEnvironment {
          * The audit trail for transformers applied to a class. See {@link ITransformerAuditTrail}
          */
         public static final Supplier<TypesafeMap.Key<ITransformerAuditTrail>> AUDITTRAIL = buildKey("audittrail", ITransformerAuditTrail.class);
+        /**
+         * A simple List of Maps for Mod data. Map keys should include a "name" and "description".
+         */
+        public static final Supplier<TypesafeMap.Key<List<Map<String,String>>>> MODLIST = buildKey("modlist", List.class);
     }
 
 
-    static <T> Supplier<TypesafeMap.Key<T>> buildKey(String name, Class<T> clazz) {
+    static <T> Supplier<TypesafeMap.Key<T>> buildKey(String name, Class<? super T> clazz) {
         return new TypesafeMap.KeyBuilder<>(name, clazz, IEnvironment.class);
     }
 }

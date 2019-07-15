@@ -49,6 +49,7 @@ public class Launcher {
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
+        environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), (s)->new ArrayList<>());
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore);
         this.argumentHandler = new ArgumentHandler();

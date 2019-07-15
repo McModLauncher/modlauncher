@@ -72,7 +72,7 @@ public final class TypesafeMap {
         }
 
         @SuppressWarnings("unchecked")
-        public static <V> Key<V> getOrCreate(TypesafeMap owner, String name, Class<V> clazz) {
+        public static <V> Key<V> getOrCreate(TypesafeMap owner, String name, Class<? super V> clazz) {
             Key<V> result = (Key<V>) owner.getKeyIdentifiers().computeIfAbsent(name, (n) -> new Key<>(n, (Class<Object>) clazz));
             if (result.clz != clazz) {
                 throw new IllegalArgumentException("Invalid type");
@@ -124,10 +124,10 @@ public final class TypesafeMap {
         private static final Map<Class<?>, List<KeyBuilder<?>>> keyBuilders = new HashMap<>();
         private final Class<?> owner;
         private final String name;
-        private final Class<T> clazz;
+        private final Class<? super T> clazz;
         private Key<T> key;
 
-        public KeyBuilder(String name, Class<T> clazz, Class<?> owner) {
+        public KeyBuilder(String name, Class<? super T> clazz, Class<?> owner) {
             this.name = name;
             this.clazz = clazz;
             this.owner = owner;
