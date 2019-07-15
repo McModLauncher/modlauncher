@@ -98,6 +98,14 @@ public interface IEnvironment {
          * A simple List of Maps for Mod data. Map keys should include a "name" and "description".
          */
         public static final Supplier<TypesafeMap.Key<List<Map<String,String>>>> MODLIST = buildKey("modlist", List.class);
+        /**
+         * The specification version for ModLauncher.
+         */
+        public static final Supplier<TypesafeMap.Key<String>> MLSPEC_VERSION = buildKey("mlspecVersion", String.class);
+        /**
+         * The implementation version for ModLauncher.
+         */
+        public static final Supplier<TypesafeMap.Key<String>> MLIMPL_VERSION = buildKey("mlimplVersion", String.class);
     }
 
 

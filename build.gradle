@@ -118,7 +118,7 @@ tasks['jmh'].dependsOn(clean)
 ext.sharedManifest = manifest {
     attributes(["Specification-Title": "modlauncher",
                 "Specification-Vendor": "Forge",
-                "Specification-Version": "2.0", // We are version 2 of the modlauncher specification
+                "Specification-Version": "3.0", // We are version 3 of the modlauncher specification
                 "Implementation-Title": project.name,
                 "Implementation-Version": "${version}+${System.getenv("BUILD_NUMBER")?:0}+${grgit.head().abbreviatedId}",
                 "Implementation-Vendor" :"Forge",

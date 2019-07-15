@@ -45,11 +45,13 @@ public class Launcher {
 
     private Launcher() {
         INSTANCE = this;
-        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher starting: java version {} by {}", () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
+        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}", ()->getClass().getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
-        environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), (s)->new ArrayList<>());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.MLSPEC_VERSION.get(), s->getClass().getPackage().getSpecificationVersion());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.MLIMPL_VERSION.get(), s->getClass().getPackage().getImplementationVersion());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), s->new ArrayList<>());
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore);
         this.argumentHandler = new ArgumentHandler();
