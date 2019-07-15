@@ -49,7 +49,7 @@ class TransformationServicesHandler {
     private static <I, R> Function<I,Optional<R>> alternate(@Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
         if (second == null) return first;
         if (first == null) return second;
-        return input -> Optional.ofNullable(first.apply(input)).orElseGet(() -> Optional.ofNullable(second.apply(input)).orElse(Optional.empty()));
+        return input -> Optional.ofNullable(first.apply(input).orElseGet(() -> second.apply(input).orElse(null)));
     }
 
     void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
