@@ -136,6 +136,15 @@ class TransformationServicesHandler {
         additionalPaths.stream().map(LamdbaExceptionUtils.rethrowFunction(p->p.toUri().toURL())).forEach(cl::addURL);
         transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, cl, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
         serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
+        final List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(()->new RuntimeException("The MODLIST isn't set, huh?"));
+        serviceLookup.forEach((name, deco)->{
+            HashMap<String,String> mod = new HashMap<>();
+            mod.put("name", name);
+            mod.put("type", "TRANSFORMATIONSERVICE");
+            String fName = deco.getService().getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+            mod.put("file", fName.substring(fName.lastIndexOf("/")));
+            modlist.add(mod);
+        });
         LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
 
     }

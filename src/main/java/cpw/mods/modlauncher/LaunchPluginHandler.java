@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,6 +39,15 @@ public class LaunchPluginHandler {
         ServiceLoader<ILaunchPluginService> services = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ILaunchPluginService.class,
                 e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e));
         plugins = ServiceLoaderStreamUtils.toMap(services, ILaunchPluginService::name);
+        final List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(()->new RuntimeException("The MODLIST isn't set, huh?"));
+        plugins.forEach((name, plugin)->{
+            HashMap<String,String> mod = new HashMap<>();
+            mod.put("name", name);
+            mod.put("type", "PLUGINSERVICE");
+            String fName = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+            mod.put("file", fName.substring(fName.lastIndexOf("/")));
+            modlist.add(mod);
+        });
         LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
     }
 
