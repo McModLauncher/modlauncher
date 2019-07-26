@@ -95,7 +95,8 @@ public interface IEnvironment {
          */
         public static final Supplier<TypesafeMap.Key<ITransformerAuditTrail>> AUDITTRAIL = buildKey("audittrail", ITransformerAuditTrail.class);
         /**
-         * A simple List of Maps for Mod data. Map keys should include a "name" and "description".
+         * A simple List of Maps for Mod data. Map keys should include a "name" and "description". "file" and "type" are
+         * populated automatically, as is "name".
          */
         public static final Supplier<TypesafeMap.Key<List<Map<String,String>>>> MODLIST = buildKey("modlist", List.class);
         /**
