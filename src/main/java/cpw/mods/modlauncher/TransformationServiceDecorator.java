@@ -112,7 +112,8 @@ public class TransformationServiceDecorator {
         final Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> entry = this.service.additionalClassesLocator();
         if (entry == null) return null;
         final HashSet<String> packagePrefixes = new HashSet<>(entry.getKey());
-        final Set<String> badPrefixes = packagePrefixes.stream().filter(s -> !(s.endsWith(".") && s.indexOf('.') > 0)).collect(Collectors.toSet());
+        final Set<String> badPrefixes = packagePrefixes.stream().map(s->s.replace('.','/')).
+                filter(s -> !(s.endsWith(".") && s.indexOf('.') > 0)).collect(Collectors.toSet());
         if (!badPrefixes.isEmpty()) {
             badPrefixes.forEach(s->LOGGER.error("Illegal prefix specified for {} : {}", this.service.name(), s));
             throw new IllegalArgumentException("Bad prefixes specified");
