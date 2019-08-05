@@ -106,6 +106,22 @@ public interface ITransformationService {
         return null;
     }
 
+    /**
+     * Allow transformation services to provide additional resource files when asked for.
+     *
+     * Rules:
+     * The Strings in the set must not end with ".class". Conflicts with other ITransformationServices will result
+     * in an immediate crash.
+     *
+     * @return a set of strings (tested with "equals" for classResources in "internal" format (my/package/Resource))
+     * with a function that receives the full resource being searched and returns an Optional URL for loading that
+     * class. The null return value means no classlocator will be used for this transformation service.
+     *
+     */
+    default Map.Entry<Set<String>,Supplier<Function<String, Optional<URL>>>> additionalResourcesLocator() {
+        return null;
+    }
+
     interface OptionResult {
         @Nonnull
         <V> V value(OptionSpec<V> options);
