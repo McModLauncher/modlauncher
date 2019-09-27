@@ -53,7 +53,7 @@ class ClassTransformerTests {
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});
         final ITransformationService dummyService = new MockTransformerService();
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer(), dummyService);
-        byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, new byte[0], "test.MyClass");
+        byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class,String.class}, new byte[0], "test.MyClass","testing");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result),
                 () -> assertNotNull(new TransformingClassLoader(transformStore, lph, FileSystems.getDefault().getPath(".")).getClass("test.MyClass", result)),
@@ -74,7 +74,7 @@ class ClassTransformerTests {
         ClassWriter cw = new ClassWriter(Opcodes.ASM5);
         dummyClass.accept(cw);
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.DummyClass", "dummyfield"), fieldNodeTransformer1(), dummyService);
-        byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class}, cw.toByteArray(), "test.DummyClass");
+        byte[] result1 = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class, String.class}, cw.toByteArray(), "test.DummyClass", "testing");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result1),
                 () -> assertNotNull(new TransformingClassLoader(transformStore, lph, FileSystems.getDefault().getPath(".")).getClass("test.DummyClass", result1)),

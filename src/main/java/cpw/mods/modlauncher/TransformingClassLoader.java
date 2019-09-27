@@ -22,6 +22,7 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -124,8 +125,12 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
             return existingClass;
         }
-        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder);
+        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder, "classloading");
         return defineClass(name, classBytes, 0, classBytes.length);
+    }
+
+    byte[] buildTransformedClassNodeFor(final String className, final String reason) throws ClassNotFoundException {
+        return delegatedClassLoader.findClass(className, classBytesFinder, reason);
     }
 
     private Optional<Manifest> findManifest(URLConnection urlConnection) {
@@ -209,7 +214,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             return byteFinder.apply(name);
         }
 
-        protected byte[] findClass(final String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
+        protected byte[] findClass(final String name, Function<String,URL> classBytesFinder, final String reason) throws ClassNotFoundException {
             final String path = name.replace('.', '/').concat(".class");
 
             final URL classResource = classBytesFinder.apply(path);
@@ -227,20 +232,23 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     }
                     jarManifest = urlConnection.getJarManifest();
                 } catch (IOException e) {
-                    LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {}", name, classResource, e);
+                    LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {} reason {}", name, classResource, reason, e);
                     throw new ClassNotFoundException("Failed to find class bytes for "+name, e);
                 }
             } else {
                 classBytes = new byte[0];
             }
-            classBytes = tcl.classTransformer.transform(classBytes, name);
+            classBytes = tcl.classTransformer.transform(classBytes, name, reason);
             if (classBytes.length > 0) {
-                LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {}", name, classResource);
+                LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {} reason {}", name, classResource, reason);
 
-                int i = name.lastIndexOf('.');
-                String pkgname = i > 0 ? name.substring(0, i) : "";
-                // Check if package already loaded.
-                tryDefinePackage(pkgname, jarManifest);
+                // Only add the package if we have the
+                if (reason.equals("classloading")) {
+                    int i = name.lastIndexOf('.');
+                    String pkgname = i > 0 ? name.substring(0, i) : "";
+                    // Check if package already loaded.
+                    tryDefinePackage(pkgname, jarManifest);
+                }
 
                 return classBytes;
             } else {

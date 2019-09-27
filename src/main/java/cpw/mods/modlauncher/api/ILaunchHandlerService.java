@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.api;
 
+import java.nio.file.Path;
 import java.util.concurrent.*;
 
 /**
@@ -29,4 +30,6 @@ public interface ILaunchHandlerService {
     void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder);
 
     Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader);
+
+    default Path[] getPaths() { return new Path[0]; }
 }

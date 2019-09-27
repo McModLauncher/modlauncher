@@ -72,12 +72,13 @@ public class Launcher {
     private void run(String... args) {
         final Path gameDir = this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.discoverServices(gameDir);
-        this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
+        final List<Map.Entry<String, Path>> scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
+        this.launchPlugins.offerScanResultsToPlugins(scanResults);
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder, this.environment);
         Thread.currentThread().setContextClassLoader(this.classLoader);
-        this.launchService.launch(this.argumentHandler, this.classLoader);
+        this.launchService.launch(this.argumentHandler, this.classLoader, this.launchPlugins);
     }
 
     public Environment environment() {

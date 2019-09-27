@@ -56,10 +56,10 @@ public class ClassTransformer {
         this.auditTrail = tat;
     }
 
-    byte[] transform(byte[] inputClass, String className) {
+    byte[] transform(byte[] inputClass, String className, final String reason) {
         Type classDesc = Type.getObjectType(className.replace('.', '/'));
 
-        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0);
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0, reason);
 
         final boolean needsTransforming = transformers.needsTransforming(className);
         if (!needsTransforming && launchPluginTransformerSet.isEmpty()) {
@@ -81,15 +81,16 @@ public class ClassTransformer {
             digest = ()->getSha256().digest(EMPTY);
             empty = true;
         }
+        auditTrail.addReason(classDesc.getClassName(), reason);
 
-        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail);
+        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
         if (!preresult && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
             // Shortcut if there's no further work to do
             return inputClass;
         }
 
         if (needsTransforming) {
-            VotingContext context = new VotingContext(className, empty, digest, auditTrail.getActivityFor(className));
+            VotingContext context = new VotingContext(className, empty, digest, auditTrail.getActivityFor(className), reason);
 
             List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
             // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
@@ -111,7 +112,7 @@ public class ClassTransformer {
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail);
+        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
         if (!preresult && !postresult && !needsTransforming) {
             return inputClass;
         }

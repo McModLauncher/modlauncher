@@ -52,7 +52,7 @@ class TransformationServicesHandler {
         return input -> Optional.ofNullable(first.apply(input).orElseGet(() -> second.apply(input).orElse(null)));
     }
 
-    void initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
+    List<Map.Entry<String, Path>> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
         loadTransformationServices(environment);
         validateTransformationServices();
         processArguments(argumentHandler, environment);
@@ -60,8 +60,9 @@ class TransformationServicesHandler {
         // force the naming to "mojang" if nothing has been populated during transformer setup
         environment.computePropertyIfAbsent(IEnvironment.Keys.NAMING.get(), a-> "mojang");
         nameMappingServiceHandler.bindNamingServices(environment.getProperty(Environment.Keys.NAMING.get()).orElse("mojang"));
-        runScanningTransformationServices(environment);
+        final List<Map.Entry<String, Path>> scanResults = runScanningTransformationServices(environment);
         initialiseServiceTransformers();
+        return scanResults;
     }
 
     TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment) {
@@ -106,10 +107,13 @@ class TransformationServicesHandler {
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
 
-    private void runScanningTransformationServices(Environment environment) {
+    private List<Map.Entry<String, Path>> runScanningTransformationServices(Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Transformation services begin scanning");
 
-        serviceLookup.values().forEach(s -> s.runScan(environment));
+        return serviceLookup.values()
+                .stream()
+                .flatMap(s -> s.runScan(environment).stream())
+                .collect(Collectors.toList());
     }
 
     private void validateTransformationServices() {

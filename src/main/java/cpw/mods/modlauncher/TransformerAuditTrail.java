@@ -60,6 +60,10 @@ public class TransformerAuditTrail implements ITransformerAuditTrail {
         }
     }
 
+    public void addReason(String clazz, String reason) {
+        getTransformerActivities(clazz).add(new TransformerActivity(ITransformerActivity.Type.REASON, reason));
+    }
+
     public void addPluginAuditTrail(String clazz, ILaunchPluginService plugin, ILaunchPluginService.Phase phase) {
         getTransformerActivities(clazz).add(new TransformerActivity(ITransformerActivity.Type.PLUGIN, plugin.name(), phase.name().substring(0,1)));
     }

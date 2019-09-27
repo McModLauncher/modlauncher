@@ -54,4 +54,9 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
             return null;
         };
     }
+
+    @Override
+    public Path[] getPaths() {
+        return new Path[] {FileSystems.getDefault().getPath(LAUNCH_PATH_STRING)};
+    }
 }

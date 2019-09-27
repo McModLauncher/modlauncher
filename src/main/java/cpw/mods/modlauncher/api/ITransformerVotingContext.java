@@ -41,6 +41,8 @@ public interface ITransformerVotingContext {
      */
     List<ITransformerActivity> getAuditActivities();
 
+    String getReason();
+
     /**
      * Return the result of applying the supplied field predicate to the current field node.
      * Can only be used on a Field target.

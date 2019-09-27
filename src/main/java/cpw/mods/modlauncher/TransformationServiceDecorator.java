@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nullable;
 import java.lang.reflect.*;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -105,10 +106,11 @@ public class TransformationServiceDecorator {
         return service;
     }
 
-    void runScan(final Environment environment) {
+    List<Map.Entry<String, Path>> runScan(final Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
-        this.service.beginScanning(environment);
+        final List<Map.Entry<String, Path>> scanResults = this.service.runScan(environment);
         LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
+        return scanResults;
     }
 
     Function<String,Optional<URL>> getClassLoader() {

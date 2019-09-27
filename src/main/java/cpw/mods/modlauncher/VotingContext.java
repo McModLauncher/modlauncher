@@ -33,13 +33,15 @@ class VotingContext implements ITransformerVotingContext {
     private final boolean classExists;
     private final Supplier<byte[]> sha256;
     private final List<ITransformerActivity> auditActivities;
+    private final String reason;
     private Object node;
 
-    VotingContext(String className, boolean classExists, Supplier<byte[]> sha256sum, final List<ITransformerActivity> activities) {
+    VotingContext(String className, boolean classExists, Supplier<byte[]> sha256sum, final List<ITransformerActivity> activities, final String reason) {
         this.className = className;
         this.classExists = classExists;
         this.sha256 = sha256sum;
         this.auditActivities = activities;
+        this.reason = reason;
     }
 
     @Override
@@ -60,6 +62,11 @@ class VotingContext implements ITransformerVotingContext {
     @Override
     public List<ITransformerActivity> getAuditActivities() {
         return auditActivities;
+    }
+
+    @Override
+    public String getReason() {
+        return reason;
     }
 
     <T> void setNode(final T node) {

@@ -45,9 +45,13 @@ class LaunchServiceHandler {
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
-    private void launch(String target, String[] arguments, ITransformingClassLoader classLoader) {
+
+    private void launch(String target, String[] arguments, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
+        final LaunchServiceHandlerDecorator launchServiceHandlerDecorator = launchHandlerLookup.get(target);
+        final Path[] paths = launchServiceHandlerDecorator.getService().getPaths();
+        launchPluginHandler.announceLaunch(classLoader, paths);
         LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
-        launchHandlerLookup.get(target).launch(arguments, classLoader);
+        launchServiceHandlerDecorator.launch(arguments, classLoader);
     }
 
     static List<String> hideAccessToken(String[] arguments) {
@@ -62,10 +66,10 @@ class LaunchServiceHandler {
         return output;
     }
 
-    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader) {
+    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
         String launchTarget = argumentHandler.getLaunchTarget();
         String[] args = argumentHandler.buildArgumentList();
-        launch(launchTarget, args, classLoader);
+        launch(launchTarget, args, classLoader, launchPluginHandler);
     }
 
     TransformingClassLoaderBuilder identifyTransformationTargets(final ArgumentHandler argumentHandler) {

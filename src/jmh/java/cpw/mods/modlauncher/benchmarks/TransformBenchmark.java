@@ -49,7 +49,7 @@ public class TransformBenchmark {
         final TransformStore transformStore = new TransformStore();
         final LaunchPluginHandler lph = new LaunchPluginHandler();
         classTransformer = uncheck(()->Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null}));
-        transform = uncheck(()->classTransformer.getClass().getDeclaredMethod("transform", byte[].class, String.class));
+        transform = uncheck(()->classTransformer.getClass().getDeclaredMethod("transform", byte[].class, String.class,String.class));
         transform.setAccessible(true);
         LaunchPluginHandler pluginHandler = Whitebox.getInternalState(classTransformer, "pluginHandler");
         Map<String, ILaunchPluginService> plugins = Whitebox.getInternalState(pluginHandler, "plugins");
@@ -93,13 +93,13 @@ public class TransformBenchmark {
 
     @Benchmark
     public int transformNoop() {
-        byte[] result = uncheck(()->(byte[])transform.invoke(classTransformer,new byte[0], "test.MyClass"));
+        byte[] result = uncheck(()->(byte[])transform.invoke(classTransformer,new byte[0], "test.MyClass","jmh"));
         return result.length + 1;
     }
 
     @Benchmark
     public int transformDummyClass() {
-        byte[] result = uncheck(()->(byte[])transform.invoke(classTransformer,classBytes, "cpw.mods.modlauncher.testjar.TestClass"));
+        byte[] result = uncheck(()->(byte[])transform.invoke(classTransformer,classBytes, "cpw.mods.modlauncher.testjar.TestClass","jmh"));
         return result.length + 1;
     }
 }

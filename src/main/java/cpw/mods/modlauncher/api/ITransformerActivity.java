@@ -26,7 +26,7 @@ public interface ITransformerActivity {
     String getActivityString();
 
     enum Type {
-        PLUGIN("pl"), TRANSFORMER("xf");
+        PLUGIN("pl"), TRANSFORMER("xf"), REASON("re");
 
         private final String label;
 

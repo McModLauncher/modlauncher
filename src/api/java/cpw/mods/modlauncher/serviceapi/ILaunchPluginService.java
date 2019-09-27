@@ -23,6 +23,8 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Loaded from the initial classpath of the system to identify plugins that wish to work across the system.
@@ -65,6 +67,17 @@ public interface ILaunchPluginService {
     EnumSet<Phase> handlesClass(Type classType, final boolean isEmpty);
 
     /**
+     * If this plugin wants to receive the {@link ClassNode} into {@link #processClass}
+     * @param classType the class to consider
+     * @param isEmpty if the class is empty at present (indicates no backing file found)
+     * @param reason Reason for transformation request. "classloading" or the name of an {@link ILaunchPluginService}
+     * @return the set of Phases the plugin wishes to be called back with
+     */
+    default EnumSet<Phase> handlesClass(Type classType, final boolean isEmpty, final String reason) {
+        return handlesClass(classType, isEmpty);
+    }
+
+    /**
      * Each class loaded is offered to the plugin for processing.
      * Ordering between plugins is not known.
      *
@@ -76,15 +89,36 @@ public interface ILaunchPluginService {
     boolean processClass(final Phase phase, ClassNode classNode, final Type classType);
 
     /**
-     * Adds a resource to this plugin for processing by it. Minecraft will always be the first resource offered.
+     * Each class loaded is offered to the plugin for processing.
+     * Ordering between plugins is not known.
      *
-     * Transformers may pass additional resources.
+     * @param phase The phase of the supplied class node
+     * @param classNode the classnode to process
+     * @param classType the name of the class
+     * @param reason Reason for transformation. "classloading" or the name of an {@link ILaunchPluginService}
+     * @return the processed classnode
+     */
+    default boolean processClass(final Phase phase, ClassNode classNode, final Type classType, String reason) {
+        return processClass(phase, classNode, classType);
+    }
+    /**
+     * Adds a resource to this plugin for processing by it. Minecraft will always be the only resource offered.
+     * (Name will be "minecraft").
      *
      * @param resource The resource to be considered by this plugin.
      * @param name A name for this resource.
      */
+    @Deprecated
     default void addResource(Path resource, String name) {}
 
+    /**
+     * Offer scan results from TransformationServices to this plugin.
+     *
+     * @param resources A collection of all the results
+     */
+    default void addResources(List<Map.Entry<String, Path>> resources) {}
+
+    default void initializeLaunch(ITransformerLoader transformerLoader,  Path[] specialPaths) {}
     /**
      * Get a plugin specific extension object from the plugin. This can be used to expose proprietary interfaces
      * to Launchers without ModLauncher needing to understand them.
@@ -93,4 +127,8 @@ public interface ILaunchPluginService {
      * @return An extension object
      */
     default <T> T getExtension() {return null;}
+
+    interface ITransformerLoader {
+        byte[] buildTransformedClassNodeFor(final String className) throws ClassNotFoundException;
+    }
 }

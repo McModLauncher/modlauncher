@@ -22,6 +22,7 @@ import joptsimple.*;
 
 import javax.annotation.*;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
 
@@ -68,6 +69,11 @@ public interface ITransformationService {
      * @param environment environment
      */
     void beginScanning(IEnvironment environment);
+
+    default List<Map.Entry<String, Path>> runScan(IEnvironment environment) {
+        beginScanning(environment);
+        return Collections.emptyList();
+    }
     /**
      * Load your service. Called immediately on loading with a list of other services found.
      * Use to identify and immediately indicate incompatibilities with other services, and environment
