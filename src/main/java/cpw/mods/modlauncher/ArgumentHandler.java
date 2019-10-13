@@ -36,6 +36,7 @@ public class ArgumentHandler {
     private OptionSpec<Path> minecraftJarOption;
     private OptionSpec<String> nonOption;
     private OptionSpec<String> launchTarget;
+    private OptionSpec<String> uuidOption;
 
     Path setArgs(String[] args) {
         this.args = args;
@@ -53,6 +54,7 @@ public class ArgumentHandler {
         gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
         assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
+        uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
 
         parserConsumer.accept(parser);
@@ -62,6 +64,7 @@ public class ArgumentHandler {
         env.computePropertyIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
         env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
+        env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
@@ -102,6 +105,7 @@ public class ArgumentHandler {
         addOptionToString(profileOption, optionSet, args);
         addOptionToString(gameDirOption, optionSet, args);
         addOptionToString(assetsDirOption, optionSet, args);
+        addOptionToString(uuidOption, optionSet, args);
         List<?> nonOptionList = this.optionSet.nonOptionArguments();
         nonOptionList.stream().map(Object::toString).forEach(args::add);
         return args.toArray(new String[0]);

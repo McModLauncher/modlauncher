@@ -83,6 +83,10 @@ public interface IEnvironment {
          */
         public static final Supplier<TypesafeMap.Key<Path>> ASSETSDIR = buildKey("assetsdir", Path.class);
         /**
+         * The UUID of the player on the client
+         */
+        public static final Supplier<TypesafeMap.Key<String>> UUID = buildKey("uuid", String.class);
+        /**
          * The name of the identified launch target (passed as an argument)
          */
         public static final Supplier<TypesafeMap.Key<String>> LAUNCHTARGET = buildKey("launchtarget", String.class);
