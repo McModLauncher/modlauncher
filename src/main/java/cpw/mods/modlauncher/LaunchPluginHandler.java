@@ -62,9 +62,14 @@ public class LaunchPluginHandler {
         return Optional.ofNullable(plugins.get(name));
     }
 
-    public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty, final String reason) {
+    public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty, final String reason, final TransformerAuditTrail auditTrail) {
         final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> phaseObjectEnumMap = new EnumMap<>(ILaunchPluginService.Phase.class);
         plugins.forEach((n,pl)-> pl.handlesClass(className, isEmpty, reason).forEach(ph->phaseObjectEnumMap.computeIfAbsent(ph, e->new ArrayList<>()).add(pl)));
+        phaseObjectEnumMap.values()
+                .stream()
+                .flatMap(Collection::stream)
+                .distinct()
+                .forEach(pl->pl.customAuditConsumer(className.getClassName(), strings->auditTrail.addPluginCustomAuditTrail(className.getClassName(), pl, strings)));
         LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap);
         return phaseObjectEnumMap;
     }

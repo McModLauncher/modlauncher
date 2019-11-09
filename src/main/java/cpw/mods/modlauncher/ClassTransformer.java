@@ -59,7 +59,7 @@ public class ClassTransformer {
     byte[] transform(byte[] inputClass, String className, final String reason) {
         Type classDesc = Type.getObjectType(className.replace('.', '/'));
 
-        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0, reason);
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0, reason, this.auditTrail);
 
         final boolean needsTransforming = transformers.needsTransforming(className);
         if (!needsTransforming && launchPluginTransformerSet.isEmpty()) {

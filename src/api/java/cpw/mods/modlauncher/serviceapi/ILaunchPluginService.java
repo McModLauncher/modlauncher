@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Loaded from the initial classpath of the system to identify plugins that wish to work across the system.
@@ -127,6 +128,17 @@ public interface ILaunchPluginService {
      * @return An extension object
      */
     default <T> T getExtension() {return null;}
+
+    /**
+     * Receives a call immediately after handlesClass for any transformer that declares an interest.
+     *
+     * the consumer can be called repeatedly to generate new AuditTrail entries in the audit log.
+     *
+     * @param className className that is being transformed
+     * @param auditDataAcceptor accepts an array of strings to add a new audit trail record with the data
+     */
+    default void customAuditConsumer(String className, Consumer<String[]> auditDataAcceptor) {
+    }
 
     interface ITransformerLoader {
         byte[] buildTransformedClassNodeFor(final String className) throws ClassNotFoundException;
