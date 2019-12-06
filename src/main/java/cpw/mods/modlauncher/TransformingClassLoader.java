@@ -38,8 +38,6 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
 
 /**
  * Minecraft Class Loader
- * <p>
- * Somewhat modeled on code from https://dzone.com/articles/java-classloader-handling
  */
 public class TransformingClassLoader extends ClassLoader implements ITransformingClassLoader {
 

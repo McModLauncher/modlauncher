@@ -1,13 +1,12 @@
 import java.text.SimpleDateFormat
 
 plugins {
-    id 'org.ajoberstar.reckon' version '0.11.0'
-    id 'org.ajoberstar.grgit' version '3.1.1'
-    id 'com.github.ben-manes.versions' version '0.21.0'
-    id 'me.champeau.gradle.jmh' version '0.4.8'
+    id 'org.ajoberstar.reckon' version '0.12.0'
+    id 'org.ajoberstar.grgit' version '4.0.0'
+    id 'com.github.ben-manes.versions' version '0.27.0'
+    id 'me.champeau.gradle.jmh' version '0.5.0'
 }
 apply plugin: 'java-library'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'jacoco'
@@ -16,7 +15,7 @@ repositories {
     mavenCentral()
     maven {
         name = 'forge'
-        url = 'http://files.minecraftforge.net/maven'
+        url = 'https://files.minecraftforge.net/maven'
     }
 }
 
@@ -57,18 +56,19 @@ group = 'cpw.mods'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+ext.asmVersion = 7.2
 
 dependencies {
     implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("net.sf.jopt-simple:jopt-simple:5.0.4")
-    api("org.ow2.asm:asm:6.2")
-    api("org.ow2.asm:asm-tree:6.2")
-    api("org.ow2.asm:asm-commons:6.2")
-    apiImplementation("org.ow2.asm:asm:6.2")
-    apiImplementation("org.ow2.asm:asm-tree:6.2")
-    apiImplementation("org.ow2.asm:asm-commons:6.2")
-    implementation("org.apache.logging.log4j:log4j-api:2.11.2")
-    implementation("org.apache.logging.log4j:log4j-core:2.11.2")
+    api("org.ow2.asm:asm:${asmVersion}")
+    api("org.ow2.asm:asm-tree:${asmVersion}")
+    api("org.ow2.asm:asm-commons:${asmVersion}")
+    apiImplementation("org.ow2.asm:asm:${asmVersion}")
+    apiImplementation("org.ow2.asm:asm-tree:${asmVersion}")
+    apiImplementation("org.ow2.asm:asm-commons:${asmVersion}")
+    implementation("org.apache.logging.log4j:log4j-api:2.12.1")
+    implementation("org.apache.logging.log4j:log4j-core:2.12.1")
     implementation("cpw.mods:grossjava9hacks:1.1.+")
     implementation(sourceSets.api.output)
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.+")
@@ -76,10 +76,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.5.+")
     testImplementation(sourceSets.testJars.runtimeClasspath)
     jmhImplementation("org.powermock:powermock-core:2.0.+")
-    jmhImplementation("org.ow2.asm:asm:6.2")
-    jmhImplementation("org.ow2.asm:asm-tree:6.2")
-    jmhImplementation("org.ow2.asm:asm-commons:6.2")
-    jmh("org.ow2.asm:asm:6.2")
+    jmhImplementation("org.ow2.asm:asm:${asmVersion}")
+    jmhImplementation("org.ow2.asm:asm-tree:${asmVersion}")
+    jmhImplementation("org.ow2.asm:asm-commons:${asmVersion}")
+    jmh("org.ow2.asm:asm:${asmVersion}")
 }
 
 task apiJar(type: Jar) {
