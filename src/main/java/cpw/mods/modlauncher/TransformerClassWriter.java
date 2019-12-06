@@ -118,7 +118,7 @@ class TransformerClassWriter extends ClassWriter {
         private final ClassTransformer classTransformer;
 
         public SuperCollectingVisitor(final ClassTransformer classTransformer) {
-            super(Opcodes.ASM5);
+            super(Opcodes.ASM7);
             this.classTransformer = classTransformer;
         }
 
