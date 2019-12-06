@@ -41,7 +41,7 @@ class TransformerClassWriter extends ClassWriter {
     private final ClassNode clazzAccessor;
 
     public TransformerClassWriter(final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
-        super(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM5);
+        super(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM7);
         this.classTransformer = classTransformer;
         this.clazzAccessor = clazzAccessor;
         if (!classParents.containsKey(clazzAccessor.name)) {
