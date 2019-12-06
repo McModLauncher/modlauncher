@@ -32,17 +32,17 @@ public class PredicateVisitor extends ClassVisitor {
     private boolean result;
 
     PredicateVisitor(final ITransformerVotingContext.FieldPredicate fieldPredicate) {
-        super(Opcodes.ASM6);
+        super(Opcodes.ASM7);
         this.fieldPredicate = fieldPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.MethodPredicate methodPredicate) {
-        super(Opcodes.ASM6);
+        super(Opcodes.ASM7);
         this.methodPredicate = methodPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.ClassPredicate classPredicate) {
-        super(Opcodes.ASM6);
+        super(Opcodes.ASM7);
         this.classPredicate = classPredicate;
     }
 
