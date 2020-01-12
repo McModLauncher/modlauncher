@@ -83,8 +83,8 @@ public class ClassTransformer {
         }
         auditTrail.addReason(classDesc.getClassName(), reason);
 
-        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
-        if (!preresult && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
+        ILaunchPluginService.ComputeLevel preLevel = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        if (preLevel == ILaunchPluginService.ComputeLevel.NO_REWRITE && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
             // Shortcut if there's no further work to do
             return inputClass;
         }
@@ -112,12 +112,15 @@ public class ClassTransformer {
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
-        if (!preresult && !postresult && !needsTransforming) {
+        ILaunchPluginService.ComputeLevel postLevel = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        if (preLevel == ILaunchPluginService.ComputeLevel.NO_REWRITE && postLevel == ILaunchPluginService.ComputeLevel.NO_REWRITE && !needsTransforming) {
             return inputClass;
         }
+        //Transformers always get compute_frames
+        ILaunchPluginService.ComputeLevel finalLevel = needsTransforming ? ILaunchPluginService.ComputeLevel.COMPUTE_FRAMES : postLevel.mergeWith(preLevel);
 
-        ClassWriter cw = new TransformerClassWriter(this, clazz);
+        //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
+        ClassWriter cw = finalLevel == ILaunchPluginService.ComputeLevel.COMPUTE_FRAMES ? new TransformerClassWriter(this, clazz) : new ClassWriter(finalLevel.getFlag() | Opcodes.ASM7);
         clazz.accept(cw);
         if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
@@ -166,7 +169,7 @@ public class ClassTransformer {
             if (results.containsKey(TransformerVoteResult.YES)) {
                 final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
-                auditTrail.addTransformerAuditTrail(context.getClassName(), ((TransformerHolder)transformer).owner(), transformer);
+                auditTrail.addTransformerAuditTrail(context.getClassName(), ((TransformerHolder<?>)transformer).owner(), transformer);
                 transformers.remove(transformer);
                 continue;
             }

@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.serviceapi;
 
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -57,6 +58,51 @@ public interface ILaunchPluginService {
          * After regular transformer processing
          */
         AFTER
+    }
+
+    enum ComputeLevel {
+        /**
+         * This plugin did not change the class and therefor requires no rewrite of the class.
+         * This is the fastest option
+         */
+        NO_REWRITE,
+        /**
+         * The plugin did change the class and requires a rewrite, but does not require any additional computation
+         * as frames and maxs in the class did not change of have been corrected by the plugin
+         */
+        SIMPLE_REWRITE,
+        /**
+         * The plugin did change the class and requires a rewrite, and requires max re-computation,
+         * but frames are unchanged or corrected by the plugin
+         */
+        COMPUTE_MAXS,
+        /**
+         * The plugin did change the class and requires a rewrite, and requires max and frame re-computation.
+         * This is the slowest, but also safest method if you don't know what level is required
+         */
+        COMPUTE_FRAMES;
+
+        public ComputeLevel mergeWith(ComputeLevel level) {
+            if (level.ordinal() > this.ordinal())
+                return level;
+            else
+                return this;
+        }
+
+        public int getFlag() {
+            switch (this) {
+                case NO_REWRITE:
+                    throw new RuntimeException("No flag available for " + this.name() + "!");
+                case SIMPLE_REWRITE:
+                    return 0;
+                case COMPUTE_MAXS:
+                    return ClassWriter.COMPUTE_MAXS;
+                case COMPUTE_FRAMES:
+                    return ClassWriter.COMPUTE_FRAMES;
+                default:
+                    throw new RuntimeException("Unknown enum constant " + this);
+            }
+        }
     }
 
     /**
@@ -102,6 +148,21 @@ public interface ILaunchPluginService {
     default boolean processClass(final Phase phase, ClassNode classNode, final Type classType, String reason) {
         return processClass(phase, classNode, classType);
     }
+
+    /**
+     * Each class loaded is offered to the plugin for processing.
+     * Ordering between plugins is not known.
+     *
+     * @param phase The phase of the supplied class node
+     * @param classNode the classnode to process
+     * @param classType the name of the class
+     * @param reason Reason for transformation. "classloading" or the name of an {@link ILaunchPluginService}
+     * @return The required compute level for this class
+     */
+    default ComputeLevel processClassNew(final Phase phase, ClassNode classNode, final Type classType, String reason) {
+        return processClass(phase, classNode, classType, reason) ? ComputeLevel.COMPUTE_FRAMES : ComputeLevel.NO_REWRITE;
+    }
+
     /**
      * Adds a resource to this plugin for processing by it. Minecraft will always be the only resource offered.
      * (Name will be "minecraft").

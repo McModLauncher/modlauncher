@@ -78,17 +78,18 @@ public class LaunchPluginHandler {
         plugins.forEach((n,p)->p.addResources(scanResults));
     }
 
-    boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail, final String reason) {
-        boolean needsRewriting = false;
+    ILaunchPluginService.ComputeLevel offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail, final String reason) {
+        ILaunchPluginService.ComputeLevel level = ILaunchPluginService.ComputeLevel.NO_REWRITE;
         for (ILaunchPluginService iLaunchPluginService : plugins) {
             LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService.name(), className.getClassName());
-            if (iLaunchPluginService.processClass(phase, node, className, reason)) {
+            ILaunchPluginService.ComputeLevel newLevel = iLaunchPluginService.processClassNew(phase, node, className, reason);
+            if (newLevel != ILaunchPluginService.ComputeLevel.NO_REWRITE) {
                 auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
-                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {}", iLaunchPluginService.name(), className.getClassName());
-                needsRewriting = true;
+                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute level {}", iLaunchPluginService.name(), className.getClassName(), newLevel);
+                level = newLevel.mergeWith(level);
             }
         }
-        return needsRewriting;
+        return level;
     }
 
     void announceLaunch(final TransformingClassLoader transformerLoader, final Path[] specialPaths) {
