@@ -60,49 +60,32 @@ public interface ILaunchPluginService {
         AFTER
     }
 
-    enum ComputeLevel {
+    class ComputeFlags {
         /**
          * This plugin did not change the class and therefor requires no rewrite of the class.
          * This is the fastest option
          */
-        NO_REWRITE,
+        public static final int NO_REWRITE = 0;
+
         /**
          * The plugin did change the class and requires a rewrite, but does not require any additional computation
-         * as frames and maxs in the class did not change of have been corrected by the plugin
+         * as frames and maxs in the class did not change of have been corrected by the plugin.
+         * Should not be combined with {@link #COMPUTE_FRAMES} or {@link #COMPUTE_MAXS}
          */
-        SIMPLE_REWRITE,
+        public static final int SIMPLE_REWRITE = 0x100; //leave some space for eventual new flags in ClassWriter
+
         /**
          * The plugin did change the class and requires a rewrite, and requires max re-computation,
          * but frames are unchanged or corrected by the plugin
          */
-        COMPUTE_MAXS,
+        public static final int COMPUTE_MAXS = ClassWriter.COMPUTE_MAXS;
+
         /**
-         * The plugin did change the class and requires a rewrite, and requires max and frame re-computation.
-         * This is the slowest, but also safest method if you don't know what level is required
+         * The plugin did change the class and requires a rewrite, and requires frame re-computation.
+         * This is the slowest, but also safest method if you don't know what level is required.
+         * This implies {@link #COMPUTE_MAXS}, so maxs will also be recomputed.
          */
-        COMPUTE_FRAMES;
-
-        public ComputeLevel mergeWith(ComputeLevel level) {
-            if (level.ordinal() > this.ordinal())
-                return level;
-            else
-                return this;
-        }
-
-        public int getFlag() {
-            switch (this) {
-                case NO_REWRITE:
-                    throw new RuntimeException("No flag available for " + this.name() + "!");
-                case SIMPLE_REWRITE:
-                    return 0;
-                case COMPUTE_MAXS:
-                    return ClassWriter.COMPUTE_MAXS;
-                case COMPUTE_FRAMES:
-                    return ClassWriter.COMPUTE_FRAMES;
-                default:
-                    throw new RuntimeException("Unknown enum constant " + this);
-            }
-        }
+        public static final int COMPUTE_FRAMES = ClassWriter.COMPUTE_FRAMES;
     }
 
     /**
@@ -157,10 +140,10 @@ public interface ILaunchPluginService {
      * @param classNode the classnode to process
      * @param classType the name of the class
      * @param reason Reason for transformation. "classloading" or the name of an {@link ILaunchPluginService}
-     * @return The required compute level for this class
+     * @return The {@link ComputeFlags} for this class
      */
-    default ComputeLevel processClassNew(final Phase phase, ClassNode classNode, final Type classType, String reason) {
-        return processClass(phase, classNode, classType, reason) ? ComputeLevel.COMPUTE_FRAMES : ComputeLevel.NO_REWRITE;
+    default int processClassNew(final Phase phase, ClassNode classNode, final Type classType, String reason) {
+        return processClass(phase, classNode, classType, reason) ? ComputeFlags.COMPUTE_FRAMES : ComputeFlags.NO_REWRITE;
     }
 
     /**
