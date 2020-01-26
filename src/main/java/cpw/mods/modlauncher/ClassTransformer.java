@@ -121,7 +121,8 @@ public class ClassTransformer {
         finalFlags &= ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
 
         //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
-        ClassWriter cw = finalFlags == ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES ? new TransformerClassWriter(this, clazz) : new ClassWriter(finalFlags | Opcodes.ASM7);
+        boolean requireFrames = (finalFlags & ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES) == ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
+        ClassWriter cw = requireFrames ? new TransformerClassWriter(this, clazz) : new ClassWriter(finalFlags | Opcodes.ASM7);
         clazz.accept(cw);
         if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
