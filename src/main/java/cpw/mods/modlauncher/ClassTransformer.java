@@ -66,7 +66,7 @@ public class ClassTransformer {
             return inputClass;
         }
 
-        ClassNode clazz = new ClassNode(Opcodes.ASM7);
+        ClassNode clazz = new ClassNode(TransformerClassWriter.ASM_VERSION);
         Supplier<byte[]> digest;
         boolean empty;
         if (inputClass.length > 0) {
@@ -118,11 +118,7 @@ public class ClassTransformer {
         }
         //Transformers always get compute_frames
         int finalFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
-        finalFlags &= ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
-
-        //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
-        boolean requireFrames = (finalFlags & ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES) == ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
-        ClassWriter cw = requireFrames ? new TransformerClassWriter(this, clazz) : new ClassWriter(finalFlags | Opcodes.ASM7);
+        ClassWriter cw = TransformerClassWriter.createClassWriter(finalFlags, this, clazz);
         clazz.accept(cw);
         if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
