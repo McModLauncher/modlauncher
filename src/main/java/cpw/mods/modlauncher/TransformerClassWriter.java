@@ -29,14 +29,15 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class TransformerClassWriter extends ClassWriter {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final HashMap<String,String> classParents = new HashMap<>();
-    private static final HashMap<String, Set<String>> classHierarchies = new HashMap<>();
-    private static final HashMap<String, Boolean> isInterface = new HashMap<>();
+    private static final Map<String,String> classParents = new ConcurrentHashMap<>();
+    private static final Map<String, Set<String>> classHierarchies = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> isInterface = new ConcurrentHashMap<>();
     private ClassTransformer classTransformer;
     private final ClassNode clazzAccessor;
 
