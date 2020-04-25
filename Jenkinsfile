@@ -3,8 +3,8 @@
 pipeline {
     agent {
         docker {
-            image 'gradlewrapper:latest'
-            args '-v gradlecache:/gradlecache'
+            image 'gradle:jdk8'
+            args '-v modlaunchergc:/home/gradle/.gradle/'
         }
     }
     environment {
@@ -12,11 +12,6 @@ pipeline {
     }
 
     stages {
-        stage('fetch') {
-            steps {
-                checkout scm
-            }
-        }
         stage('buildandtest') {
             steps {
                 sh './gradlew ${GRADLE_ARGS} --refresh-dependencies --continue build test'
@@ -42,7 +37,6 @@ pipeline {
             }
             steps {
                 sh './gradlew ${GRADLE_ARGS} publish -PforgeMavenUser=${FORGE_MAVEN_USR} -PforgeMavenPassword=${FORGE_MAVEN_PSW}'
-                sh 'curl --user ${FORGE_MAVEN} http://files.minecraftforge.net/maven/manage/promote/latest/cpw.mods.modlauncher/${BUILD_NUMBER}'
             }
         }
     }
