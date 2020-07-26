@@ -92,6 +92,9 @@ public class ClassTransformer {
         if (needsTransforming) {
             VotingContext context = new VotingContext(className, empty, digest, auditTrail.getActivityFor(className), reason);
 
+            List<ITransformer<ClassNode>> preClassTransformers = new ArrayList<>(transformers.getTransformersFor(className, TransformTargetLabel.LabelType.PRE_CLASS));
+            clazz = this.performVote(preClassTransformers, clazz, context);
+
             List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
             // it's probably possible to inject "dummy" fields into this list for spawning new fields without class transform
             for (FieldNode field : clazz.fields) {
@@ -108,7 +111,7 @@ public class ClassTransformer {
 
             clazz.fields = fieldList;
             clazz.methods = methodList;
-            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className));
+            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className, TransformTargetLabel.LabelType.CLASS));
             clazz = this.performVote(classTransformers, clazz, context);
         }
 

@@ -40,6 +40,7 @@ public class TransformStore {
         transformers.put(TransformTargetLabel.LabelType.CLASS, new TransformList<>(ClassNode.class));
         transformers.put(TransformTargetLabel.LabelType.METHOD, new TransformList<>(MethodNode.class));
         transformers.put(TransformTargetLabel.LabelType.FIELD, new TransformList<>(FieldNode.class));
+        transformers.put(TransformTargetLabel.LabelType.PRE_CLASS, new TransformList<>(ClassNode.class));
     }
 
     List<ITransformer<FieldNode>> getTransformersFor(String className, FieldNode field) {
@@ -54,9 +55,9 @@ public class TransformStore {
         return transformerlist.getTransformersForLabel(tl);
     }
 
-    List<ITransformer<ClassNode>> getTransformersFor(String className) {
+    List<ITransformer<ClassNode>> getTransformersFor(String className, TransformTargetLabel.LabelType classType) {
         TransformTargetLabel tl = new TransformTargetLabel(className);
-        TransformList<ClassNode> transformerlist = TransformTargetLabel.LabelType.CLASS.getFromMap(this.transformers);
+        TransformList<ClassNode> transformerlist = classType.getFromMap(this.transformers);
         return transformerlist.getTransformersForLabel(tl);
     }
 

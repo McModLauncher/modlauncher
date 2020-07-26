@@ -95,7 +95,7 @@ public final class TransformTargetLabel {
     }
 
     public enum LabelType {
-        FIELD(FieldNode.class), METHOD(MethodNode.class), CLASS(ClassNode.class);
+        FIELD(FieldNode.class), METHOD(MethodNode.class), CLASS(ClassNode.class), PRE_CLASS(ClassNode.class);
 
         private final Class<?> nodeType;
 
