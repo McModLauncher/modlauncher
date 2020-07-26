@@ -79,16 +79,17 @@ public class LaunchPluginHandler {
         int flags = 0;
         for (ILaunchPluginService iLaunchPluginService : plugins) {
             LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService.name(), className.getClassName());
-            int newFlags = iLaunchPluginService.processClassNew(phase, node, className, reason);
-            if (newFlags != ILaunchPluginService.ComputeFlags.NO_REWRITE) {
+            final int pluginFlags = iLaunchPluginService.processClassWithFlags(phase, node, className, reason);
+            if (pluginFlags != ILaunchPluginService.ComputeFlags.NO_REWRITE) {
                 //If simple rewrite is specified, no other flags should be present
-                if ((newFlags & ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE) != 0 && newFlags != ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE)
+                if ((pluginFlags & ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE) != 0 && pluginFlags != ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE)
                     throw new RuntimeException(String.format("LauncherPluginService %s returned SIMPLE_REWRITE and additional flags (%s) while transforming %s", iLaunchPluginService.name(), flags, className.getClassName()));
                 auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
-                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute flags {}", iLaunchPluginService.name(), className.getClassName(), flags);
-                flags |= newFlags;
+                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute flags {}", iLaunchPluginService.name(), className.getClassName(), pluginFlags);
+                flags |= pluginFlags;
             }
         }
+        LOGGER.debug(LAUNCHPLUGIN, "Final flags state for {} is {}", className.getClassName(), flags);
         return flags;
     }
 

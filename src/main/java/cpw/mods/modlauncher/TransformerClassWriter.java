@@ -36,21 +36,17 @@ import java.util.stream.Stream;
 
 class TransformerClassWriter extends ClassWriter {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int ASM_VERSION = Opcodes.ASM7;
-    private static final int SIMPLE_REWRITE_FLAG = ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE;
-    private static final int COMPUTE_FRAMES_FLAG = ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
     private static final Map<String,String> classParents = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> classHierarchies = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> isInterface = new ConcurrentHashMap<>();
     private ClassTransformer classTransformer;
 
     public static ClassWriter createClassWriter(final int mlFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
-        int writerFlag = mlFlags & ~SIMPLE_REWRITE_FLAG; //Strip any modlauncher-custom fields
-        writerFlag |= ASM_VERSION;
+        int writerFlag = mlFlags & ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
+        writerFlag |= Opcodes.ASM7;
 
         //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
-        boolean requireFrames = (writerFlag & COMPUTE_FRAMES_FLAG) != 0;
-        return requireFrames ? new TransformerClassWriter(writerFlag, classTransformer, clazzAccessor) : new ClassWriter(mlFlags);
+        return (writerFlag & ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES) != 0 ? new TransformerClassWriter(writerFlag, classTransformer, clazzAccessor) : new ClassWriter(mlFlags);
     }
 
     private TransformerClassWriter(final int writerFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
@@ -130,7 +126,7 @@ class TransformerClassWriter extends ClassWriter {
         private final ClassTransformer classTransformer;
 
         public SuperCollectingVisitor(final ClassTransformer classTransformer) {
-            super(ASM_VERSION);
+            super(Opcodes.ASM7);
             this.classTransformer = classTransformer;
         }
 

@@ -114,7 +114,7 @@ public interface ILaunchPluginService {
      * @param phase The phase of the supplied class node
      * @param classNode the classnode to process
      * @param classType the name of the class
-     * @return the processed classnode
+     * @return true if the classNode needs rewriting using COMPUTE_FRAMES or false if it needs no NO_REWRITE
      */
     boolean processClass(final Phase phase, ClassNode classNode, final Type classType);
 
@@ -126,7 +126,7 @@ public interface ILaunchPluginService {
      * @param classNode the classnode to process
      * @param classType the name of the class
      * @param reason Reason for transformation. "classloading" or the name of an {@link ILaunchPluginService}
-     * @return the processed classnode
+     * @return true if the classNode needs rewriting using COMPUTE_FRAMES or false if it needs no NO_REWRITE
      */
     default boolean processClass(final Phase phase, ClassNode classNode, final Type classType, String reason) {
         return processClass(phase, classNode, classType);
@@ -142,7 +142,7 @@ public interface ILaunchPluginService {
      * @param reason Reason for transformation. "classloading" or the name of an {@link ILaunchPluginService}
      * @return The {@link ComputeFlags} for this class
      */
-    default int processClassNew(final Phase phase, ClassNode classNode, final Type classType, String reason) {
+    default int processClassWithFlags(final Phase phase, ClassNode classNode, final Type classType, String reason) {
         return processClass(phase, classNode, classType, reason) ? ComputeFlags.COMPUTE_FRAMES : ComputeFlags.NO_REWRITE;
     }
 

@@ -57,7 +57,7 @@ public class ClassTransformer {
     }
 
     byte[] transform(byte[] inputClass, String className, final String reason) {
-        Type classDesc = Type.getObjectType(className.replace('.', '/'));
+        final Type classDesc = Type.getObjectType(className.replace('.', '/'));
 
         final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0, reason, this.auditTrail);
 
@@ -66,7 +66,7 @@ public class ClassTransformer {
             return inputClass;
         }
 
-        ClassNode clazz = new ClassNode(TransformerClassWriter.ASM_VERSION);
+        ClassNode clazz = new ClassNode(Opcodes.ASM7);
         Supplier<byte[]> digest;
         boolean empty;
         if (inputClass.length > 0) {
@@ -83,7 +83,7 @@ public class ClassTransformer {
         }
         auditTrail.addReason(classDesc.getClassName(), reason);
 
-        int preFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        final int preFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
         if (preFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
             // Shortcut if there's no further work to do
             return inputClass;
@@ -112,15 +112,15 @@ public class ClassTransformer {
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        int postFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        final int postFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
         if (preFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && postFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && !needsTransforming) {
             return inputClass;
         }
         //Transformers always get compute_frames
-        int finalFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
-        ClassWriter cw = TransformerClassWriter.createClassWriter(finalFlags, this, clazz);
+        final int finalFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
+        final ClassWriter cw = TransformerClassWriter.createClassWriter(finalFlags, this, clazz);
         clazz.accept(cw);
-        if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
+        if (LOGGER.isEnabled(Level.TRACE) && MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
         }
         return cw.toByteArray();
