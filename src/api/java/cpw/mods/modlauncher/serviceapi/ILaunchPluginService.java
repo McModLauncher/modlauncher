@@ -111,12 +111,17 @@ public interface ILaunchPluginService {
      * Each class loaded is offered to the plugin for processing.
      * Ordering between plugins is not known.
      *
+     * One of {@link #processClass(Phase, ClassNode, Type)}, {@link #processClass(Phase, ClassNode, Type, String)}
+     * or {@link #processClassWithFlags(Phase, ClassNode, Type, String)} <em>must</em> be implemented.
+     *
      * @param phase The phase of the supplied class node
      * @param classNode the classnode to process
      * @param classType the name of the class
      * @return true if the classNode needs rewriting using COMPUTE_FRAMES or false if it needs no NO_REWRITE
      */
-    boolean processClass(final Phase phase, ClassNode classNode, final Type classType);
+    default boolean processClass(final Phase phase, ClassNode classNode, final Type classType) {
+        throw new IllegalStateException("YOU NEED TO OVERRIDE ONE OF THE processClass methods");
+    }
 
     /**
      * Each class loaded is offered to the plugin for processing.
@@ -147,14 +152,13 @@ public interface ILaunchPluginService {
     }
 
     /**
-     * Adds a resource to this plugin for processing by it. Minecraft will always be the only resource offered.
-     * (Name will be "minecraft").
+     * Adds a resource to this plugin for processing by it. Used by forge to hand resources to access transformers
+     * for example.
      *
      * @param resource The resource to be considered by this plugin.
      * @param name A name for this resource.
      */
-    @Deprecated
-    default void addResource(Path resource, String name) {}
+    default void offerResource(Path resource, String name) {}
 
     /**
      * Offer scan results from TransformationServices to this plugin.
