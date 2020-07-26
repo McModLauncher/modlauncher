@@ -38,7 +38,7 @@ public class PluginTests {
             }
 
             @Override
-            public void addResource(final Path resource, final String name) {
+            public void offerResource(final Path resource, final String name) {
 
             }
 
