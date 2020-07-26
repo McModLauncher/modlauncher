@@ -66,7 +66,7 @@ public class ClassTransformer {
             return inputClass;
         }
 
-        ClassNode clazz = new ClassNode(Opcodes.ASM7);
+        ClassNode clazz = new ClassNode(TransformerClassWriter.ASM_VERSION);
         Supplier<byte[]> digest;
         boolean empty;
         if (inputClass.length > 0) {
@@ -83,8 +83,8 @@ public class ClassTransformer {
         }
         auditTrail.addReason(classDesc.getClassName(), reason);
 
-        boolean preresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
-        if (!preresult && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
+        int preFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.BEFORE, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.BEFORE, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        if (preFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && !needsTransforming && launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()).isEmpty()) {
             // Shortcut if there's no further work to do
             return inputClass;
         }
@@ -112,12 +112,13 @@ public class ClassTransformer {
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
-        boolean postresult = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
-        if (!preresult && !postresult && !needsTransforming) {
+        int postFlags = pluginHandler.offerClassNodeToPlugins(ILaunchPluginService.Phase.AFTER, launchPluginTransformerSet.getOrDefault(ILaunchPluginService.Phase.AFTER, Collections.emptyList()), clazz, classDesc, auditTrail, reason);
+        if (preFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && postFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && !needsTransforming) {
             return inputClass;
         }
-
-        ClassWriter cw = new TransformerClassWriter(this, clazz);
+        //Transformers always get compute_frames
+        int finalFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
+        ClassWriter cw = TransformerClassWriter.createClassWriter(finalFlags, this, clazz);
         clazz.accept(cw);
         if (MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE) && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
@@ -166,7 +167,7 @@ public class ClassTransformer {
             if (results.containsKey(TransformerVoteResult.YES)) {
                 final ITransformer<T> transformer = results.get(TransformerVoteResult.YES).get(0).getTransformer();
                 node = transformer.transform(node, context);
-                auditTrail.addTransformerAuditTrail(context.getClassName(), ((TransformerHolder)transformer).owner(), transformer);
+                auditTrail.addTransformerAuditTrail(context.getClassName(), ((TransformerHolder<?>)transformer).owner(), transformer);
                 transformers.remove(transformer);
                 continue;
             }

@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
@@ -35,16 +36,26 @@ import java.util.stream.Stream;
 
 class TransformerClassWriter extends ClassWriter {
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final int ASM_VERSION = Opcodes.ASM7;
+    private static final int SIMPLE_REWRITE_FLAG = ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE;
+    private static final int COMPUTE_FRAMES_FLAG = ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
     private static final Map<String,String> classParents = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> classHierarchies = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> isInterface = new ConcurrentHashMap<>();
     private ClassTransformer classTransformer;
-    private final ClassNode clazzAccessor;
 
-    public TransformerClassWriter(final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
-        super(ClassWriter.COMPUTE_FRAMES | Opcodes.ASM7);
+    public static ClassWriter createClassWriter(final int mlFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
+        int writerFlag = mlFlags & ~SIMPLE_REWRITE_FLAG; //Strip any modlauncher-custom fields
+        writerFlag |= ASM_VERSION;
+
+        //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
+        boolean requireFrames = (writerFlag & COMPUTE_FRAMES_FLAG) != 0;
+        return requireFrames ? new TransformerClassWriter(writerFlag, classTransformer, clazzAccessor) : new ClassWriter(mlFlags);
+    }
+
+    private TransformerClassWriter(final int writerFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
+        super(writerFlags);
         this.classTransformer = classTransformer;
-        this.clazzAccessor = clazzAccessor;
         if (!classParents.containsKey(clazzAccessor.name)) {
             computeHierarchy(clazzAccessor);
         }
@@ -119,7 +130,7 @@ class TransformerClassWriter extends ClassWriter {
         private final ClassTransformer classTransformer;
 
         public SuperCollectingVisitor(final ClassTransformer classTransformer) {
-            super(Opcodes.ASM7);
+            super(ASM_VERSION);
             this.classTransformer = classTransformer;
         }
 

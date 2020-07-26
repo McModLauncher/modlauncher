@@ -19,7 +19,6 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +28,6 @@ import org.objectweb.asm.tree.*;
 import javax.annotation.*;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -78,17 +75,21 @@ public class LaunchPluginHandler {
         plugins.forEach((n,p)->p.addResources(scanResults));
     }
 
-    boolean offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail, final String reason) {
-        boolean needsRewriting = false;
+    int offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail, final String reason) {
+        int flags = 0;
         for (ILaunchPluginService iLaunchPluginService : plugins) {
             LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService.name(), className.getClassName());
-            if (iLaunchPluginService.processClass(phase, node, className, reason)) {
+            int newFlags = iLaunchPluginService.processClassNew(phase, node, className, reason);
+            if (newFlags != ILaunchPluginService.ComputeFlags.NO_REWRITE) {
+                //If simple rewrite is specified, no other flags should be present
+                if ((newFlags & ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE) != 0 && newFlags != ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE)
+                    throw new RuntimeException(String.format("LauncherPluginService %s returned SIMPLE_REWRITE and additional flags (%s) while transforming %s", iLaunchPluginService.name(), flags, className.getClassName()));
                 auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
-                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {}", iLaunchPluginService.name(), className.getClassName());
-                needsRewriting = true;
+                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute flags {}", iLaunchPluginService.name(), className.getClassName(), flags);
+                flags |= newFlags;
             }
         }
-        return needsRewriting;
+        return flags;
     }
 
     void announceLaunch(final TransformingClassLoader transformerLoader, final Path[] specialPaths) {
