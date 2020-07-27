@@ -42,11 +42,10 @@ class TransformerClassWriter extends ClassWriter {
     private ClassTransformer classTransformer;
 
     public static ClassWriter createClassWriter(final int mlFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
-        int writerFlag = mlFlags & ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
-        writerFlag |= Opcodes.ASM7;
+        final int writerFlag = mlFlags & ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
 
         //Only use the TransformerClassWriter when needed as it's slower, and only COMPUTE_FRAMES calls getCommonSuperClass
-        return (writerFlag & ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES) != 0 ? new TransformerClassWriter(writerFlag, classTransformer, clazzAccessor) : new ClassWriter(mlFlags);
+        return (writerFlag & ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES) != 0 ? new TransformerClassWriter(writerFlag, classTransformer, clazzAccessor) : new ClassWriter(writerFlag);
     }
 
     private TransformerClassWriter(final int writerFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
