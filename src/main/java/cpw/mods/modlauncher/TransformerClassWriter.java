@@ -27,19 +27,18 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class TransformerClassWriter extends ClassWriter {
+    public static final String CLASSLOADING_REASON = "computing_frames";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String,String> classParents = new ConcurrentHashMap<>();
-    private static final Map<String, Set<String>> classHierarchies = new ConcurrentHashMap<>();
-    private static final Map<String, Boolean> isInterface = new ConcurrentHashMap<>();
-    private ClassTransformer classTransformer;
+    private static final Map<String, String> CLASS_PARENTS = new ConcurrentHashMap<>();
+    private static final Map<String, Set<String>> CLASS_HIERARCHIES = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> IS_INTERFACE = new ConcurrentHashMap<>();
+    private final ClassTransformer classTransformer;
+    private final ClassNode clazzAccessor;
+    private boolean computedThis = false;
 
     public static ClassWriter createClassWriter(final int mlFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
         int writerFlag = mlFlags & ~ILaunchPluginService.ComputeFlags.SIMPLE_REWRITE; //Strip any modlauncher-custom fields
@@ -52,58 +51,16 @@ class TransformerClassWriter extends ClassWriter {
     private TransformerClassWriter(final int writerFlags, final ClassTransformer classTransformer, final ClassNode clazzAccessor) {
         super(writerFlags);
         this.classTransformer = classTransformer;
-        if (!classParents.containsKey(clazzAccessor.name)) {
-            computeHierarchy(clazzAccessor);
-        }
-    }
-
-    private Set<String> getSupers(final String typeName) {
-        if (!classParents.containsKey(typeName)) {
-            computeHierarchy(typeName, classTransformer);
-        }
-        return classHierarchies.get(typeName);
-    }
-
-    private boolean isIntf(final String typeName) {
-        if (!classParents.containsKey(typeName)) {
-            computeHierarchy(typeName, classTransformer);
-        }
-        return isInterface.get(typeName);
-    }
-
-    private String getSuper(final String typeName) {
-        if (!classParents.containsKey(typeName)) {
-            computeHierarchy(typeName, classTransformer);
-        }
-        return classParents.get(typeName);
-    }
-
-    private void computeHierarchy(final ClassNode clazzNode) {
-        clazzNode.accept(new SuperCollectingVisitor(classTransformer));
-    }
-
-    private void computeHierarchy(final String className, final ClassTransformer classTransformer) {
-        final String target = className.replace('.', '/').concat(".class");
-        InputStream resource = null;
-        try {
-            resource = classTransformer.getTransformingClassLoader().getResourceAsStream(target);
-            final ClassReader classReader = new ClassReader(resource);
-            classReader.accept(new SuperCollectingVisitor(classTransformer), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-        } catch (IOException e) {
-            LOGGER.fatal("Class {} unable to find resource {}", className, resource);
-            throw new RuntimeException("Failed to load hierarchy member " + className, e);
-        } catch (NullPointerException e) {
-            // discard NPE - it's because the classloader doesn't exist in testing
-            classParents.put(className, "java/lang/Object");
-            classHierarchies.put(className, Stream.of(className, "java/lang/Object").collect(Collectors.toSet()));
-        }
-        finally {
-            try {resource.close();} catch (NullPointerException | IOException e) {}
-        }
+        this.clazzAccessor = clazzAccessor;
     }
 
     @Override
-    protected String getCommonSuperClass(String type1, String type2) {
+    protected String getCommonSuperClass(final String type1, final String type2) {
+        if (!computedThis) {
+            computeHierarchy(clazzAccessor);
+            computedThis = true;
+        }
+
         if (getSupers(type2).contains(type1)) {
             return type1;
         }
@@ -122,29 +79,115 @@ class TransformerClassWriter extends ClassWriter {
         return type;
     }
 
-    private class SuperCollectingVisitor extends ClassVisitor {
-        private final ClassTransformer classTransformer;
 
-        public SuperCollectingVisitor(final ClassTransformer classTransformer) {
+    private Set<String> getSupers(final String typeName) {
+        computeHierarchy(typeName);
+        return CLASS_HIERARCHIES.get(typeName);
+    }
+
+    private boolean isIntf(final String typeName) {
+        //We don't need computeHierarchy as it has been called already from a different method every time this method is called
+        return IS_INTERFACE.get(typeName);
+    }
+
+    private String getSuper(final String typeName) {
+        computeHierarchy(typeName);
+        return CLASS_PARENTS.get(typeName);
+    }
+
+    private void computeHierarchy(final ClassNode clazzNode) {
+        if (!CLASS_HIERARCHIES.containsKey(clazzNode.name)) {
+            clazzNode.accept(new SuperCollectingVisitor());
+        }
+    }
+
+    /**
+     * Computes the hierarchy for a specific class if it has not been computed yet
+     */
+    private void computeHierarchy(final String className) {
+        if (CLASS_HIERARCHIES.containsKey(className)) return; //already computed
+        Class<?> clz = classTransformer.getTransformingClassLoader().getLoadedClass(className.replace('/', '.'));
+        if (clz != null) {
+            computeHierarchyFromClass(className, clz);
+        } else {
+            computeHierarchyFromFile(className);
+        }
+    }
+
+    /**
+     * Computes the hierarchy for a specific class using the already loaded class object
+     * Must be kept in sync with the file counterpart {@link SuperCollectingVisitor#visit(int, int, String, String, String, String[])}
+     */
+    private void computeHierarchyFromClass(final String name, final Class<?> clazz) {
+        Class<?> superClass = clazz.getSuperclass();
+        Set<String> hierarchies = new HashSet<>();
+        if (superClass != null) {
+            String superName = superClass.getName().replace('.', '/');
+            CLASS_PARENTS.put(name, superName);
+            if (!CLASS_HIERARCHIES.containsKey(superName))
+                computeHierarchyFromClass(superName, superClass);
+            hierarchies.add(name);
+            hierarchies.addAll(CLASS_HIERARCHIES.get(superName));
+        } else {
+            hierarchies.add("java/lang/Object");
+        }
+        IS_INTERFACE.put(name, clazz.isInterface());
+        Arrays.stream(clazz.getInterfaces()).forEach(c->{
+            String n = c.getName().replace('.', '/');
+            if (!CLASS_HIERARCHIES.containsKey(n))
+                computeHierarchyFromClass(n, c);
+            hierarchies.add(n);
+            hierarchies.addAll(CLASS_HIERARCHIES.get(n));
+        });
+        CLASS_HIERARCHIES.put(name, hierarchies); //Only put the set in the map once it is fully populated, to prevent another thread from using incomplete data
+    }
+
+    /**
+     * Computes the hierarchy for a specific class by loading the class from disk and running it through modlauncher.
+     */
+    private void computeHierarchyFromFile(final String className) {
+        try {
+            byte[] classData = classTransformer.getTransformingClassLoader().buildTransformedClassNodeFor(className, CLASSLOADING_REASON);
+            ClassReader classReader = new ClassReader(classData);
+            classReader.accept(new SuperCollectingVisitor(), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        } catch (ClassNotFoundException e) {
+            //Don't panic just yet. Do a classload on the super classloader
+            //This is safe, as the TCL can't find the class, so it has to be on the super classloader, and it can't cause circulation,
+            //as classes from the parent classloader cannot reference classes from the TCL, as the parent only contains libraries and std lib
+            try {
+                computeHierarchyFromClass(className, Class.forName(className.replace('/', '.'), false, classTransformer.getTransformingClassLoader()));
+            } catch (ClassNotFoundException classNotFoundException) {
+                classNotFoundException.addSuppressed(e);
+                LOGGER.fatal("Failed to find class {} ", className, classNotFoundException);
+                throw new RuntimeException("Cannot find class " + className, classNotFoundException);
+            }
+        }
+    }
+
+    private class SuperCollectingVisitor extends ClassVisitor {
+
+        public SuperCollectingVisitor() {
             super(Opcodes.ASM7);
-            this.classTransformer = classTransformer;
         }
 
         @Override
         public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
-            classParents.put(name, superName);
+            Set<String> hierarchies = new HashSet<>();
             if (superName != null) {
-                computeHierarchy(superName, classTransformer);
-                classHierarchies.put(name, Stream.concat(Stream.of(name), classHierarchies.get(superName).stream()).collect(Collectors.toSet()));
+                CLASS_PARENTS.put(name, superName);
+                computeHierarchy(superName);
+                hierarchies.add(name);
+                hierarchies.addAll(CLASS_HIERARCHIES.get(superName));
             } else {
-                classHierarchies.put(name, Collections.singleton("java/lang/Object"));
+                hierarchies.add("java/lang/Object");
             }
-            isInterface.put(name, (access & Opcodes.ACC_INTERFACE) != 0);
+            IS_INTERFACE.put(name, (access & Opcodes.ACC_INTERFACE) != 0);
             Arrays.stream(interfaces).forEach(n->{
-                computeHierarchy(n, classTransformer);
-                classHierarchies.get(name).add(n);
-                classHierarchies.get(name).addAll(classHierarchies.get(n));
+                computeHierarchy(n);
+                hierarchies.add(n);
+                hierarchies.addAll(CLASS_HIERARCHIES.get(n));
             });
+            CLASS_HIERARCHIES.put(name, hierarchies); //Only put the set in the map once it is fully populated, to prevent another thread from using incomplete data
         }
     }
 }

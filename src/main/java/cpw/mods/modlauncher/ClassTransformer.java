@@ -119,9 +119,15 @@ public class ClassTransformer {
         if (preFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && postFlags == ILaunchPluginService.ComputeFlags.NO_REWRITE && !needsTransforming) {
             return inputClass;
         }
+
         //Transformers always get compute_frames
-        final int finalFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
-        final ClassWriter cw = TransformerClassWriter.createClassWriter(finalFlags, this, clazz);
+        int mergedFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
+
+        //Don't compute frames when loading for frame computation to avoid cycles. The byte data will only be used for computing frames anyway
+        if (reason.equals(TransformerClassWriter.CLASSLOADING_REASON))
+            mergedFlags &= ~ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
+
+        final ClassWriter cw = TransformerClassWriter.createClassWriter(mergedFlags, this, clazz);
         clazz.accept(cw);
         if (LOGGER.isEnabled(Level.TRACE) && MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
             dumpClass(cw.toByteArray(), className);
