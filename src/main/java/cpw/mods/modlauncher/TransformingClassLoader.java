@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
+import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -55,7 +56,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
     private final Function<URLConnection, Manifest> manifestFinder;
-    private Function<String,URL> classBytesFinder;
+    private Function<String,Enumeration<URL>> resourceFinder;
     private Predicate<String> targetPackageFilter;
 
     public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... paths) {
@@ -63,7 +64,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.specialJars = Arrays.stream(paths).map(rethrowFunction(path->path.toUri().toURL())).toArray(URL[]::new);
         this.delegatedClassLoader = new DelegatedClassLoader(this);
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
-        this.classBytesFinder = input-> this.locateResource(input).orElse(null);
+        this.resourceFinder = this::locateResource;
         this.manifestFinder = input -> this.findManifest(input).orElse(null);
     }
 
@@ -75,7 +76,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.specialJars = builder.getSpecialJarsAsURLs();
         this.delegatedClassLoader = new DelegatedClassLoader(this);
         this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
-        this.classBytesFinder = alternate(builder.getClassBytesLocator(), this::locateResource);
+        this.resourceFinder = EnumerationHelper.mergeFunctors(builder.getResourceEnumeratorLocator(), this::locateResource);
         this.manifestFinder = alternate(builder.getManifestLocator(), this::findManifest);
     }
 
@@ -93,7 +94,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
             try {
                 LOGGER.trace(CLASSLOADING, "Attempting to load {}", name);
-                final Class<?> loadedClass = loadClass(name, this.classBytesFinder);
+                final Class<?> loadedClass = loadClass(name, this.resourceFinder);
                 LOGGER.trace(CLASSLOADING, "Class loaded for {}", name);
                 if (resolve)
                     resolveClass(loadedClass);
@@ -125,7 +126,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         return (Class<T>) super.defineClass(name, bytes, 0, bytes.length);
     }
 
-    public Class<?> loadClass(String name, Function<String,URL> classBytesFinder) throws ClassNotFoundException {
+    public Class<?> loadClass(String name, Function<String,Enumeration<URL>> classBytesFinder) throws ClassNotFoundException {
         final Class<?> existingClass = getLoadedClass(name);
         if (existingClass != null) {
             LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
@@ -136,7 +137,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     byte[] buildTransformedClassNodeFor(final String className, final String reason) throws ClassNotFoundException {
-        return delegatedClassLoader.findClass(className, classBytesFinder, reason);
+        return delegatedClassLoader.findClass(className, resourceFinder, reason);
     }
 
     private Optional<Manifest> findManifest(URLConnection urlConnection) {
@@ -152,8 +153,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     @Override
-    protected URL findResource(final String name) {
-        return delegatedClassLoader.findResource(name, classBytesFinder);
+    protected Enumeration<URL> findResources(final String name) {
+        return delegatedClassLoader.findResources(name, resourceFinder);
     }
 
     static class AutoURLConnection implements AutoCloseable {
@@ -185,8 +186,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         }
     }
 
-    protected Optional<URL> locateResource(String path) {
-        return Optional.ofNullable(delegatedClassLoader.findResource(path));
+    protected Enumeration<URL> locateResource(String path) {
+        return LamdbaExceptionUtils.uncheck(()->delegatedClassLoader.findResources(path));
     }
 
     private static class DelegatedClassLoader extends URLClassLoader {
@@ -216,14 +217,13 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             return tcl.findClass(name);
         }
 
-        public URL findResource(final String name, Function<String,URL> byteFinder) {
+        public Enumeration<URL> findResources(final String name, Function<String,Enumeration<URL>> byteFinder) {
             return byteFinder.apply(name);
         }
 
-        protected byte[] findClass(final String name, Function<String,URL> classBytesFinder, final String reason) throws ClassNotFoundException {
+        protected byte[] findClass(final String name, Function<String,Enumeration<URL>> classBytesFinder, final String reason) throws ClassNotFoundException {
             final String path = name.replace('.', '/').concat(".class");
-
-            final URL classResource = classBytesFinder.apply(path);
+            final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
             byte[] classBytes;
             Manifest jarManifest = null;
             if (classResource != null) {

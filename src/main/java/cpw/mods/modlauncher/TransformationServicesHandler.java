@@ -67,13 +67,13 @@ class TransformationServicesHandler {
 
     TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment) {
         final List<Function<String, Optional<URL>>> classLocatorList = serviceLookup.values().stream().map(TransformationServiceDecorator::getClassLoader).filter(Objects::nonNull).collect(Collectors.toList());
-        Function<String, Optional<URL>> classBytesLocator = builder.getClassBytesLocator();
+        Function<String, Enumeration<URL>> resourceEnumeratorLocator = builder.getResourceEnumeratorLocator();
 
         for (Function<String, Optional<URL>> transformerClassLocator : classLocatorList) {
-            classBytesLocator = alternate(classBytesLocator, transformerClassLocator);
+            resourceEnumeratorLocator = EnumerationHelper.mergeFunctors(resourceEnumeratorLocator, EnumerationHelper.fromOptional(transformerClassLocator));
         }
 
-        builder.setClassBytesLocator(classBytesLocator);
+        builder.setResourceEnumeratorLocator(resourceEnumeratorLocator);
         return new TransformingClassLoader(transformStore, pluginHandler, builder, environment);
     }
 

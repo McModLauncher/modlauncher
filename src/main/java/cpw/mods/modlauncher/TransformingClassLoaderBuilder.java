@@ -23,25 +23,19 @@ import cpw.mods.modlauncher.api.ITransformingClassLoaderBuilder;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.jar.Manifest;
 
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
 
 class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder {
-    private List<Path> transformationPaths = new ArrayList<>();
-    private Function<String, Optional<URL>> classBytesLocator;
+    private final List<Path> transformationPaths = new ArrayList<>();
+    private Function<String, Enumeration<URL>> resourcesLocator;
     private Function<URLConnection, Optional<Manifest>> manifestLocator;
 
     URL[] getSpecialJarsAsURLs() {
         return transformationPaths.stream().map(rethrowFunction(path->path.toUri().toURL())).toArray(URL[]::new);
-    }
-
-    Function<String, Optional<URL>> getClassBytesLocator() {
-        return classBytesLocator;
     }
 
     Function<URLConnection, Optional<Manifest>> getManifestLocator() {
@@ -55,11 +49,20 @@ class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder 
 
     @Override
     public void setClassBytesLocator(final Function<String, Optional<URL>> additionalClassBytesLocator) {
-        this.classBytesLocator = additionalClassBytesLocator;
+        this.resourcesLocator = EnumerationHelper.fromOptional(additionalClassBytesLocator);
+    }
+
+    @Override
+    public void setResourceEnumeratorLocator(final Function<String, Enumeration<URL>> resourceEnumeratorLocator) {
+        this.resourcesLocator = resourceEnumeratorLocator;
     }
 
     @Override
     public void setManifestLocator(final Function<URLConnection, Optional<Manifest>> manifestLocator) {
         this.manifestLocator = manifestLocator;
+    }
+
+    Function<String, Enumeration<URL>> getResourceEnumeratorLocator() {
+        return this.resourcesLocator != null ? this.resourcesLocator : input -> Collections.emptyEnumeration();
     }
 }
