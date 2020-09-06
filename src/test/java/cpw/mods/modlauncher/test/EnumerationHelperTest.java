@@ -16,8 +16,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package cpw.mods.modlauncher;
+package cpw.mods.modlauncher.test;
 
+import cpw.mods.modlauncher.EnumerationHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
