@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class TransformerClassWriter extends ClassWriter {
-    public static final String CLASSLOADING_REASON = "computing_frames";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, String> CLASS_PARENTS = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> CLASS_HIERARCHIES = new ConcurrentHashMap<>();
@@ -146,7 +146,7 @@ class TransformerClassWriter extends ClassWriter {
      */
     private void computeHierarchyFromFile(final String className) {
         try {
-            byte[] classData = classTransformer.getTransformingClassLoader().buildTransformedClassNodeFor(className, CLASSLOADING_REASON);
+            byte[] classData = classTransformer.getTransformingClassLoader().buildTransformedClassNodeFor(className, ITransformerActivity.COMPUTING_FRAMES_REASON);
             ClassReader classReader = new ClassReader(classData);
             classReader.accept(new SuperCollectingVisitor(), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         } catch (ClassNotFoundException e) {

@@ -125,7 +125,7 @@ public class ClassTransformer {
         int mergedFlags = needsTransforming ? ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES : (postFlags | preFlags);
 
         //Don't compute frames when loading for frame computation to avoid cycles. The byte data will only be used for computing frames anyway
-        if (reason.equals(TransformerClassWriter.CLASSLOADING_REASON))
+        if (reason.equals(ITransformerActivity.COMPUTING_FRAMES_REASON))
             mergedFlags &= ~ILaunchPluginService.ComputeFlags.COMPUTE_FRAMES;
 
         final ClassWriter cw = TransformerClassWriter.createClassWriter(mergedFlags, this, clazz);

@@ -19,10 +19,10 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -131,7 +131,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
             return existingClass;
         }
-        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder, "classloading");
+        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder, ITransformerActivity.CLASSLOADING_REASON);
         return defineClass(name, classBytes, 0, classBytes.length);
     }
 
@@ -249,7 +249,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                 LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {} reason {}", name, classResource, reason);
 
                 // Only add the package if we have the
-                if (reason.equals("classloading")) {
+                if (reason.equals(ITransformerActivity.CLASSLOADING_REASON)) {
                     int i = name.lastIndexOf('.');
                     String pkgname = i > 0 ? name.substring(0, i) : "";
                     // Check if package already loaded.

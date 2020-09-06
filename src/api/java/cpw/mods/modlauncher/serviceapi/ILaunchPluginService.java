@@ -100,7 +100,10 @@ public interface ILaunchPluginService {
      * If this plugin wants to receive the {@link ClassNode} into {@link #processClass}
      * @param classType the class to consider
      * @param isEmpty if the class is empty at present (indicates no backing file found)
-     * @param reason Reason for transformation request. "classloading" or the name of an {@link ILaunchPluginService}
+     * @param reason Reason for transformation request.
+     *               "classloading" - cpw.mods.modlauncher.api.ITransformerActivity#CLASSLOADING_REASON
+     *               "computing_frames" - cpw.mods.modlauncher.api.ITransformerActivity#COMPUTING_FRAMES_REASON
+     *               or the name of an {@link ILaunchPluginService}
      * @return the set of Phases the plugin wishes to be called back with
      */
     default EnumSet<Phase> handlesClass(Type classType, final boolean isEmpty, final String reason) {
