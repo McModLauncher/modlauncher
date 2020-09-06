@@ -100,8 +100,8 @@ jmh {
     include = [ 'cpw.mods.modlauncher.benchmarks.TransformBenchmark' ]
     benchmarkMode = ['avgt' ]
     profilers = [ 'stack' ]
-    timeOnIteration = '5s'
-    warmup = '5s'
+    timeOnIteration = '3s'
+    warmup = '3s'
     warmupIterations = 3
     iterations = 3
     fork = 3

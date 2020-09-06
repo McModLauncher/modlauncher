@@ -21,7 +21,9 @@ package cpw.mods.modlauncher.benchmarks;
 import cpw.mods.modlauncher.ClassTransformer;
 import cpw.mods.modlauncher.LaunchPluginHandler;
 import cpw.mods.modlauncher.TransformStore;
+import cpw.mods.modlauncher.TransformerAuditTrail;
 import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -32,8 +34,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
@@ -70,11 +72,6 @@ public class TransformBenchmark {
             }
 
             @Override
-            public void addResource(final Path resource, final String name) {
-
-            }
-
-            @Override
             public boolean processClass(final Phase phase, final ClassNode classNode, final Type classType) {
                 return true;
             }
@@ -95,6 +92,13 @@ public class TransformBenchmark {
     public int transformNoop() {
         byte[] result = uncheck(()->(byte[])transform.invoke(classTransformer,new byte[0], "test.MyClass","jmh"));
         return result.length + 1;
+    }
+
+    @TearDown(Level.Iteration)
+    public void clearLog() {
+        TransformerAuditTrail auditTrail = Whitebox.getInternalState(classTransformer, "auditTrail");
+        Map<String, List<ITransformerActivity>> map = Whitebox.getInternalState(auditTrail, "audit");
+        map.clear();
     }
 
     @Benchmark
