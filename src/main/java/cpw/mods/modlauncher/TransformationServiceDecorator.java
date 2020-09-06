@@ -144,7 +144,7 @@ public class TransformationServiceDecorator {
         if (resourcesLocator!=null) {
             final HashSet<String> resNames = new HashSet<>(resourcesLocator.getKey());
             final Set<String> badResourceNames = resNames.stream().
-                    filter(s -> !s.endsWith(".class") || resourceNames.contains(s)).
+                    filter(s -> s.endsWith(".class") || resourceNames.contains(s)).
                     collect(Collectors.toSet());
             if (!badResourceNames.isEmpty()) {
                 badResourceNames.forEach(s -> LOGGER.error("Illegal resource name specified for {} : {}", this.service.name(), s));
