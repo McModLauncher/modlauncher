@@ -153,6 +153,11 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     }
 
     @Override
+    protected URL findResource(final String name) {
+        return delegatedClassLoader.findResource(name, resourceFinder);
+    }
+
+    @Override
     protected Enumeration<URL> findResources(final String name) {
         return delegatedClassLoader.findResources(name, resourceFinder);
     }
@@ -215,6 +220,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         @Override
         protected Class<?> findClass(final String name) throws ClassNotFoundException {
             return tcl.findClass(name);
+        }
+
+        public URL findResource(final String name, Function<String, Enumeration<URL>> byteFinder) {
+            return EnumerationHelper.firstElementOrNull(byteFinder.apply(name));
         }
 
         public Enumeration<URL> findResources(final String name, Function<String,Enumeration<URL>> byteFinder) {
