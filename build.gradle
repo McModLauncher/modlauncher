@@ -113,7 +113,7 @@ tasks['jmh'].dependsOn(clean)
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '5.0', // We are version 4 of the modlauncher specification
+                'Specification-Version': '7.0', // We are version 7 of the modlauncher specification
                 'Implementation-Title': project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -124,7 +124,7 @@ ext.sharedManifest = manifest {
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '5.0', // We are version 4 of the modlauncher serviceapi specification
+                'Specification-Version': '7.0', // We are version 7 of the modlauncher serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
                 'Implementation-Vendor' :'forge',
