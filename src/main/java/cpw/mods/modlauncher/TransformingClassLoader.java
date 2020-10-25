@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
+import java.security.CodeSigner;
+import java.security.CodeSource;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -132,12 +134,13 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
             return existingClass;
         }
-        byte[] classBytes = delegatedClassLoader.findClass(name, classBytesFinder, ITransformerActivity.CLASSLOADING_REASON);
-        return defineClass(name, classBytes, 0, classBytes.length);
+        final Map.Entry<byte[], CodeSource> classData = delegatedClassLoader.findClass(name, classBytesFinder, ITransformerActivity.CLASSLOADING_REASON);
+        byte[] classBytes = classData.getKey();
+        return defineClass(name, classBytes, 0, classBytes.length, SecureJarHandler.createProtectionDomain(classData.getValue(), this));
     }
 
     byte[] buildTransformedClassNodeFor(final String className, final String reason) throws ClassNotFoundException {
-        return delegatedClassLoader.findClass(className, resourceFinder, reason);
+        return delegatedClassLoader.findClass(className, resourceFinder, reason).getKey();
     }
 
     private Optional<Manifest> findManifest(URLConnection urlConnection) {
@@ -189,6 +192,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         Manifest getJarManifest() {
             return manifestFinder.apply(this.urlConnection);
         }
+
+        URL getBaseUrl() {
+            return this.urlConnection.getURL();
+        }
     }
 
     protected Enumeration<URL> locateResource(String path) {
@@ -230,11 +237,13 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             return byteFinder.apply(name);
         }
 
-        protected byte[] findClass(final String name, Function<String,Enumeration<URL>> classBytesFinder, final String reason) throws ClassNotFoundException {
+        protected Map.Entry<byte[], CodeSource> findClass(final String name, Function<String,Enumeration<URL>> classBytesFinder, final String reason) throws ClassNotFoundException {
             final String path = name.replace('.', '/').concat(".class");
             final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
             byte[] classBytes;
+            CodeSource codeSigners = null;
             Manifest jarManifest = null;
+            URL baseURL = null;
             if (classResource != null) {
                 try (AutoURLConnection urlConnection = new AutoURLConnection(classResource, tcl.manifestFinder)) {
                     final int length = urlConnection.getContentLength();
@@ -246,6 +255,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                         remain -= read;
                     }
                     jarManifest = urlConnection.getJarManifest();
+                    baseURL = urlConnection.getBaseUrl();
                 } catch (IOException e) {
                     LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {} reason {}", name, classResource, reason, e);
                     throw new ClassNotFoundException("Failed to find class bytes for "+name, e);
@@ -263,9 +273,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     String pkgname = i > 0 ? name.substring(0, i) : "";
                     // Check if package already loaded.
                     tryDefinePackage(pkgname, jarManifest);
+                    codeSigners = SecureJarHandler.getSigners(path, baseURL, classBytes, jarManifest);
                 }
 
-                return classBytes;
+                return new AbstractMap.SimpleImmutableEntry<>(classBytes, codeSigners);
             } else {
                 LOGGER.trace(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
