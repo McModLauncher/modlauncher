@@ -37,6 +37,9 @@ public class SecureJarHandler {
     private static final Method BEGIN_ENTRY = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("beginEntry", JarEntry.class, ManifestEntryVerifier.class));
     private static final Method UPDATE = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("update", int.class, byte[].class, int.class, int.class, ManifestEntryVerifier.class));
     private static final Field JV = LamdbaExceptionUtils.uncheck(()->Manifest.class.getDeclaredField("jv"));
+    static {
+        JV.setAccessible(true);
+    }
     @SuppressWarnings("ConstantConditions")
     public static CodeSource getSigners(final String name, @Nullable final URL url, final byte[] bytes, @Nullable final Manifest manifest) {
         if (manifest == null) return null;
