@@ -111,6 +111,10 @@ public interface IEnvironment {
          * The implementation version for ModLauncher.
          */
         public static final Supplier<TypesafeMap.Key<String>> MLIMPL_VERSION = buildKey("mlimplVersion", String.class);
+        /**
+         * True if we can compute secured JAR state. JVMs < 8.0.61 do not have this feature because reasons
+         */
+        public static final Supplier<TypesafeMap.Key<Boolean>> SECURED_JARS_ENABLED = buildKey("securedJarsEnabled", Boolean.class);
     }
 
 

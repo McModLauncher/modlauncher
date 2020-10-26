@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import sun.security.util.ManifestEntryVerifier;
@@ -39,15 +40,26 @@ public class SecureJarHandler {
     private static final Class<?> JVCLASS = LamdbaExceptionUtils.uncheck(()->Class.forName("java.util.jar.JarVerifier"));
     private static final Method BEGIN_ENTRY = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("beginEntry", JarEntry.class, ManifestEntryVerifier.class));
     private static final Method UPDATE = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("update", int.class, byte[].class, int.class, int.class, ManifestEntryVerifier.class));
-    private static final Field JV = LamdbaExceptionUtils.uncheck(()->Manifest.class.getDeclaredField("jv"));
+    private static final Field JV;
     static {
-        JV.setAccessible(true);
-        BEGIN_ENTRY.setAccessible(true);
-        UPDATE.setAccessible(true);
+        Field jv;
+        try {
+            jv = Manifest.class.getDeclaredField("jv");
+            jv.setAccessible(true);
+            BEGIN_ENTRY.setAccessible(true);
+            UPDATE.setAccessible(true);
+            Launcher.INSTANCE.environment().computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k->Boolean.TRUE);
+        } catch (NoSuchFieldException e) {
+            LogManager.getLogger().warn("LEGACY JDK DETECTED, SECURED JAR HANDLING DISABLED");
+            jv = null;
+            Launcher.INSTANCE.environment().computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k->Boolean.FALSE);
+        }
+        JV = jv;
     }
     @SuppressWarnings("ConstantConditions")
     // Manifest is required to originate from an ensureInitialized JarFile. Otherwise it will not work
     public static CodeSource createCodeSource(final String name, @Nullable final URL url, final byte[] bytes, @Nullable final Manifest manifest) {
+        if (JV == null) return null;
         if (manifest == null) return null;
         if (url == null) return null;
         JarEntry je = new JarEntry(name);
