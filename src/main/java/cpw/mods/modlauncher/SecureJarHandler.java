@@ -19,11 +19,12 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
+import org.apache.logging.log4j.LogManager;
 import sun.security.util.ManifestEntryVerifier;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.*;
@@ -31,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.Manifest;
+
+import static cpw.mods.modlauncher.LogMarkers.CLASSLOADING;
 
 public class SecureJarHandler {
     private static final Class<?> JVCLASS = LamdbaExceptionUtils.uncheck(()->Class.forName("java.util.jar.JarVerifier"));
@@ -43,7 +46,8 @@ public class SecureJarHandler {
         UPDATE.setAccessible(true);
     }
     @SuppressWarnings("ConstantConditions")
-    public static CodeSource getSigners(final String name, @Nullable final URL url, final byte[] bytes, @Nullable final Manifest manifest) {
+    // Manifest is required to originate from an ensureInitialized JarFile. Otherwise it will not work
+    public static CodeSource createCodeSource(final String name, @Nullable final URL url, final byte[] bytes, @Nullable final Manifest manifest) {
         if (manifest == null) return null;
         if (url == null) return null;
         JarEntry je = new JarEntry(name);
@@ -54,7 +58,14 @@ public class SecureJarHandler {
         // Feed the bytes to the underlying MEV
         LamdbaExceptionUtils.uncheck(()->UPDATE.invoke(obj, bytes.length, bytes, 0, bytes.length, mev));
         // Generate the cert check - signers will be loaded into the dummy jar entry
-        LamdbaExceptionUtils.uncheck(()->UPDATE.invoke(obj, -1, bytes, 0, bytes.length, mev));
+        try {
+            UPDATE.invoke(obj, -1, bytes, 0, bytes.length, mev);
+        } catch (SecurityException se) {
+            // SKIP security exception - we didn't validate the signature for some reason
+            LogManager.getLogger().info(CLASSLOADING, "Validation problem during class loading of {}", name, se);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
         CodeSigner[] signers = je.getCodeSigners();
         return new CodeSource(url, signers);
     }

@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
-import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.*;
 import java.util.function.Function;
@@ -241,7 +240,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             final String path = name.replace('.', '/').concat(".class");
             final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
             byte[] classBytes;
-            CodeSource codeSigners = null;
+            CodeSource codeSource = null;
             Manifest jarManifest = null;
             URL baseURL = null;
             if (classResource != null) {
@@ -263,8 +262,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             } else {
                 classBytes = new byte[0];
             }
-            classBytes = tcl.classTransformer.transform(classBytes, name, reason);
-            if (classBytes.length > 0) {
+            final byte[] processedClassBytes = tcl.classTransformer.transform(classBytes, name, reason);
+            if (processedClassBytes.length > 0) {
                 LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {} reason {}", name, classResource, reason);
 
                 // Only add the package if we have the
@@ -273,10 +272,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     String pkgname = i > 0 ? name.substring(0, i) : "";
                     // Check if package already loaded.
                     tryDefinePackage(pkgname, jarManifest);
-                    codeSigners = SecureJarHandler.getSigners(path, baseURL, classBytes, jarManifest);
+                    codeSource = SecureJarHandler.createCodeSource(path, baseURL, classBytes, jarManifest);
                 }
 
-                return new AbstractMap.SimpleImmutableEntry<>(classBytes, codeSigners);
+                return new AbstractMap.SimpleImmutableEntry<>(processedClassBytes, codeSource);
             } else {
                 LOGGER.trace(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
                 // signal to the parent to fall back to the normal lookup
