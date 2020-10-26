@@ -65,6 +65,10 @@ public class SecureJarHandler {
         JarEntry je = new JarEntry(name);
         ManifestEntryVerifier mev = new ManifestEntryVerifier(manifest);
         Object obj = LamdbaExceptionUtils.uncheck(()->JV.get(manifest));
+        if (obj == null) {
+            // we don't have a fully fledged manifest with security info, for some reason (likely loaded by default JAR code, rather than our stuff)
+            return null;
+        }
         // begin Entry on JarVerifier
         LamdbaExceptionUtils.uncheck(()->BEGIN_ENTRY.invoke(obj, je, mev));
         // Feed the bytes to the underlying MEV
