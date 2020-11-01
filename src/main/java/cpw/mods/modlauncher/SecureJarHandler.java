@@ -48,14 +48,14 @@ public class SecureJarHandler {
             jv.setAccessible(true);
             BEGIN_ENTRY.setAccessible(true);
             UPDATE.setAccessible(true);
-            Launcher.INSTANCE.environment().computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k->Boolean.TRUE);
         } catch (NoSuchFieldException e) {
             LogManager.getLogger().warn("LEGACY JDK DETECTED, SECURED JAR HANDLING DISABLED");
             jv = null;
-            Launcher.INSTANCE.environment().computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k->Boolean.FALSE);
         }
         JV = jv;
     }
+
+
     @SuppressWarnings("ConstantConditions")
     // Manifest is required to originate from an ensureInitialized JarFile. Otherwise it will not work
     public static CodeSource createCodeSource(final String name, @Nullable final URL url, final byte[] bytes, @Nullable final Manifest manifest) {
@@ -95,5 +95,9 @@ public class SecureJarHandler {
                 return new ProtectionDomain(codeSource, perms, cl, null);
             });
         }
+    }
+
+    public static boolean canHandleSecuredJars() {
+        return JV != null;
     }
 }
