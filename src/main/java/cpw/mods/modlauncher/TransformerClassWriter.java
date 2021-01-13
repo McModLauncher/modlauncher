@@ -146,7 +146,7 @@ class TransformerClassWriter extends ClassWriter {
      */
     private void computeHierarchyFromFile(final String className) {
         try {
-            byte[] classData = classTransformer.getTransformingClassLoader().buildTransformedClassNodeFor(className, ITransformerActivity.COMPUTING_FRAMES_REASON);
+            byte[] classData = classTransformer.getTransformingClassLoader().buildTransformedClassNodeFor(className.replace('/', '.'), ITransformerActivity.COMPUTING_FRAMES_REASON);
             ClassReader classReader = new ClassReader(classData);
             classReader.accept(new SuperCollectingVisitor(), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         } catch (ClassNotFoundException e) {
