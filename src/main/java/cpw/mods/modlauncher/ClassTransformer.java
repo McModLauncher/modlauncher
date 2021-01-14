@@ -40,6 +40,7 @@ import static cpw.mods.modlauncher.LogMarkers.MODLAUNCHER;
 public class ClassTransformer {
     private static final byte[] EMPTY = new byte[0];
     private static final Logger LOGGER = LogManager.getLogger();
+    private final Marker CLASSDUMP = MarkerManager.getMarker("CLASSDUMP");
     private final TransformStore transformers;
     private final LaunchPluginHandler pluginHandler;
     private final TransformingClassLoader transformingClassLoader;
@@ -130,7 +131,7 @@ public class ClassTransformer {
 
         final ClassWriter cw = TransformerClassWriter.createClassWriter(mergedFlags, this, clazz);
         clazz.accept(cw);
-        if (LOGGER.isEnabled(Level.TRACE) && MarkerManager.exists("CLASSDUMP") && LOGGER.isEnabled(Level.TRACE, MarkerManager.getMarker("CLASSDUMP"))) {
+        if (LOGGER.isEnabled(Level.TRACE) && ITransformerActivity.CLASSLOADING_REASON.equals(reason) && LOGGER.isEnabled(Level.TRACE, CLASSDUMP)) {
             dumpClass(cw.toByteArray(), className);
         }
         return cw.toByteArray();
@@ -151,8 +152,7 @@ public class ClassTransformer {
             }
         }
         try {
-            // file of form <classname><stringofnumbers>.class in temporary directory
-            final Path tempFile = Files.createTempFile(tempDir, className, ".class");
+            final Path tempFile = tempDir.resolve(className + ".class");
             Files.write(tempFile, clazz);
             LOGGER.info(MODLAUNCHER, "Wrote {} byte class file {} to {}", clazz.length, className, tempFile);
         } catch (IOException e) {
