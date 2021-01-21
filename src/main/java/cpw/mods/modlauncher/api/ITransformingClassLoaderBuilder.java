@@ -33,5 +33,11 @@ public interface ITransformingClassLoaderBuilder {
 
     void setResourceEnumeratorLocator(Function<String, Enumeration<URL>> resourceEnumeratorLocator);
 
-    void setManifestLocator(Function<URLConnection, Optional<Manifest>> manifestLocator);
+    @Deprecated
+    default void setManifestLocator(Function<URLConnection, Optional<Manifest>> manifestLocator) {
+
+    }
+
+    void setManifestAndJarLocator(Function<URLConnection, Optional<JarEntryWithManifest>> manifestLocator);
+
 }

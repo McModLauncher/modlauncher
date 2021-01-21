@@ -27,18 +27,19 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.jar.Manifest;
 
+import cpw.mods.modlauncher.api.JarEntryWithManifest;
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
 
 class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder {
     private final List<Path> transformationPaths = new ArrayList<>();
     private Function<String, Enumeration<URL>> resourcesLocator;
-    private Function<URLConnection, Optional<Manifest>> manifestLocator;
+    private Function<URLConnection, Optional<JarEntryWithManifest>> manifestLocator;
 
     URL[] getSpecialJarsAsURLs() {
         return transformationPaths.stream().map(rethrowFunction(path->path.toUri().toURL())).toArray(URL[]::new);
     }
 
-    Function<URLConnection, Optional<Manifest>> getManifestLocator() {
+    Function<URLConnection, Optional<JarEntryWithManifest>> getManifestLocator() {
         return manifestLocator;
     }
 
@@ -59,6 +60,10 @@ class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder 
 
     @Override
     public void setManifestLocator(final Function<URLConnection, Optional<Manifest>> manifestLocator) {
+    }
+
+    @Override
+    public void setManifestAndJarLocator(Function<URLConnection, Optional<JarEntryWithManifest>> manifestLocator) {
         this.manifestLocator = manifestLocator;
     }
 

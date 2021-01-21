@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
+import cpw.mods.modlauncher.api.JarEntryWithManifest;
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +57,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
-    private final Function<URLConnection, Manifest> manifestFinder;
+    private final Function<URLConnection, JarEntryWithManifest> manifestFinder;
     private Function<String,Enumeration<URL>> resourceFinder;
     private Predicate<String> targetPackageFilter;
 
@@ -86,6 +87,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         if (first == null) return input-> second.apply(input).orElse(null);
         return input -> first.apply(input).orElseGet(() -> second.apply(input).orElse(null));
     }
+
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
@@ -142,11 +144,19 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         return delegatedClassLoader.findClass(className, resourceFinder, reason).getKey();
     }
 
-    private Optional<Manifest> findManifest(URLConnection urlConnection) {
+    private Optional<JarEntryWithManifest> findManifest(URLConnection urlConnection) {
         try {
             if (urlConnection instanceof JarURLConnection) {
-
-                return Optional.ofNullable(((JarURLConnection) urlConnection).getManifest());
+                JarEntry jarEntry = ((JarURLConnection)urlConnection).getJarEntry();
+                Manifest manifest = ((JarURLConnection)urlConnection).getManifest();
+                if (jarEntry != null && manifest != null) {
+                    return Optional.of(new JarEntryWithManifest(
+                            jarEntry,
+                            manifest
+                    ));
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (IOException e) {
             // noop
@@ -167,9 +177,9 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     static class AutoURLConnection implements AutoCloseable {
         private final URLConnection urlConnection;
         private final InputStream inputStream;
-        private final Function<URLConnection, Manifest> manifestFinder;
+        private final Function<URLConnection, JarEntryWithManifest> manifestFinder;
 
-        AutoURLConnection(URL url, Function<URLConnection, Manifest> manifestFinder) throws IOException {
+        AutoURLConnection(URL url, Function<URLConnection, JarEntryWithManifest> manifestFinder) throws IOException {
             this.urlConnection = url.openConnection();
             this.inputStream = this.urlConnection.getInputStream();
             this.manifestFinder = manifestFinder;
@@ -188,7 +198,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             return this.inputStream;
         }
 
-        Manifest getJarManifest() {
+        JarEntryWithManifest getJarManifest() {
             return manifestFinder.apply(this.urlConnection);
         }
 
@@ -241,7 +251,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
             byte[] classBytes;
             CodeSource codeSource = null;
-            Manifest jarManifest = null;
+            JarEntryWithManifest jarManifest = null;
             URL baseURL = null;
             if (classResource != null) {
                 try (AutoURLConnection urlConnection = new AutoURLConnection(classResource, tcl.manifestFinder)) {
@@ -271,8 +281,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     int i = name.lastIndexOf('.');
                     String pkgname = i > 0 ? name.substring(0, i) : "";
                     // Check if package already loaded.
-                    tryDefinePackage(pkgname, jarManifest);
-                    codeSource = SecureJarHandler.createCodeSource(path, baseURL, classBytes, jarManifest);
+                    tryDefinePackage(pkgname, jarManifest == null ? null : jarManifest.getManifest());
+                    codeSource = SecureJarHandler.createCodeSource(baseURL, jarManifest);
                 }
 
                 return new AbstractMap.SimpleImmutableEntry<>(processedClassBytes, codeSource);
