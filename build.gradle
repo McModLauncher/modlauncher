@@ -47,7 +47,7 @@ group = 'cpw.mods'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-ext.asmVersion = 7.2
+ext.asmVersion = 9.1
 
 version = grgit.describe(longDescr: true).split('-').with { "${it[0]}.${it[1]}" }
 
