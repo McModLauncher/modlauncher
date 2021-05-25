@@ -18,7 +18,8 @@
 
 package cpw.mods.modlauncher.api;
 
-import javax.annotation.*;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 /**
@@ -38,7 +39,7 @@ public interface ITransformer<T> {
      * @return An ASM node of the same type as that supplied. It will be used for subsequent
      * rounds of voting.
      */
-    @Nonnull
+    @NotNull
     T transform(T input, ITransformerVotingContext context);
 
     /**
@@ -65,7 +66,7 @@ public interface ITransformer<T> {
      * @param context The context of the vote
      * @return A TransformerVoteResult indicating the desire of this transformer
      */
-    @Nonnull
+    @NotNull
     TransformerVoteResult castVote(ITransformerVotingContext context);
 
     /**
@@ -75,7 +76,7 @@ public interface ITransformer<T> {
      *
      * @return The set of targets this transformer wishes to apply to
      */
-    @Nonnull
+    @NotNull
     Set<Target> targets();
 
     /**
@@ -149,7 +150,7 @@ public interface ITransformer<T> {
          * @param className The name of the class
          * @return A target for the named class
          */
-        @Nonnull
+        @NotNull
         public static Target targetClass(String className) {
             return new Target(className, "", "", TargetType.CLASS);
         }
@@ -160,7 +161,7 @@ public interface ITransformer<T> {
          * @param className The name of the class
          * @return A target for the named class
          */
-        @Nonnull
+        @NotNull
         public static Target targetPreClass(String className) {
             return new Target(className, "", "", TargetType.PRE_CLASS);
         }
@@ -172,7 +173,7 @@ public interface ITransformer<T> {
          * @param methodDescriptor The method's descriptor string
          * @return A target for the named method
          */
-        @Nonnull
+        @NotNull
         public static Target targetMethod(String className, String methodName, String methodDescriptor) {
             return new Target(className, methodName, methodDescriptor, TargetType.METHOD);
         }
@@ -184,7 +185,7 @@ public interface ITransformer<T> {
          * @param fieldName The name of the field
          * @return A target for the named field
          */
-        @Nonnull
+        @NotNull
         public static Target targetField(String className, String fieldName) {
             return new Target(className, fieldName, "", TargetType.FIELD);
         }

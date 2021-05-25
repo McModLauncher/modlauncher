@@ -20,11 +20,11 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
-import javax.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -37,7 +37,7 @@ class TransformationServiceDecoratorTests {
     @Test
     void testGatherTransformersNormally() throws Exception {
         MockTransformerService mockTransformerService = new MockTransformerService() {
-            @Nonnull
+            @NotNull
             @Override
             public List<ITransformer> transformers() {
                 return Stream.of(classNodeTransformer, methodNodeTransformer).collect(Collectors.toList());
@@ -67,19 +67,19 @@ class TransformationServiceDecoratorTests {
         }
     }
     private static class ClassNodeTransformer implements ITransformer<ClassNode> {
-        @Nonnull
+        @NotNull
         @Override
         public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
             return input;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public TransformerVoteResult castVote(ITransformerVotingContext context) {
             return TransformerVoteResult.YES;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Set<Target> targets() {
             return Stream.of(Target.targetClass("cheese.Puffs")).collect(Collectors.toSet());
@@ -87,19 +87,19 @@ class TransformationServiceDecoratorTests {
     }
 
     private static class MethodNodeTransformer implements ITransformer<MethodNode> {
-        @Nonnull
+        @NotNull
         @Override
         public MethodNode transform(MethodNode input, ITransformerVotingContext context) {
             return input;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public TransformerVoteResult castVote(ITransformerVotingContext context) {
             return TransformerVoteResult.YES;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Set<Target> targets() {
             return Stream.of(Target.targetMethod("cheesy.PuffMethod", "fish", "()V")).collect(Collectors.toSet());

@@ -18,6 +18,8 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.gross.SecureJarVerifier;
+
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
@@ -33,5 +35,5 @@ public interface ITransformingClassLoaderBuilder {
 
     void setResourceEnumeratorLocator(Function<String, Enumeration<URL>> resourceEnumeratorLocator);
 
-    void setManifestLocator(Function<URLConnection, Optional<Manifest>> manifestLocator);
+    void setManifestLocator(Function<URLConnection, Optional<SecureJarVerifier.SecureJar>> manifestLocator);
 }

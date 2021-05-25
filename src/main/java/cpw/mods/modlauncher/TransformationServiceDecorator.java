@@ -22,7 +22,7 @@ import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.nio.file.Path;
@@ -155,7 +155,7 @@ public class TransformationServiceDecorator {
         return s -> getOptionalURL(classesLocator, resourcesLocator, s);
     }
 
-    private Optional<URL> getOptionalURL(@Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> classes, @Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> resources, final String name) {
+    private Optional<URL> getOptionalURL(@Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> classes, @org.jetbrains.annotations.Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> resources, final String name) {
         if (classes != null && name.endsWith(".class")) {
             for (String pfx : classes.getKey()) {
                 if (name.startsWith(pfx.replace('.','/'))) {

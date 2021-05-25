@@ -16,6 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.Launcher;
@@ -24,7 +25,6 @@ import cpw.mods.modlauncher.testjar.ITestServiceLoader;
 import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
-import javax.xml.ws.Service;
 import java.io.File;
 import java.util.List;
 import java.util.ServiceLoader;

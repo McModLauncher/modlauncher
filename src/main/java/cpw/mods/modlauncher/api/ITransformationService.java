@@ -19,8 +19,8 @@
 package cpw.mods.modlauncher.api;
 
 import joptsimple.*;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.*;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
@@ -39,7 +39,7 @@ public interface ITransformationService {
      *
      * @return the name of the mod service
      */
-    @Nonnull
+    @NotNull
     String name();
 
     /**
@@ -93,7 +93,7 @@ public interface ITransformationService {
      * and {@link #initialize(IEnvironment)}, so you can return an appropriate Transformer set for the environment
      * you find yourself in.
      */
-    @Nonnull
+    @NotNull
     List<ITransformer> transformers();
 
     /**
@@ -129,10 +129,10 @@ public interface ITransformationService {
     }
 
     interface OptionResult {
-        @Nonnull
+        @NotNull
         <V> V value(OptionSpec<V> options);
 
-        @Nonnull
+        @NotNull
         <V> List<V> values(OptionSpec<V> options);
     }
 }

@@ -20,12 +20,12 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
-import javax.annotation.*;
 import java.lang.reflect.Constructor;
 import java.nio.file.*;
 import java.util.*;
@@ -42,7 +42,7 @@ class TransformingClassLoaderTests {
     @Test
     void testClassLoader() throws Exception {
         MockTransformerService mockTransformerService = new MockTransformerService() {
-            @Nonnull
+            @NotNull
             @Override
             public List<ITransformer> transformers() {
                 return Stream.of(classNodeTransformer).collect(Collectors.toList());
@@ -64,7 +64,7 @@ class TransformingClassLoaderTests {
     }
 
     private static class ClassNodeTransformer implements ITransformer<ClassNode> {
-        @Nonnull
+        @NotNull
         @Override
         public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
             FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
@@ -72,13 +72,13 @@ class TransformingClassLoaderTests {
             return input;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public TransformerVoteResult castVote(ITransformerVotingContext context) {
             return TransformerVoteResult.YES;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Set<Target> targets() {
             return Stream.of(Target.targetClass("cheese.Puffs")).collect(Collectors.toSet());

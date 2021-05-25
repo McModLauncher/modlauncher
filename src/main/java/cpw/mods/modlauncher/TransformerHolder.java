@@ -23,7 +23,7 @@ import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 
 public class TransformerHolder<T> implements ITransformer<T> {
@@ -35,19 +35,19 @@ public class TransformerHolder<T> implements ITransformer<T> {
         this.owner = owner;
     }
 
-    @Nonnull
+    @NotNull
     @Override
     public T transform(final T input, final ITransformerVotingContext context) {
         return wrapped.transform(input, context);
     }
 
-    @Nonnull
+    @NotNull
     @Override
     public TransformerVoteResult castVote(final ITransformerVotingContext context) {
         return wrapped.castVote(context);
     }
 
-    @Nonnull
+    @NotNull
     @Override
     public Set<Target> targets() {
         return wrapped.targets();

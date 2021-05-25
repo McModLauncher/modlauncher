@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.gross.SecureJarVerifier;
 import cpw.mods.modlauncher.api.ITransformingClassLoaderBuilder;
 
 import java.net.URL;
@@ -32,13 +33,13 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
 class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder {
     private final List<Path> transformationPaths = new ArrayList<>();
     private Function<String, Enumeration<URL>> resourcesLocator;
-    private Function<URLConnection, Optional<Manifest>> manifestLocator;
+    private Function<URLConnection, Optional<SecureJarVerifier.SecureJar>> manifestLocator;
 
     URL[] getSpecialJarsAsURLs() {
         return transformationPaths.stream().map(rethrowFunction(path->path.toUri().toURL())).toArray(URL[]::new);
     }
 
-    Function<URLConnection, Optional<Manifest>> getManifestLocator() {
+    Function<URLConnection, Optional<SecureJarVerifier.SecureJar>> getManifestLocator() {
         return manifestLocator;
     }
 
@@ -58,7 +59,7 @@ class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder 
     }
 
     @Override
-    public void setManifestLocator(final Function<URLConnection, Optional<Manifest>> manifestLocator) {
+    public void setManifestLocator(final Function<URLConnection, Optional<SecureJarVerifier.SecureJar>> manifestLocator) {
         this.manifestLocator = manifestLocator;
     }
 

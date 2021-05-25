@@ -20,10 +20,10 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
-import javax.annotation.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -37,7 +37,7 @@ public class MockTransformerService implements ITransformationService {
     private List<String> modList;
     private String state;
 
-    @Nonnull
+    @NotNull
     @Override
     public String name() {
         return "test";
@@ -68,7 +68,7 @@ public class MockTransformerService implements ITransformationService {
 
     }
 
-    @Nonnull
+    @NotNull
     @Override
     public List<ITransformer> transformers() {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
@@ -81,7 +81,7 @@ public class MockTransformerService implements ITransformationService {
             this.classNames = classNames;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
             FieldNode fn = new FieldNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "testfield", "Ljava/lang/String;", null, "CHEESE!");
@@ -89,13 +89,13 @@ public class MockTransformerService implements ITransformationService {
             return input;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public TransformerVoteResult castVote(ITransformerVotingContext context) {
             return TransformerVoteResult.YES;
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Set<Target> targets() {
             return classNames.stream().map(Target::targetClass).collect(Collectors.toSet());

@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.gross.SecureJarVerifier;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.api.ITransformingClassLoader;
@@ -25,7 +26,7 @@ import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
@@ -56,8 +57,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     private final ClassTransformer classTransformer;
     private final DelegatedClassLoader delegatedClassLoader;
     private final URL[] specialJars;
-    private final Function<URLConnection, Manifest> manifestFinder;
-    private Function<String,Enumeration<URL>> resourceFinder;
+    private final Function<URLConnection, SecureJarVerifier.SecureJar> manifestFinder;
+    private final Function<String,Enumeration<URL>> resourceFinder;
     private Predicate<String> targetPackageFilter;
 
     public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... paths) {
@@ -81,7 +82,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         this.manifestFinder = alternate(builder.getManifestLocator(), this::findManifest);
     }
 
-    private static <I, R> Function<I,R> alternate(@Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
+    private static <I, R> Function<I,R> alternate(@Nullable Function<I, Optional<R>> first, @org.jetbrains.annotations.Nullable Function<I, Optional<R>> second) {
         if (second == null) return input-> first.apply(input).orElse(null);
         if (first == null) return input-> second.apply(input).orElse(null);
         return input -> first.apply(input).orElseGet(() -> second.apply(input).orElse(null));
@@ -142,11 +143,10 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
         return delegatedClassLoader.findClass(className, resourceFinder, reason).getKey();
     }
 
-    private Optional<Manifest> findManifest(URLConnection urlConnection) {
+    private Optional<SecureJarVerifier.SecureJar> findManifest(URLConnection urlConnection) {
         try {
             if (urlConnection instanceof JarURLConnection) {
-
-                return Optional.ofNullable(((JarURLConnection) urlConnection).getManifest());
+                return Optional.of(SecureJarVerifier.from(((JarURLConnection) urlConnection).getJarFile()));
             }
         } catch (IOException e) {
             // noop
@@ -167,9 +167,9 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
     static class AutoURLConnection implements AutoCloseable {
         private final URLConnection urlConnection;
         private final InputStream inputStream;
-        private final Function<URLConnection, Manifest> manifestFinder;
+        private final Function<URLConnection, SecureJarVerifier.SecureJar> manifestFinder;
 
-        AutoURLConnection(URL url, Function<URLConnection, Manifest> manifestFinder) throws IOException {
+        AutoURLConnection(URL url, Function<URLConnection, SecureJarVerifier.SecureJar> manifestFinder) throws IOException {
             this.urlConnection = url.openConnection();
             this.inputStream = this.urlConnection.getInputStream();
             this.manifestFinder = manifestFinder;
@@ -188,7 +188,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             return this.inputStream;
         }
 
-        Manifest getJarManifest() {
+        SecureJarVerifier.SecureJar getSecureJar() {
             return manifestFinder.apply(this.urlConnection);
         }
 
@@ -241,7 +241,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
             byte[] classBytes;
             CodeSource codeSource = null;
-            Manifest jarManifest = null;
+            SecureJarVerifier.SecureJar secureJar = null;
             URL baseURL = null;
             if (classResource != null) {
                 try (AutoURLConnection urlConnection = new AutoURLConnection(classResource, tcl.manifestFinder)) {
@@ -253,7 +253,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                         pos += read;
                         remain -= read;
                     }
-                    jarManifest = urlConnection.getJarManifest();
+                    secureJar = urlConnection.getSecureJar();
                     baseURL = urlConnection.getBaseUrl();
                 } catch (IOException e) {
                     LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {} reason {}", name, classResource, reason, e);
@@ -271,8 +271,8 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                     int i = name.lastIndexOf('.');
                     String pkgname = i > 0 ? name.substring(0, i) : "";
                     // Check if package already loaded.
-                    tryDefinePackage(pkgname, jarManifest);
-                    codeSource = SecureJarHandler.createCodeSource(path, baseURL, classBytes, jarManifest);
+                    tryDefinePackage(pkgname, secureJar);
+                    codeSource = SecureJarHandler.createCodeSource(path, baseURL, classBytes, secureJar);
                 }
 
                 return new AbstractMap.SimpleImmutableEntry<>(processedClassBytes, codeSource);
@@ -283,11 +283,12 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
             }
         }
 
-        Package tryDefinePackage(String name, @Nullable Manifest man) throws IllegalArgumentException
+        Package tryDefinePackage(String name, @Nullable SecureJarVerifier.SecureJar secureJar) throws IllegalArgumentException
         {
-            if (tcl.getPackage(name) == null) {
+            var man = secureJar.getManifest();
+            if (tcl.getDefinedPackage(name) == null) {
                 synchronized (this) {
-                    if (tcl.getPackage(name) != null) return tcl.getPackage(name);
+                    if (tcl.getDefinedPackage(name) != null) return tcl.getDefinedPackage(name);
 
                     String path = name.replace('.', '/').concat("/");
                     String specTitle = null, specVersion = null, specVendor = null;
@@ -329,7 +330,7 @@ public class TransformingClassLoader extends ClassLoader implements ITransformin
                 }
 
             } else {
-                return tcl.getPackage(name);
+                return tcl.getDefinedPackage(name);
             }
         }
 

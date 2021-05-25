@@ -25,7 +25,7 @@ import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
@@ -46,7 +46,7 @@ class TransformationServicesHandler {
         this.transformStore = transformStore;
     }
 
-    private static <I, R> Function<I,Optional<R>> alternate(@Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
+    private static <I, R> Function<I,Optional<R>> alternate(@org.jetbrains.annotations.Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
         if (second == null) return first;
         if (first == null) return second;
         return input -> Optional.ofNullable(first.apply(input).orElseGet(() -> second.apply(input).orElse(null)));

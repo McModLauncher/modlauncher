@@ -21,8 +21,8 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 import joptsimple.util.*;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
@@ -78,14 +78,14 @@ public class ArgumentHandler {
 
     private ITransformationService.OptionResult optionResults(String serviceName, OptionSet set) {
         return new ITransformationService.OptionResult() {
-            @Nonnull
+            @NotNull
             @Override
             public <V> V value(OptionSpec<V> option) {
                 checkOwnership(option);
                 return set.valueOf(option);
             }
 
-            @Nonnull
+            @NotNull
             @Override
             public <V> List<V> values(OptionSpec<V> option) {
                 checkOwnership(option);

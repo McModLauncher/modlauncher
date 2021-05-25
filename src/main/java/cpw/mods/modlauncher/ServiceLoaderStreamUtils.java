@@ -19,7 +19,7 @@
 package cpw.mods.modlauncher;
 
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;

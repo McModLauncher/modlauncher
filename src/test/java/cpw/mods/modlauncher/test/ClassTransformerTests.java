@@ -21,18 +21,14 @@ package cpw.mods.modlauncher.test;
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.core.Filter;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.filter.MarkerFilter;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
 
-import javax.annotation.*;
 import java.nio.file.*;
 import java.util.*;
 
@@ -90,20 +86,20 @@ class ClassTransformerTests {
 
     private ITransformer<FieldNode> fieldNodeTransformer1() {
         return new ITransformer<FieldNode>() {
-            @Nonnull
+            @NotNull
             @Override
             public FieldNode transform(FieldNode input, ITransformerVotingContext context) {
                 input.value = "CHEESE";
                 return input;
             }
 
-            @Nonnull
+            @NotNull
             @Override
             public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
-            @Nonnull
+            @NotNull
             @Override
             public Set<Target> targets() {
                 return Collections.emptySet();
@@ -113,7 +109,7 @@ class ClassTransformerTests {
 
     private ITransformer<ClassNode> classTransformer() {
         return new ITransformer<ClassNode>() {
-            @Nonnull
+            @NotNull
             @Override
             public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
                 input.superName="java/lang/Object";
@@ -122,13 +118,13 @@ class ClassTransformerTests {
                 return input;
             }
 
-            @Nonnull
+            @NotNull
             @Override
             public TransformerVoteResult castVote(ITransformerVotingContext context) {
                 return TransformerVoteResult.YES;
             }
 
-            @Nonnull
+            @NotNull
             @Override
             public Set<Target> targets() {
                 return Collections.emptySet();
