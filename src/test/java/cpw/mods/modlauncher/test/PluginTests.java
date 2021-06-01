@@ -18,10 +18,10 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.serviceapi.*;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.nio.file.*;
 import java.util.EnumSet;

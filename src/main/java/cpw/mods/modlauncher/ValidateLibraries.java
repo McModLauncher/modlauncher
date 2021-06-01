@@ -38,18 +38,7 @@ class ValidateLibraries {
                 pair("asm", "org.objectweb.asm.ClassVisitor"),
                 pair("joptsimple", "joptsimple.OptionParser")
         );
-        final List<Map.Entry<String, String>> brokenLibs = toCheck.stream().filter(ValidateLibraries::tryLoad).collect(Collectors.toList());
-        brokenLibs.forEach(e->System.err.println("Failed to find class associated with library "+e.getKey()));
-        if (!brokenLibs.isEmpty()) throw new InvalidLauncherSetupException("Missing classes, cannot continue");
-    }
-
-    private static boolean tryLoad(final Map.Entry<String, String> nameClazz) {
-        try {
-            Class.forName(nameClazz.getValue(), false, ClassLoader.getSystemClassLoader());
-            return false;
-        } catch (ClassNotFoundException e) {
-            return true;
-        }
+        var moduleList = ValidateLibraries.class.getModule().getLayer().modules().stream().map(Module::getName).toList();
     }
 
     private static Map.Entry<String,String> pair(String name, String clazzName) {

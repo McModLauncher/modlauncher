@@ -1,3 +1,6 @@
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
+
 module cpw.mods.modlauncher.testing {
     requires cpw.mods.modlauncher.api;
     requires org.junit.jupiter.api;
@@ -8,6 +11,6 @@ module cpw.mods.modlauncher.testing {
     uses cpw.mods.modlauncher.api.ILaunchHandlerService;
     uses cpw.mods.modlauncher.api.INameMappingService;
     uses cpw.mods.modlauncher.api.ITransformationService;
-    uses cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
-    uses cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
+    uses ILaunchPluginService;
+    uses ITransformerDiscoveryService;
 }

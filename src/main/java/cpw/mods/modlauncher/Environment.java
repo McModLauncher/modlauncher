@@ -19,7 +19,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
-import cpw.mods.modlauncher.serviceapi.*;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.util.*;
 import java.util.function.BiFunction;

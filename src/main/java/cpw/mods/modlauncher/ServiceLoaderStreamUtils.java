@@ -57,7 +57,7 @@ public class ServiceLoaderStreamUtils {
     }
 
     public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, Consumer<ServiceConfigurationError> errorHandler) {
-        return errorHandlingServiceLoader(clazz, null, errorHandler);
+        return errorHandlingServiceLoader(clazz, clazz.getClassLoader(), errorHandler);
     }
 
     public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, @Nullable ClassLoader cl, Consumer<ServiceConfigurationError> errorHandler) {

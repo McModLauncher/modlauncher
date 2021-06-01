@@ -1,7 +1,7 @@
 /*
  * ModLauncher - for launching Java programs with in-flight transformation ability.
  *
- *     Copyright (C) 2017-2019 cpw
+ *     Copyright (C) 2017-2021 cpw
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by

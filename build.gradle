@@ -21,7 +21,6 @@ repositories {
 }
 
 sourceSets {
-    api
     testJars
 }
 
@@ -74,17 +73,12 @@ version = grgit.describe(longDescr: true).split('-').with { "${it[0]}.${it[1]}" 
 dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
     compileOnly('org.jetbrains:annotations:21.0.0')
-    apiCompileOnly('org.jetbrains:annotations:21.0.0')
     api("org.ow2.asm:asm:${asmVersion}")
     api("org.ow2.asm:asm-tree:${asmVersion}")
     api("org.ow2.asm:asm-commons:${asmVersion}")
-    apiImplementation("org.ow2.asm:asm:${asmVersion}")
-    apiImplementation("org.ow2.asm:asm-tree:${asmVersion}")
-    apiImplementation("org.ow2.asm:asm-commons:${asmVersion}")
     implementation('org.apache.logging.log4j:log4j-api:2.14.1')
     implementation('org.apache.logging.log4j:log4j-core:2.14.1')
     implementation('cpw.mods:grossjava9hacks:2.0.7')
-    implementation(sourceSets.api.output)
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
@@ -97,16 +91,6 @@ dependencies {
     jmh("org.ow2.asm:asm:${asmVersion}")
     jmh('org.openjdk.jmh:jmh-core:1.31')
     jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
-}
-
-task apiJar(type: Jar) {
-    archiveClassifier = 'api'
-    from sourceSets.api.output
-}
-
-task apiSourcesJar(type: Jar) {
-    archiveClassifier = 'apisource'
-    from sourceSets.api.allSource
 }
 
 task testsJar(type: Jar) {
@@ -147,7 +131,7 @@ ext.sharedManifest = manifest {
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '7.0', // We are version 7 of the modlauncher serviceapi specification
+                'Specification-Version': '7.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -155,7 +139,7 @@ ext.sharedManifest = manifest {
                 'Git-Commit': grgit.head().abbreviatedId,
                 'Git-Branch': grgit.branch.current().getName(),
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}"],
-            'cpw/mods/modlauncher/serviceapi/')
+            'cpw/mods/modlauncher/cpw.mods.modlauncher.serviceapi/')
 }
 
 jar {
@@ -169,8 +153,6 @@ tasks.withType(JavaCompile) {
 }
 
 artifacts {
-    archives apiJar
-    archives apiSourcesJar
     archives testsJar
     archives jar
     archives sourcesJar
@@ -180,8 +162,6 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact apiJar
-            artifact apiSourcesJar
             artifact sourcesJar
             pom {
                 name = 'Mod Launcher'

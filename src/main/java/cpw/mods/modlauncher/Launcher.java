@@ -19,8 +19,8 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
-import cpw.mods.modlauncher.serviceapi.*;
 import org.apache.logging.log4j.LogManager;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.nio.file.Path;
 import java.util.*;

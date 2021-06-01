@@ -18,7 +18,7 @@
 
 package cpw.mods.modlauncher.api;
 
-import cpw.mods.modlauncher.serviceapi.*;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.nio.file.*;
 import java.util.*;
