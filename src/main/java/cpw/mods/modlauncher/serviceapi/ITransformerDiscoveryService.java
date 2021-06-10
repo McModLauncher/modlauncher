@@ -18,6 +18,8 @@
 
 package cpw.mods.modlauncher.serviceapi;
 
+import cpw.mods.modlauncher.api.NamedPath;
+
 import java.nio.file.Path;
 import java.util.List;
 
@@ -31,5 +33,5 @@ public interface ITransformerDiscoveryService {
      * @param gameDirectory The root game directory
      * @return The list of services
      */
-    List<Path> candidates(final Path gameDirectory);
+    List<NamedPath> candidates(final Path gameDirectory);
 }

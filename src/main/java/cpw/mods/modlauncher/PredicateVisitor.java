@@ -25,7 +25,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public class PredicateVisitor extends ClassVisitor {
-
     private ITransformerVotingContext.MethodPredicate methodPredicate;
     private ITransformerVotingContext.FieldPredicate fieldPredicate;
     private ITransformerVotingContext.ClassPredicate classPredicate;

@@ -60,6 +60,15 @@ public class ServiceLoaderStreamUtils {
         return errorHandlingServiceLoader(clazz, clazz.getClassLoader(), errorHandler);
     }
 
+    public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, ModuleLayer moduleLayer, Consumer<ServiceConfigurationError> errorHandler) {
+        final var sl = ServiceLoader.load(moduleLayer, clazz);
+        try {
+            sl.stream().map(ServiceLoader.Provider::get).forEach(a->{});
+        } catch (ServiceConfigurationError e) {
+            errorHandler.accept(e);
+        }
+        return sl;
+    }
     public static <T> ServiceLoader<T> errorHandlingServiceLoader(Class<T> clazz, @Nullable ClassLoader cl, Consumer<ServiceConfigurationError> errorHandler) {
         final ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz, cl);
         for (Iterator<T> iterator = serviceLoader.iterator(); iterator.hasNext(); ) {

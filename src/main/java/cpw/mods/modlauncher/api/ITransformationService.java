@@ -70,7 +70,7 @@ public interface ITransformationService {
      */
     void beginScanning(IEnvironment environment);
 
-    default List<Map.Entry<String, Path>> runScan(IEnvironment environment) {
+    default List<NamedPath> runScan(IEnvironment environment) {
         beginScanning(environment);
         return Collections.emptyList();
     }

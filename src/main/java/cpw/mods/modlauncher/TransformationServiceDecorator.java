@@ -109,9 +109,9 @@ public class TransformationServiceDecorator {
         return service;
     }
 
-    List<Map.Entry<String, Path>> runScan(final Environment environment) {
+    List<NamedPath> runScan(final Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
-        final List<Map.Entry<String, Path>> scanResults = this.service.runScan(environment);
+        final List<NamedPath> scanResults = this.service.runScan(environment);
         LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
         return scanResults;
     }

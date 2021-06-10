@@ -25,6 +25,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.module.ModuleFinder;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
@@ -40,9 +42,11 @@ class TransformationServicesHandler {
     private ServiceLoader<ITransformationService> transformationServices;
     private Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
+    private final ModuleLayerHandler layerHandler;
 
-    TransformationServicesHandler(TransformStore transformStore) {
+    TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler) {
         this.transformStore = transformStore;
+        this.layerHandler = layerHandler;
     }
 
     private static <I, R> Function<I,Optional<R>> alternate(@org.jetbrains.annotations.Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
@@ -51,7 +55,7 @@ class TransformationServicesHandler {
         return input -> Optional.ofNullable(first.apply(input).orElseGet(() -> second.apply(input).orElse(null)));
     }
 
-    List<Map.Entry<String, Path>> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
+    List<NamedPath> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
         loadTransformationServices(environment);
         validateTransformationServices();
         processArguments(argumentHandler, environment);
@@ -59,7 +63,7 @@ class TransformationServicesHandler {
         // force the naming to "mojang" if nothing has been populated during transformer setup
         environment.computePropertyIfAbsent(IEnvironment.Keys.NAMING.get(), a-> "mojang");
         nameMappingServiceHandler.bindNamingServices(environment.getProperty(Environment.Keys.NAMING.get()).orElse("mojang"));
-        final List<Map.Entry<String, Path>> scanResults = runScanningTransformationServices(environment);
+        final List<NamedPath> scanResults = runScanningTransformationServices(environment);
         initialiseServiceTransformers();
         return scanResults;
     }
@@ -106,7 +110,7 @@ class TransformationServicesHandler {
         serviceLookup.values().forEach(s -> s.onInitialize(environment));
     }
 
-    private List<Map.Entry<String, Path>> runScanningTransformationServices(Environment environment) {
+    private List<NamedPath> runScanningTransformationServices(Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Transformation services begin scanning");
 
         return serviceLookup.values()
@@ -132,12 +136,14 @@ class TransformationServicesHandler {
 
     void discoverServices(final Path gameDir) {
         LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
-        final ServiceLoader<ITransformerDiscoveryService> discoveryServices = errorHandlingServiceLoader(ITransformerDiscoveryService.class, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", serviceConfigurationError));
-        final List<Path> additionalPaths = map(discoveryServices, s -> s.candidates(gameDir)).flatMap(Collection::stream).collect(Collectors.toList());
+        var bootLayer = layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT);
+        final ServiceLoader<ITransformerDiscoveryService> discoveryServices = errorHandlingServiceLoader(ITransformerDiscoveryService.class, bootLayer, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", serviceConfigurationError));
+        final List<NamedPath> additionalPaths = map(discoveryServices, s -> s.candidates(gameDir)).flatMap(Collection::stream).collect(Collectors.toList());
         LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", additionalPaths);
-        TransformerClassLoader cl = new TransformerClassLoader(((URLClassLoader)getClass().getClassLoader().getParent()).getURLs(), getClass().getClassLoader());
-        additionalPaths.stream().map(LamdbaExceptionUtils.rethrowFunction(p->p.toUri().toURL())).forEach(cl::addURL);
-        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, cl, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
+        additionalPaths.forEach(np->layerHandler.addToLayer(ModuleLayerHandler.Layer.SERVICE, np));
+        var classLoader = new ModuleClassLoader("transformerserviceclassloader");
+        var serviceLayer = layerHandler.buildLayer(ModuleLayerHandler.Layer.SERVICE, np->ModuleFinder.of(np.paths()), (n,cf)->classLoader.acceptConfiguration(cf));
+        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, serviceLayer, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
         serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
         final List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(()->new RuntimeException("The MODLIST isn't set, huh?"));
         serviceLookup.forEach((name, deco)->{

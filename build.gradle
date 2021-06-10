@@ -13,7 +13,6 @@ apply plugin: 'jacoco'
 apply plugin: 'org.javamodularity.moduleplugin'
 
 repositories {
-    mavenCentral()
     maven {
         name = 'forge'
         url = 'https://maven.minecraftforge.net/'
@@ -40,21 +39,11 @@ test {
     // exclude all tests for now
     exclude '**/*'
     useJUnitPlatform()
-    moduleOptions {
-        addOpens = [
-                'cpw.mods.modlauncher/cpw.mods.modlauncher': 'powermock.reflect',
-                'java.base/java.lang': 'powermock.reflect'
-        ]
-    }
 }
 
 compileTestJava {
     // exclude all tests - not compatible with modular system
     exclude '/**/*'
-    moduleOptions {
-        addExports = ['cpw.mods.modlauncher.testjars/cpw.mods.modlauncher.testjar': 'cpw.mods.modlauncher.test']
-        addReads = ['cpw.mods.modlauncher.test':'cpw.mods.modlauncher.testjars']
-    }
 }
 //jacoco {
 //    toolVersion = '0.8.2'
@@ -78,7 +67,7 @@ dependencies {
     api("org.ow2.asm:asm-commons:${asmVersion}")
     implementation('org.apache.logging.log4j:log4j-api:2.14.1')
     implementation('org.apache.logging.log4j:log4j-core:2.14.1')
-    implementation('cpw.mods:grossjava9hacks:2.0.7')
+    implementation('cpw.mods:securejarhandler:0.9.+')
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
@@ -120,7 +109,7 @@ tasks['jmh'].dependsOn(clean)
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '7.0', // We are version 7 of the modlauncher specification
+                'Specification-Version': '8.0', // We are version 7 of the modlauncher specification
                 'Implementation-Title': project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -131,7 +120,7 @@ ext.sharedManifest = manifest {
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '7.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
+                'Specification-Version': '8.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -139,7 +128,7 @@ ext.sharedManifest = manifest {
                 'Git-Commit': grgit.head().abbreviatedId,
                 'Git-Branch': grgit.branch.current().getName(),
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}"],
-            'cpw/mods/modlauncher/cpw.mods.modlauncher.serviceapi/')
+            'cpw/mods/modlauncher/serviceapi/')
 }
 
 jar {

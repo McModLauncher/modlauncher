@@ -20,9 +20,10 @@ package cpw.mods.modlauncher.api;
 
 import java.util.function.Predicate;
 
-public interface ITransformingClassLoader {
-    default ClassLoader getInstance() {
-        return (ClassLoader) this;
+public interface ITransformingClassLoader<T extends ClassLoader & ITransformingClassLoader<T>> {
+    @SuppressWarnings("unchecked")
+    default T getInstance() {
+        return (T)this;
     }
 
     void addTargetPackageFilter(Predicate<String> filter);

@@ -19,6 +19,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.NamedPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +46,7 @@ public class LaunchPluginHandler {
             mod.put("name", name);
             mod.put("type", "PLUGINSERVICE");
             String fName = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
-            mod.put("file", fName.substring(fName.lastIndexOf("/")));
+            mod.put("file", fName.substring(fName.lastIndexOf("/")+1));
             modlist.add(mod);
         });
         if (Launcher.INSTANCE!=null) {
@@ -74,7 +75,7 @@ public class LaunchPluginHandler {
         return phaseObjectEnumMap;
     }
 
-    void offerScanResultsToPlugins(List<Map.Entry<String, Path>> scanResults) {
+    void offerScanResultsToPlugins(List<NamedPath> scanResults) {
         plugins.forEach((n,p)->p.addResources(scanResults));
     }
 

@@ -18,23 +18,19 @@
 
 package cpw.mods.modlauncher;
 
-import cpw.mods.gross.SecureJarVerifier;
 import org.jetbrains.annotations.Nullable;
 import java.net.URL;
-import java.security.AllPermission;
-import java.security.CodeSource;
-import java.security.Permissions;
-import java.security.ProtectionDomain;
+import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class SecureJarHandler {
-    public static CodeSource createCodeSource(final String name, @Nullable final URL url, final byte[] bytes, final SecureJarVerifier.SecureJar secureJar) {
-        if (secureJar == null) return null;
-        if (url == null) return null;
-
-        return new CodeSource(url, secureJar.computeSigners(name, bytes));
+public class ProtectionDomainHelper {
+    private static final Map<URL, CodeSource> csCache = new HashMap<>();
+    public static CodeSource createCodeSource(@Nullable final URL url, final CodeSigner[] signers) {
+        synchronized (csCache) {
+            return csCache.computeIfAbsent(url, u->new CodeSource(url, signers));
+        }
     }
 
     private static final Map<CodeSource, ProtectionDomain> pdCache = new HashMap<>();

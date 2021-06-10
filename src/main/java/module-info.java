@@ -4,7 +4,6 @@ module cpw.mods.modlauncher {
     requires org.objectweb.asm.tree;
     requires org.apache.logging.log4j.core;
     requires jopt.simple;
-    requires cpw.mods.grossjava9hacks;
     requires static annotations;
     exports cpw.mods.modlauncher.log to org.apache.logging.log4j.core;
     exports cpw.mods.modlauncher.serviceapi;
@@ -15,4 +14,8 @@ module cpw.mods.modlauncher {
     uses cpw.mods.modlauncher.api.ITransformationService;
     uses cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
     uses cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
+    provides cpw.mods.modlauncher.api.ILaunchHandlerService with
+            cpw.mods.modlauncher.DefaultLaunchHandlerService, cpw.mods.modlauncher.TestingLaunchHandlerService;
+    // for bootstrap launcher to find us without having to expose our Launcher main method
+    provides java.util.function.Consumer with cpw.mods.modlauncher.BootstrapLaunchConsumer;
 }

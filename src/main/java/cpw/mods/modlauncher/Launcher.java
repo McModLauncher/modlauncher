@@ -41,20 +41,22 @@ public class Launcher {
     private final ArgumentHandler argumentHandler;
     private final LaunchServiceHandler launchService;
     private final LaunchPluginHandler launchPlugins;
+    private final ModuleLayerHandler moduleLayerHandler;
     private TransformingClassLoader classLoader;
 
     private Launcher() {
         INSTANCE = this;
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}", ()->IEnvironment.class.getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
+        this.moduleLayerHandler = new ModuleLayerHandler();
         this.launchService = new LaunchServiceHandler();
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLSPEC_VERSION.get(), s->IEnvironment.class.getPackage().getSpecificationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLIMPL_VERSION.get(), s->IEnvironment.class.getPackage().getImplementationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), s->new ArrayList<>());
-        environment.computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k->SecureJarHandler.canHandleSecuredJars());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k-> ProtectionDomainHelper.canHandleSecuredJars());
         this.transformStore = new TransformStore();
-        this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore);
+        this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
         this.argumentHandler = new ArgumentHandler();
         this.nameMappingServiceHandler = new NameMappingServiceHandler();
         this.launchPlugins = new LaunchPluginHandler();
@@ -73,7 +75,7 @@ public class Launcher {
     private void run(String... args) {
         final Path gameDir = this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.discoverServices(gameDir);
-        final List<Map.Entry<String, Path>> scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
+        final List<NamedPath> scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
         this.launchPlugins.offerScanResultsToPlugins(scanResults);
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);

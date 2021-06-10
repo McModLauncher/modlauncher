@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.serviceapi;
 
+import cpw.mods.modlauncher.api.NamedPath;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -168,7 +169,7 @@ public interface ILaunchPluginService {
      *
      * @param resources A collection of all the results
      */
-    default void addResources(List<Map.Entry<String, Path>> resources) {}
+    default void addResources(List<NamedPath> resources) {}
 
     default void initializeLaunch(ITransformerLoader transformerLoader,  Path[] specialPaths) {}
     /**
