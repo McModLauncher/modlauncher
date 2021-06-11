@@ -50,7 +50,7 @@ class TransformingClassLoaderTests {
         };
 
         TransformStore transformStore = new TransformStore();
-        LaunchPluginHandler lph = new LaunchPluginHandler();
+        LaunchPluginHandler lph = new LaunchPluginHandler(null);
         TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(transformStore);
         final Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, transformStore.getClass(), lph.getClass(), Path[].class);

@@ -49,7 +49,7 @@ public class TransformBenchmark {
     @Setup
     public void setup() {
         final TransformStore transformStore = new TransformStore();
-        final LaunchPluginHandler lph = new LaunchPluginHandler();
+        final LaunchPluginHandler lph = new LaunchPluginHandler(null);
         classTransformer = uncheck(()->Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null}));
         transform = uncheck(()->classTransformer.getClass().getDeclaredMethod("transform", byte[].class, String.class,String.class));
         transform.setAccessible(true);

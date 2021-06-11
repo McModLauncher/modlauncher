@@ -20,6 +20,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.NamedPath;
+import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,8 @@ import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -36,22 +39,20 @@ public class LaunchPluginHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Map<String, ILaunchPluginService> plugins;
 
-    public LaunchPluginHandler() {
-        ServiceLoader<ILaunchPluginService> services = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ILaunchPluginService.class,
-                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e));
-        plugins = ServiceLoaderStreamUtils.toMap(services, ILaunchPluginService::name);
-        final List<Map<String, String>> modlist = new ArrayList<>();
-        plugins.forEach((name, plugin)->{
-            HashMap<String,String> mod = new HashMap<>();
-            mod.put("name", name);
-            mod.put("type", "PLUGINSERVICE");
-            String fName = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
-            mod.put("file", fName.substring(fName.lastIndexOf("/")+1));
-            modlist.add(mod);
-        });
+    public LaunchPluginHandler(final ModuleLayerHandler layerHandler) {
+        this.plugins = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), ILaunchPluginService.class),
+                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e))
+                .collect(Collectors.toMap(ILaunchPluginService::name, Function.identity()));
+        final var modlist = plugins.entrySet().stream().map(e->Map.of(
+                "name", e.getKey(),
+                "type", "PLUGINSERVICE",
+                "file", ServiceLoaderUtils.fileNameFor(e.getValue().getClass())))
+                .toList();
         if (Launcher.INSTANCE!=null) {
-            final List<Map<String, String>> mods = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(() -> new RuntimeException("The MODLIST isn't set, huh?"));
-            mods.addAll(modlist);
+            Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get())
+                    .ifPresentOrElse(mods->mods.addAll(modlist),() -> {
+                        throw new RuntimeException("The MODLIST isn't set, huh?");
+                    });
         }
         LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
     }

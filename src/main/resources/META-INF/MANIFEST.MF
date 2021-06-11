@@ -1,0 +1,26 @@
+Manifest-Version: 1.0
+
+Name: cpw/mods/modlauncher/api/
+Specification-Title: modlauncher
+Specification-Vendor: forge
+Specification-Version: 7.0
+Implementation-Title: modlauncher
+Implementation-Version: 9.0.1+0+master.09c65e8
+Implementation-Vendor: forge
+Implementation-Timestamp: 2021-06-09T01:29:30.431684967Z
+Git-Commit: 09c65e8
+Git-Branch: master
+Build-Number: 0
+
+Name: cpw/mods/modlauncher/cpw.mods.modlauncher.serviceapi/
+Specification-Title: modlauncherserviceapi
+Specification-Vendor: forge
+Specification-Version: 7.0
+Implementation-Title: modlauncher
+Implementation-Version: 9.0.1+0+master.09c65e8
+Implementation-Vendor: forge
+Implementation-Timestamp: 2021-06-09T01:29:30.433729643Z
+Git-Commit: 09c65e8
+Git-Branch: master
+Build-Number: 0
+

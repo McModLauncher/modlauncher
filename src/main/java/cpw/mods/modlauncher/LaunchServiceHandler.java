@@ -19,6 +19,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,12 +34,11 @@ import static cpw.mods.modlauncher.LogMarkers.*;
  */
 class LaunchServiceHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ServiceLoader<ILaunchHandlerService> launchHandlerServices;
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 
-    public LaunchServiceHandler() {
-        launchHandlerServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ILaunchHandlerService.class, serviceConfigurationError -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
-        launchHandlerLookup = ServiceLoaderStreamUtils.toMap(launchHandlerServices, ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new);
+    public LaunchServiceHandler(final ModuleLayerHandler layerHandler) {
+        this.launchHandlerLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), ILaunchHandlerService.class), sce -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", sce))
+                .collect(Collectors.toMap(ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new));
         LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () -> String.join(",",launchHandlerLookup.keySet()));
     }
 

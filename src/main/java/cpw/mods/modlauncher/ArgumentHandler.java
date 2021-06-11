@@ -78,16 +78,14 @@ public class ArgumentHandler {
 
     private ITransformationService.OptionResult optionResults(String serviceName, OptionSet set) {
         return new ITransformationService.OptionResult() {
-            @NotNull
             @Override
             public <V> V value(OptionSpec<V> option) {
                 checkOwnership(option);
                 return set.valueOf(option);
             }
 
-            @NotNull
             @Override
-            public <V> List<V> values(OptionSpec<V> option) {
+            public <V> @NotNull List<V> values(OptionSpec<V> option) {
                 checkOwnership(option);
                 return set.valuesOf(option);
             }

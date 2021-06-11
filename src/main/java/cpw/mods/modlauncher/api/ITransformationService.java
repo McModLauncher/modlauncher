@@ -129,7 +129,6 @@ public interface ITransformationService {
     }
 
     interface OptionResult {
-        @NotNull
         <V> V value(OptionSpec<V> options);
 
         @NotNull

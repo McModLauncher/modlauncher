@@ -28,7 +28,7 @@ import java.util.Optional;
 public class ExtraDataTextRenderer implements TextRenderer {
     private final TextRenderer wrapped;
     private final Optional<ITransformerAuditTrail> auditData;
-    private ThreadLocal<TransformerContext> currentClass = new ThreadLocal<>();
+    private final ThreadLocal<TransformerContext> currentClass = new ThreadLocal<>();
 
     ExtraDataTextRenderer(final TextRenderer wrapped) {
         this.wrapped = wrapped;

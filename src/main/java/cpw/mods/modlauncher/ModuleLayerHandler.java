@@ -18,15 +18,15 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.cl.JarModuleFinder;
+import cpw.mods.cl.ModuleClassLoader;
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.NamedPath;
 
-import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public final class ModuleLayerHandler {
     enum Layer {
@@ -53,15 +53,17 @@ public final class ModuleLayerHandler {
         layers.computeIfAbsent(layer, l->new ArrayList<>()).add(namedPath);
     }
 
-    public ModuleLayer buildLayer(final Layer layer, final Function<NamedPath, ModuleFinder> finder, final BiFunction<String, Configuration, ClassLoader> classLoaderFinder) {
+    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
+    public LayerInfo buildLayer(final Layer layer) {
         final var parentLayer = completedLayers.get(layer.parent);
-        final var finders = layers.getOrDefault(layer, List.of()).stream()
-                .map(finder)
-                .toArray(ModuleFinder[]::new);
-        final var newConf = parentLayer.configuration().resolveAndBind(ModuleFinder.compose(finders), ModuleFinder.of(), List.of());
-        final var modController = ModuleLayer.defineModules(newConf, List.of(parentLayer), f -> classLoaderFinder.apply(f, newConf));
+        final var finder = layers.getOrDefault(layer, List.of()).stream()
+                .map(np-> SecureJar.from(np.paths()))
+                .toArray(SecureJar[]::new);
+        final var newConf = parentLayer.configuration().resolveAndBind(JarModuleFinder.of(finder), ModuleFinder.of(), List.of());
+        final var classLoader = new ModuleClassLoader("LAYER "+layer.name(), newConf, List.of(parentLayer));
+        final var modController = ModuleLayer.defineModules(newConf, List.of(parentLayer), f->classLoader);
         completedLayers.put(layer, modController.layer());
-        return modController.layer();
+        return new LayerInfo(modController.layer(), classLoader);
     }
     public ModuleLayer getLayer(final Layer layer) {
         return completedLayers.get(layer);

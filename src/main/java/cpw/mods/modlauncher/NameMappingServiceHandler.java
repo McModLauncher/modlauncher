@@ -19,6 +19,7 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,13 +35,12 @@ import static cpw.mods.modlauncher.LogMarkers.*;
  */
 class NameMappingServiceHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ServiceLoader<INameMappingService> namingServices;
     private final Map<String, NameMappingServiceDecorator> namingTable;
     private Map<String, NameMappingServiceDecorator> nameBindings;
 
-    public NameMappingServiceHandler() {
-        namingServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(INameMappingService.class, serviceConfigurationError -> LOGGER.fatal("Encountered serious error loading naming service, expect problems", serviceConfigurationError));
-        namingTable = ServiceLoaderStreamUtils.toMap(namingServices, INameMappingService::mappingName, NameMappingServiceDecorator::new);
+    public NameMappingServiceHandler(final ModuleLayerHandler layerHandler) {
+        namingTable = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), INameMappingService.class), sce -> LOGGER.fatal("Encountered serious error loading naming service, expect problems", sce))
+                .collect(Collectors.toMap(INameMappingService::mappingName, NameMappingServiceDecorator::new));
         LOGGER.debug(MODLAUNCHER,"Found naming services : [{}]", () -> String.join(",", namingTable.keySet()));
     }
 

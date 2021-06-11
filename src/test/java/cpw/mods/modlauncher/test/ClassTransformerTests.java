@@ -45,7 +45,7 @@ class ClassTransformerTests {
         MarkerManager.getMarker("CLASSDUMP");
         Configurator.setLevel(ClassTransformer.class.getName(), Level.TRACE);
         final TransformStore transformStore = new TransformStore();
-        final LaunchPluginHandler lph = new LaunchPluginHandler();
+        final LaunchPluginHandler lph = new LaunchPluginHandler(null);
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});
         final ITransformationService dummyService = new MockTransformerService();
         Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass"), classTransformer(), dummyService);

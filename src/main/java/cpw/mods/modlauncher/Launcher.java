@@ -48,7 +48,7 @@ public class Launcher {
         INSTANCE = this;
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}", ()->IEnvironment.class.getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
         this.moduleLayerHandler = new ModuleLayerHandler();
-        this.launchService = new LaunchServiceHandler();
+        this.launchService = new LaunchServiceHandler(this.moduleLayerHandler);
         this.blackboard = new TypesafeMap();
         this.environment = new Environment(this);
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLSPEC_VERSION.get(), s->IEnvironment.class.getPackage().getSpecificationVersion());
@@ -58,12 +58,19 @@ public class Launcher {
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
         this.argumentHandler = new ArgumentHandler();
-        this.nameMappingServiceHandler = new NameMappingServiceHandler();
-        this.launchPlugins = new LaunchPluginHandler();
+        this.nameMappingServiceHandler = new NameMappingServiceHandler(this.moduleLayerHandler);
+        this.launchPlugins = new LaunchPluginHandler(this.moduleLayerHandler);
     }
 
     public static void main(String... args) {
-        ValidateLibraries.validate();
+        if (System.getProperty("java.vendor").contains("OpenJ9")) {
+            System.err.printf("""
+            You are attempting to run with an unsupported Java Virtual Machine : %s
+            Please visit https://adoptopenjdk.net and install the HotSpot variant.
+            OpenJ9 is incompatible with several of the transformation behaviours that we rely on to work.
+            """, System.getProperty("java.vendor"));
+            throw new IllegalStateException("Open J9 is not supported");
+        }
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         new Launcher().run(args);
     }

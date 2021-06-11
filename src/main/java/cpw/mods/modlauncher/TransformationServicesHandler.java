@@ -20,26 +20,22 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
+import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.jetbrains.annotations.Nullable;
 
-import java.lang.module.ModuleFinder;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
-import static cpw.mods.modlauncher.ServiceLoaderStreamUtils.*;
 
 class TransformationServicesHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private ServiceLoader<ITransformationService> transformationServices;
     private Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
     private final ModuleLayerHandler layerHandler;
@@ -47,12 +43,6 @@ class TransformationServicesHandler {
     TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler) {
         this.transformStore = transformStore;
         this.layerHandler = layerHandler;
-    }
-
-    private static <I, R> Function<I,Optional<R>> alternate(@org.jetbrains.annotations.Nullable Function<I, Optional<R>> first, @Nullable Function<I, Optional<R>> second) {
-        if (second == null) return first;
-        if (first == null) return second;
-        return input -> Optional.ofNullable(first.apply(input).orElseGet(() -> second.apply(input).orElse(null)));
     }
 
     List<NamedPath> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
@@ -87,15 +77,15 @@ class TransformationServicesHandler {
     }
 
     private void computeArgumentsForServices(OptionParser parser) {
-        parallelForEach(transformationServices,
-                service -> service.arguments((a, b) -> parser.accepts(service.name() + "." + a, b))
-        );
+        serviceLookup.values().stream()
+                .map(TransformationServiceDecorator::getService)
+                .forEach(service->service.arguments((a, b) -> parser.accepts(service.name() + "." + a, b)));
     }
 
     private void offerArgumentResultsToServices(OptionSet optionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult> resultHandler) {
-        parallelForEach(transformationServices,
-                service -> service.argumentValues(resultHandler.apply(service.name(), optionSet))
-        );
+        serviceLookup.values().stream()
+                .map(TransformationServiceDecorator::getService)
+                .forEach(service -> service.argumentValues(resultHandler.apply(service.name(), optionSet)));
     }
 
     private void initialiseServiceTransformers() {
@@ -130,43 +120,28 @@ class TransformationServicesHandler {
 
     private void loadTransformationServices(Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Transformation services loading");
-
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
     }
 
     void discoverServices(final Path gameDir) {
         LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
         var bootLayer = layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT);
-        final ServiceLoader<ITransformerDiscoveryService> discoveryServices = errorHandlingServiceLoader(ITransformerDiscoveryService.class, bootLayer, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", serviceConfigurationError));
-        final List<NamedPath> additionalPaths = map(discoveryServices, s -> s.candidates(gameDir)).flatMap(Collection::stream).collect(Collectors.toList());
-        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", additionalPaths);
+        var additionalPaths = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(bootLayer, ITransformerDiscoveryService.class),  sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", sce))
+                .map(s->s.candidates(gameDir))
+                .flatMap(Collection::stream)
+                .toList();
+        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())));
         additionalPaths.forEach(np->layerHandler.addToLayer(ModuleLayerHandler.Layer.SERVICE, np));
-        var classLoader = new ModuleClassLoader("transformerserviceclassloader");
-        var serviceLayer = layerHandler.buildLayer(ModuleLayerHandler.Layer.SERVICE, np->ModuleFinder.of(np.paths()), (n,cf)->classLoader.acceptConfiguration(cf));
-        transformationServices = ServiceLoaderStreamUtils.errorHandlingServiceLoader(ITransformationService.class, serviceLayer, serviceConfigurationError -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", serviceConfigurationError));
-        serviceLookup = ServiceLoaderStreamUtils.toMap(transformationServices, ITransformationService::name, TransformationServiceDecorator::new);
-        final List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(()->new RuntimeException("The MODLIST isn't set, huh?"));
-        serviceLookup.forEach((name, deco)->{
-            HashMap<String,String> mod = new HashMap<>();
-            mod.put("name", name);
-            mod.put("type", "TRANSFORMATIONSERVICE");
-            String fName = deco.getService().getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
-            mod.put("file", fName.substring(fName.lastIndexOf("/")));
-            modlist.add(mod);
-        });
+        var serviceLayer = layerHandler.buildLayer(ModuleLayerHandler.Layer.SERVICE);
+        serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
+                .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
+        var modlist = serviceLookup.entrySet().stream().map(e->Map.of(
+                "name", e.getKey(),
+                "type", "TRANSFORMATIONSERVICE",
+                "file", ServiceLoaderUtils.fileNameFor(e.getValue().getClass())
+                )).toList();
+        Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).ifPresent(ml->ml.addAll(modlist));
         LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
 
-    }
-
-
-    private static class TransformerClassLoader extends URLClassLoader {
-        TransformerClassLoader(final URL[] urls, ClassLoader parent) {
-            super(urls, parent);
-        }
-
-        @Override
-        protected void addURL(final URL url) {
-            super.addURL(url);
-        }
     }
 }
