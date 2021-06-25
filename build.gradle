@@ -2,17 +2,17 @@ import java.text.SimpleDateFormat
 
 plugins {
     id 'org.ajoberstar.grgit' version '4.1.0'
-    id 'com.github.ben-manes.versions' version '0.38.0'
-    id 'me.champeau.jmh' version '0.6.4'
-    id 'org.javamodularity.moduleplugin' version '1.8.3' apply false
+    id 'com.github.ben-manes.versions' version '0.39.0'
+    id 'me.champeau.jmh' version '0.6.5'
+    id 'org.javamodularity.moduleplugin' version '1.8.7' apply false
 }
 apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
-apply plugin: 'jacoco'
 apply plugin: 'org.javamodularity.moduleplugin'
 
 repositories {
+    mavenLocal()
     maven {
         name = 'forge'
         url = 'https://maven.minecraftforge.net/'
@@ -45,23 +45,21 @@ compileTestJava {
     // exclude all tests - not compatible with modular system
     exclude '/**/*'
 }
-//jacoco {
-//    toolVersion = '0.8.2'
-//}
 
 group = 'cpw.mods'
 ext.asmVersion = 9.1
 
-compileJava {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+//compileJava {
+//    sourceCompatibility = JavaVersion.VERSION_16
+//    targetCompatibility = JavaVersion.VERSION_16
+//}
 
 version = grgit.describe(longDescr: true).split('-').with { "${it[0]}.${it[1]}" }
 
 dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    compileOnly('org.jetbrains:annotations:21.0.0')
+    compileOnly('org.jetbrains:annotations:21.0.1')
     api("org.ow2.asm:asm:${asmVersion}")
     api("org.ow2.asm:asm-tree:${asmVersion}")
     api("org.ow2.asm:asm-commons:${asmVersion}")
@@ -73,14 +71,14 @@ dependencies {
     testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
     testCompileOnly(sourceSets.testJars.output)
-    testCompileOnly('org.jetbrains:annotations:21.0.0')
+    testCompileOnly('org.jetbrains:annotations:21.0.1')
     testRuntimeOnly('cpw.mods:bootstraplauncher:0.1.+')
     jmhImplementation('org.powermock:powermock-core:2.0.+')
     jmhImplementation("org.ow2.asm:asm:${asmVersion}")
     jmhImplementation("org.ow2.asm:asm-tree:${asmVersion}")
     jmhImplementation("org.ow2.asm:asm-commons:${asmVersion}")
     jmh("org.ow2.asm:asm:${asmVersion}")
-    jmh('org.openjdk.jmh:jmh-core:1.31')
+    jmh('org.openjdk.jmh:jmh-core:1.32')
     jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
 }
 

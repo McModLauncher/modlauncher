@@ -16,7 +16,7 @@ pipeline {
             steps {
                 withGradle {
                     sh './gradlew ${GRADLE_ARGS} --refresh-dependencies --continue build test'
-                    gradleVersion(this, 'properties', 'MYVERSION')
+                    gradleVersion(this)
                 }
             }
             post {
@@ -41,7 +41,7 @@ pipeline {
             }
             post {
                 success {
-                    build job: 'filegenerator', parameters: [string(name: 'COMMAND', value: "promote cpw.mods:modlauncher ${env.MYVERSION} latest")], propagate: false, wait: false
+                    build job: 'filegenerator', parameters: [string(name: 'COMMAND', value: "promote ${env.MYGROUP}:${env.MYARTIFACT} ${env.MYVERSION} latest")], propagate: false, wait: false
                 }
             }
         }

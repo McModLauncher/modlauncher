@@ -21,52 +21,73 @@ package cpw.mods.modlauncher;
 import cpw.mods.cl.JarModuleFinder;
 import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
 
+import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
-public final class ModuleLayerHandler {
-    enum Layer {
-        BOOT(null),
-        SERVICE(BOOT),
-        PLUGIN(BOOT),
-        GAME(SERVICE);
+public final class ModuleLayerHandler implements IModuleLayerManager {
+    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
 
-        private final Layer parent;
+    private record PathOrJar(NamedPath path, SecureJar jar) {
+        static PathOrJar from(SecureJar jar) {
+            return new PathOrJar(null, jar);
+        }
+        static PathOrJar from(NamedPath path) {
+            return new PathOrJar(path, null);
+        }
 
-        Layer(final Layer parent) {
-            this.parent = parent;
+        SecureJar build() {
+            return jar != null ? jar : SecureJar.from(path.paths());
         }
     }
-    private final EnumMap<Layer, List<NamedPath>> layers = new EnumMap<>(Layer.class);
-    private final EnumMap<Layer, ModuleLayer> completedLayers = new EnumMap<>(Layer.class);
+    private final EnumMap<Layer, List<PathOrJar>> layers = new EnumMap<>(Layer.class);
+    private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
     ModuleLayerHandler() {
-        completedLayers.put(Layer.BOOT, getClass().getModule().getLayer());
+        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), (ModuleClassLoader) getClass().getClassLoader()));
+    }
+
+    void addToLayer(final Layer layer, final SecureJar jar) {
+        if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
+        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(jar));
     }
 
     void addToLayer(final Layer layer, final NamedPath namedPath) {
         if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
-        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(namedPath);
+        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(namedPath));
     }
 
-    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
-    public LayerInfo buildLayer(final Layer layer) {
-        final var parentLayer = completedLayers.get(layer.parent);
+    public LayerInfo buildLayer(final Layer layer, BiFunction<Configuration, List<ModuleLayer>, ModuleClassLoader> classLoaderSupplier) {
         final var finder = layers.getOrDefault(layer, List.of()).stream()
-                .map(np-> SecureJar.from(np.paths()))
+                .map(PathOrJar::build)
                 .toArray(SecureJar[]::new);
-        final var newConf = parentLayer.configuration().resolveAndBind(JarModuleFinder.of(finder), ModuleFinder.of(), List.of());
-        final var classLoader = new ModuleClassLoader("LAYER "+layer.name(), newConf, List.of(parentLayer));
-        final var modController = ModuleLayer.defineModules(newConf, List.of(parentLayer), f->classLoader);
-        completedLayers.put(layer, modController.layer());
+        final var targets = Arrays.stream(finder).map(SecureJar::name).toList();
+        final var newConf = Configuration.resolveAndBind(JarModuleFinder.of(finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li->li.layer().configuration()).toList(), ModuleFinder.of(), targets);
+        final var allParents = Arrays.stream(layer.getParent()).map(completedLayers::get).map(LayerInfo::layer).<ModuleLayer>mapMulti((moduleLayer, comp)-> {
+            comp.accept(moduleLayer);
+            moduleLayer.parents().forEach(comp);
+        }).toList();
+        final var classLoader = classLoaderSupplier.apply(newConf, allParents);
+        final var modController = ModuleLayer.defineModules(newConf, Arrays.stream(layer.getParent()).map(completedLayers::get).map(LayerInfo::layer).toList(), f->classLoader);
+        completedLayers.put(layer, new LayerInfo(modController.layer(), classLoader));
         return new LayerInfo(modController.layer(), classLoader);
     }
-    public ModuleLayer getLayer(final Layer layer) {
-        return completedLayers.get(layer);
+    public LayerInfo buildLayer(final Layer layer) {
+        return buildLayer(layer, (cf, p) -> new ModuleClassLoader("LAYER "+layer.name(), cf, p));
     }
 
+    @Override
+    public Optional<ModuleLayer> getLayer(final Layer layer) {
+        return Optional.ofNullable(completedLayers.get(layer).layer());
+    }
+
+    public void updateLayer(Layer layer, Consumer<LayerInfo> action) {
+        action.accept(completedLayers.get(layer));
+    }
 }

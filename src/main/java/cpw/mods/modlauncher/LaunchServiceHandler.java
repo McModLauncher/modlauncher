@@ -23,7 +23,6 @@ import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -37,7 +36,7 @@ class LaunchServiceHandler {
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 
     public LaunchServiceHandler(final ModuleLayerHandler layerHandler) {
-        this.launchHandlerLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), ILaunchHandlerService.class), sce -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", sce))
+        this.launchHandlerLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchHandlerService.class), sce -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", sce))
                 .collect(Collectors.toMap(ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new));
         LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () -> String.join(",",launchHandlerLookup.keySet()));
     }
@@ -46,12 +45,12 @@ class LaunchServiceHandler {
         return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
     }
 
-    private void launch(String target, String[] arguments, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
+    private void launch(String target, String[] arguments, ModuleLayer gameLayer, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
         final LaunchServiceHandlerDecorator launchServiceHandlerDecorator = launchHandlerLookup.get(target);
-        final Path[] paths = launchServiceHandlerDecorator.getService().getPaths();
+        final NamedPath[] paths = launchServiceHandlerDecorator.getService().getPaths();
         launchPluginHandler.announceLaunch(classLoader, paths);
         LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
-        launchServiceHandlerDecorator.launch(arguments, classLoader);
+        launchServiceHandlerDecorator.launch(arguments, gameLayer);
     }
 
     static List<String> hideAccessToken(String[] arguments) {
@@ -66,10 +65,10 @@ class LaunchServiceHandler {
         return output;
     }
 
-    public void launch(ArgumentHandler argumentHandler, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
+    public void launch(ArgumentHandler argumentHandler, ModuleLayer gameLayer, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
         String launchTarget = argumentHandler.getLaunchTarget();
         String[] args = argumentHandler.buildArgumentList();
-        launch(launchTarget, args, classLoader, launchPluginHandler);
+        launch(launchTarget, args, gameLayer, classLoader, launchPluginHandler);
     }
 
     TransformingClassLoaderBuilder identifyTransformationTargets(final ArgumentHandler argumentHandler) {

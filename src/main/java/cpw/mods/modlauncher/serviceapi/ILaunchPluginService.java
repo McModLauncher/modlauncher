@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.serviceapi;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.NamedPath;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
@@ -169,9 +170,9 @@ public interface ILaunchPluginService {
      *
      * @param resources A collection of all the results
      */
-    default void addResources(List<NamedPath> resources) {}
+    default void addResources(List<SecureJar> resources) {}
 
-    default void initializeLaunch(ITransformerLoader transformerLoader,  Path[] specialPaths) {}
+    default void initializeLaunch(ITransformerLoader transformerLoader,  NamedPath[] specialPaths) {}
     /**
      * Get a plugin specific extension object from the plugin. This can be used to expose proprietary interfaces
      * to Launchers without ModLauncher needing to understand them.

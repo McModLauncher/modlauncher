@@ -39,7 +39,7 @@ class NameMappingServiceHandler {
     private Map<String, NameMappingServiceDecorator> nameBindings;
 
     public NameMappingServiceHandler(final ModuleLayerHandler layerHandler) {
-        namingTable = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), INameMappingService.class), sce -> LOGGER.fatal("Encountered serious error loading naming service, expect problems", sce))
+        namingTable = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), INameMappingService.class), sce -> LOGGER.fatal("Encountered serious error loading naming service, expect problems", sce))
                 .collect(Collectors.toMap(INameMappingService::mappingName, NameMappingServiceDecorator::new));
         LOGGER.debug(MODLAUNCHER,"Found naming services : [{}]", () -> String.join(",", namingTable.keySet()));
     }

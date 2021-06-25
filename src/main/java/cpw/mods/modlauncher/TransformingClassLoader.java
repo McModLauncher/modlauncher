@@ -18,271 +18,43 @@
 
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.ITransformingClassLoader;
-import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import cpw.mods.cl.ModuleClassLoader;
+import cpw.mods.modlauncher.api.*;
 
-import org.jetbrains.annotations.Nullable;
-
-import java.net.*;
-import java.nio.file.*;
-import java.security.CodeSource;
+import java.lang.module.Configuration;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import static cpw.mods.modlauncher.LogMarkers.*;
-import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.*;
 
 /**
  * Module transforming class loader
  */
-public class TransformingClassLoader extends ClassLoader implements ITransformingClassLoader<TransformingClassLoader> {
-    private static final Logger LOGGER = LogManager.getLogger();
-
+public class TransformingClassLoader extends ModuleClassLoader {
     static {
-        // We're capable of loading classes in parallel
         ClassLoader.registerAsParallelCapable();
     }
-
-    private static final List<String> SKIP_PACKAGE_PREFIXES = Arrays.asList(
-            "java.", "javax.", "org.objectweb.asm.", "org.apache.logging.log4j."
-    );
     private final ClassTransformer classTransformer;
-    private final DelegatedClassLoader delegatedClassLoader;
-    private final URL[] specialJars;
-    private final Function<String,Enumeration<URL>> resourceFinder;
-    private Predicate<String> targetPackageFilter;
 
-    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, Path... paths) {
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, ModuleLayerHandler moduleLayerHandler) {
+        super("TRANSFORMER", moduleLayerHandler.getLayer(IModuleLayerManager.Layer.GAME).orElseThrow().configuration(), List.of(moduleLayerHandler.getLayer(IModuleLayerManager.Layer.SERVICE).orElseThrow()));
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this);
-        this.specialJars = Arrays.stream(paths).map(rethrowFunction(path->path.toUri().toURL())).toArray(URL[]::new);
-        this.delegatedClassLoader = new DelegatedClassLoader(this);
-        this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
-        this.resourceFinder = this::locateResource;
     }
 
-    TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder, final Environment environment) {
-        super();
+    TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, TransformingClassLoaderBuilder builder, final Environment environment, final Configuration configuration, List<ModuleLayer> parentLayers) {
+        super("TRANSFORMER", configuration, parentLayers);
         TransformerAuditTrail tat = new TransformerAuditTrail();
         environment.computePropertyIfAbsent(IEnvironment.Keys.AUDITTRAIL.get(), v->tat);
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this, tat);
-        this.specialJars = builder.getSpecialJarsAsURLs();
-        this.delegatedClassLoader = new DelegatedClassLoader(this);
-        this.targetPackageFilter = s -> SKIP_PACKAGE_PREFIXES.stream().noneMatch(s::startsWith);
-        this.resourceFinder = EnumerationHelper.mergeFunctors(builder.getResourceEnumeratorLocator(), this::locateResource);
     }
 
-    private static <I, R> Function<I,R> alternate(@Nullable Function<I, Optional<R>> first, @org.jetbrains.annotations.Nullable Function<I, Optional<R>> second) {
-        if (second == null) return input-> first.apply(input).orElse(null);
-        if (first == null) return input-> second.apply(input).orElse(null);
-        return input -> first.apply(input).orElseGet(() -> second.apply(input).orElse(null));
-    }
     @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        synchronized (getClassLoadingLock(name)) {
-            if (!targetPackageFilter.test(name)) {
-                LOGGER.trace(CLASSLOADING, "Delegating to parent {}", name);
-                return super.loadClass(name, resolve);
-            }
-            try {
-                LOGGER.trace(CLASSLOADING, "Attempting to load {}", name);
-                final Class<?> loadedClass = loadClass(name, this.resourceFinder);
-                LOGGER.trace(CLASSLOADING, "Class loaded for {}", name);
-                if (resolve)
-                    resolveClass(loadedClass);
-                return loadedClass;
-            } catch (ClassNotFoundException | SecurityException e) {
-                LOGGER.trace(CLASSLOADING, "Delegating to parent classloader {}", name);
-                try {
-                    return super.loadClass(name, resolve);
-                } catch (ClassNotFoundException | SecurityException e1) {
-                    e1.addSuppressed(e);
-                    LOGGER.trace(CLASSLOADING, "Parent classloader error on {}", name, e);
-                    throw e1;
-                }
-            }
-        }
+    protected byte[] maybeTransformClassBytes(final byte[] bytes, final String name, final String context) {
+        return classTransformer.transform(bytes, name, context != null ? context : ITransformerActivity.CLASSLOADING_REASON);
     }
 
     public Class<?> getLoadedClass(String name) {
         return findLoadedClass(name);
     }
 
-    @Override
-    public void addTargetPackageFilter(Predicate<String> filter) {
-        this.targetPackageFilter = this.targetPackageFilter.and(filter);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> Class<T> getClass(String name, byte[] bytes) {
-        return (Class<T>) super.defineClass(name, bytes, 0, bytes.length);
-    }
-
-    public Class<?> loadClass(String name, Function<String,Enumeration<URL>> classBytesFinder) throws ClassNotFoundException {
-        final Class<?> existingClass = getLoadedClass(name);
-        if (existingClass != null) {
-            LOGGER.trace(CLASSLOADING, "Found existing class {}", name);
-            return existingClass;
-        }
-        final Map.Entry<byte[], CodeSource> classData = null;
-        byte[] classBytes = classData.getKey();
-        return defineClass(name, classBytes, 0, classBytes.length, ProtectionDomainHelper.createProtectionDomain(classData.getValue(), this));
-    }
-
     byte[] buildTransformedClassNodeFor(final String className, final String reason) throws ClassNotFoundException {
-        return null; //delegatedClassLoader.findClass(className, resourceFinder, reason).getKey();
+        return super.getMaybeTransformedClassBytes(className, reason);
     }
-
-    @Override
-    protected URL findResource(final String name) {
-        return delegatedClassLoader.findResource(name, resourceFinder);
-    }
-
-    @Override
-    protected Enumeration<URL> findResources(final String name) {
-        return delegatedClassLoader.findResources(name, resourceFinder);
-    }
-
-    protected Enumeration<URL> locateResource(String path) {
-        return LamdbaExceptionUtils.uncheck(()->delegatedClassLoader.findResources(path));
-    }
-
-    private static class DelegatedClassLoader extends URLClassLoader {
-        static {
-            ClassLoader.registerAsParallelCapable();
-        }
-
-        private final TransformingClassLoader tcl;
-
-        DelegatedClassLoader(TransformingClassLoader cl) {
-            super(cl.specialJars, null);
-            this.tcl = cl;
-        }
-
-
-        @Override
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            return tcl.loadClass(name, resolve);
-        }
-
-        Class<?> getLoadedClass(String name) {
-            return findLoadedClass(name);
-        }
-
-        @Override
-        protected Class<?> findClass(final String name) throws ClassNotFoundException {
-            return tcl.findClass(name);
-        }
-
-        public URL findResource(final String name, Function<String, Enumeration<URL>> byteFinder) {
-            return EnumerationHelper.firstElementOrNull(byteFinder.apply(name));
-        }
-
-        public Enumeration<URL> findResources(final String name, Function<String,Enumeration<URL>> byteFinder) {
-            return byteFinder.apply(name);
-        }
-
-//        protected Map.Entry<byte[], CodeSource> findClass(final String name, Function<String,Enumeration<URL>> classBytesFinder, final String reason) throws ClassNotFoundException {
-//            final String path = name.replace('.', '/').concat(".class");
-//            final URL classResource = EnumerationHelper.firstElementOrNull(classBytesFinder.apply(path));;
-//            byte[] classBytes;
-//            CodeSource codeSource = null;
-//            SecureJarVerifier.SecureJar secureJar = null;
-//            URL baseURL = null;
-//            if (classResource != null) {
-//                try (AutoURLConnection urlConnection = new AutoURLConnection(classResource, tcl.manifestFinder)) {
-//                    final int length = urlConnection.getContentLength();
-//                    final InputStream is = urlConnection.getInputStream();
-//                    classBytes = new byte[length];
-//                    int pos = 0, remain = length, read;
-//                    while ((read = is.read(classBytes, pos, remain)) != -1 && remain > 0) {
-//                        pos += read;
-//                        remain -= read;
-//                    }
-//                    secureJar = urlConnection.getSecureJar();
-//                    baseURL = urlConnection.getBaseUrl();
-//                } catch (IOException e) {
-//                    LOGGER.trace(CLASSLOADING,"Failed to load bytes for class {} at {} reason {}", name, classResource, reason, e);
-//                    throw new ClassNotFoundException("Failed to find class bytes for "+name, e);
-//                }
-//            } else {
-//                classBytes = new byte[0];
-//            }
-//            final byte[] processedClassBytes = tcl.classTransformer.transform(classBytes, name, reason);
-//            if (processedClassBytes.length > 0) {
-//                LOGGER.trace(CLASSLOADING, "Loaded transform target {} from {} reason {}", name, classResource, reason);
-//
-//                // Only add the package if we have the
-//                if (reason.equals(ITransformerActivity.CLASSLOADING_REASON)) {
-//                    int i = name.lastIndexOf('.');
-//                    String pkgname = i > 0 ? name.substring(0, i) : "";
-//                    // Check if package already loaded.
-//                    tryDefinePackage(pkgname, secureJar);
-//                    codeSource = ProtectionDomainHelper.createCodeSource(path, baseURL, classBytes, secureJar);
-//                }
-//
-//                return new AbstractMap.SimpleImmutableEntry<>(processedClassBytes, codeSource);
-//            } else {
-//                LOGGER.trace(CLASSLOADING, "Failed to transform target {} from {}", name, classResource);
-//                // signal to the parent to fall back to the normal lookup
-//                throw new ClassNotFoundException();
-//            }
-//        }
-
-//        Package tryDefinePackage(String name, @Nullable SecureJarVerifier.SecureJar secureJar) throws IllegalArgumentException
-//        {
-//            var man = secureJar.getManifest();
-//            if (tcl.getDefinedPackage(name) == null) {
-//                synchronized (this) {
-//                    if (tcl.getDefinedPackage(name) != null) return tcl.getDefinedPackage(name);
-//
-//                    String path = name.replace('.', '/').concat("/");
-//                    String specTitle = null, specVersion = null, specVendor = null;
-//                    String implTitle = null, implVersion = null, implVendor = null;
-//
-//                    if (man != null) {
-//                        Attributes attr = man.getAttributes(path);
-//                        if (attr != null) {
-//                            specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
-//                            specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-//                            specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-//                            implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-//                            implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-//                            implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
-//                        }
-//                        attr = man.getMainAttributes();
-//                        if (attr != null) {
-//                            if (specTitle == null) {
-//                                specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
-//                            }
-//                            if (specVersion == null) {
-//                                specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-//                            }
-//                            if (specVendor == null) {
-//                                specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-//                            }
-//                            if (implTitle == null) {
-//                                implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-//                            }
-//                            if (implVersion == null) {
-//                                implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-//                            }
-//                            if (implVendor == null) {
-//                                implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
-//                            }
-//                        }
-//                    }
-//                    return tcl.definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, null);
-//                }
-//
-//            } else {
-//                return tcl.getDefinedPackage(name);
-//            }
-//        }
-
-    }
-
 }

@@ -32,9 +32,9 @@ class LaunchServiceHandlerDecorator {
         this.service = service;
     }
 
-    public void launch(String[] arguments, ITransformingClassLoader classLoader) {
+    public void launch(String[] arguments, ModuleLayer gameLayer) {
         try {
-            this.service.launchService(arguments, classLoader).call();
+            this.service.launchService(arguments, gameLayer).call();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

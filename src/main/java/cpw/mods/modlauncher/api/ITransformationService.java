@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.jarhandling.SecureJar;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,19 +62,21 @@ public interface ITransformationService {
      */
     void initialize(IEnvironment environment);
 
-
+    record Resource(IModuleLayerManager.Layer target, List<SecureJar> resources) {}
     /**
      * Scan for mods (but don't classload them), identify metadata that might drive
-     * game functionality.
+     * game functionality, return list of elements and target module layer (One of PLUGIN or GAME)
      *
      * @param environment environment
      */
-    void beginScanning(IEnvironment environment);
-
-    default List<NamedPath> runScan(IEnvironment environment) {
-        beginScanning(environment);
-        return Collections.emptyList();
+    default List<Resource> beginScanning(IEnvironment environment) {
+        return List.of();
     }
+
+    default List<Resource> completeScan(IModuleLayerManager layerManager) {
+        return List.of();
+    }
+
     /**
      * Load your service. Called immediately on loading with a list of other services found.
      * Use to identify and immediately indicate incompatibilities with other services, and environment

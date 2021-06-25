@@ -62,6 +62,8 @@ public interface IEnvironment {
      */
     Optional<ILaunchHandlerService> findLaunchHandler(String name);
 
+    Optional<IModuleLayerManager> findModuleLayerManager();
+
     /**
      * Find the naming translation for the targetMapping.
      * @param targetMapping the name of the mapping to lookup

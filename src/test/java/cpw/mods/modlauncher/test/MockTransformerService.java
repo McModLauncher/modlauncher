@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.test;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
@@ -56,11 +57,6 @@ public class MockTransformerService implements ITransformationService {
     @Override
     public void initialize(IEnvironment environment) {
         state = "INITIALIZED";
-    }
-
-    @Override
-    public void beginScanning(final IEnvironment environment) {
-        // noop
     }
 
     @Override

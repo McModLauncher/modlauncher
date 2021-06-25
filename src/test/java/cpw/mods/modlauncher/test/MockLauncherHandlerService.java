@@ -38,7 +38,7 @@ public class MockLauncherHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader) {
+    public Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer) {
         return () -> null;
     }
 }

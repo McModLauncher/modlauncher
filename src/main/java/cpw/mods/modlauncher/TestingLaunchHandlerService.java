@@ -44,7 +44,7 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader) {
+    public Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer) {
         try {
             Class<?> callableLaunch = Class.forName(System.getProperty("test.harness.callable"));
             final MethodHandles.Lookup lookup = MethodHandles.lookup();

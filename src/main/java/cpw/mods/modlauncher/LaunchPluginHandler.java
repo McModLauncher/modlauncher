@@ -18,7 +18,9 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +30,6 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class LaunchPluginHandler {
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler(final ModuleLayerHandler layerHandler) {
-        this.plugins = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(ModuleLayerHandler.Layer.BOOT), ILaunchPluginService.class),
+        this.plugins = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchPluginService.class),
                 e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e))
                 .collect(Collectors.toMap(ILaunchPluginService::name, Function.identity()));
         final var modlist = plugins.entrySet().stream().map(e->Map.of(
@@ -76,7 +77,7 @@ public class LaunchPluginHandler {
         return phaseObjectEnumMap;
     }
 
-    void offerScanResultsToPlugins(List<NamedPath> scanResults) {
+    void offerScanResultsToPlugins(List<SecureJar> scanResults) {
         plugins.forEach((n,p)->p.addResources(scanResults));
     }
 
@@ -95,7 +96,7 @@ public class LaunchPluginHandler {
         return flags;
     }
 
-    void announceLaunch(final TransformingClassLoader transformerLoader, final Path[] specialPaths) {
+    void announceLaunch(final TransformingClassLoader transformerLoader, final NamedPath[] specialPaths) {
         plugins.forEach((k, p)->p.initializeLaunch((s->transformerLoader.buildTransformedClassNodeFor(s, k)), specialPaths));
     }
 }

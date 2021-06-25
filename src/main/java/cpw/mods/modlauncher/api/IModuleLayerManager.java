@@ -1,7 +1,7 @@
 /*
  * ModLauncher - for launching Java programs with in-flight transformation ability.
  *
- *     Copyright (C) 2017-2019 cpw
+ *     Copyright (C) 2017-2021 cpw
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -18,13 +18,25 @@
 
 package cpw.mods.modlauncher.api;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
-public interface ITransformingClassLoader<T extends ClassLoader & ITransformingClassLoader<T>> {
-    @SuppressWarnings("unchecked")
-    default T getInstance() {
-        return (T)this;
+public interface IModuleLayerManager {
+    Optional<ModuleLayer> getLayer(Layer layer);
+
+    enum Layer {
+        BOOT(),
+        SERVICE(BOOT),
+        PLUGIN(BOOT),
+        GAME(PLUGIN, SERVICE);
+
+        private final Layer[] parent;
+
+        Layer(final Layer... parent) {
+            this.parent = parent;
+        }
+
+        public Layer[] getParent() {
+            return parent;
+        }
     }
-
-    void addTargetPackageFilter(Predicate<String> filter);
 }

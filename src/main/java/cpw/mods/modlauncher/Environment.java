@@ -53,6 +53,11 @@ public final class Environment implements IEnvironment {
     }
 
     @Override
+    public Optional<IModuleLayerManager> findModuleLayerManager() {
+        return launcher.findLayerManager();
+    }
+
+    @Override
     public Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(final String targetMapping) {
         return launcher.findNameMapping(targetMapping);
     }

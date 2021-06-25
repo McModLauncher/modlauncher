@@ -74,8 +74,7 @@ public class TransformationServiceDecorator {
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
-                t ->
-                {
+                t ->{
                     final Type[] genericInterfaces = t.getClass().getGenericInterfaces();
                     for (Type typ : genericInterfaces) {
                         ParameterizedType pt = (ParameterizedType) typ;
@@ -109,9 +108,9 @@ public class TransformationServiceDecorator {
         return service;
     }
 
-    List<NamedPath> runScan(final Environment environment) {
+    List<ITransformationService.Resource> runScan(final Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
-        final List<NamedPath> scanResults = this.service.runScan(environment);
+        final List<ITransformationService.Resource> scanResults = this.service.beginScanning(environment);
         LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
         return scanResults;
     }
@@ -170,5 +169,9 @@ public class TransformationServiceDecorator {
             }
         }
         return Optional.empty();
+    }
+
+    public List<ITransformationService.Resource> onCompleteScan(IModuleLayerManager moduleLayerManager) {
+        return this.service.completeScan(moduleLayerManager);
     }
 }

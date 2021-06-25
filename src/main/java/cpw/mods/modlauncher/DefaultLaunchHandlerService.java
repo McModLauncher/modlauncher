@@ -45,10 +45,10 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader) {
+    public Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer) {
 
         return () -> {
-            final Class<?> mcClass = Class.forName("net.minecraft.client.main.Main", true, launchClassLoader.getInstance());
+            final Class<?> mcClass = Class.forName(gameLayer.findModule("minecraft").orElseThrow(), "net.minecraft.client.main.Main");
             final Method mcClassMethod = mcClass.getMethod("main", String[].class);
             mcClassMethod.invoke(null, (Object) arguments);
             return null;
@@ -56,7 +56,7 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Path[] getPaths() {
-        return new Path[] {FileSystems.getDefault().getPath(LAUNCH_PATH_STRING)};
+    public NamedPath[] getPaths() {
+        return new NamedPath[] {new NamedPath("launch",FileSystems.getDefault().getPath(LAUNCH_PATH_STRING))};
     }
 }

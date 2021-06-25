@@ -29,7 +29,7 @@ public interface ILaunchHandlerService {
 
     void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder);
 
-    Callable<Void> launchService(String[] arguments, ITransformingClassLoader launchClassLoader);
+    Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer);
 
-    default Path[] getPaths() { return new Path[0]; }
+    default NamedPath[] getPaths() { return new NamedPath[0]; }
 }
