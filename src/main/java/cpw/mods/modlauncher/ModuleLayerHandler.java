@@ -29,7 +29,6 @@ import java.lang.module.ModuleFinder;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
     record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
@@ -76,6 +75,7 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
         final var classLoader = classLoaderSupplier.apply(newConf, allParents);
         final var modController = ModuleLayer.defineModules(newConf, Arrays.stream(layer.getParent()).map(completedLayers::get).map(LayerInfo::layer).toList(), f->classLoader);
         completedLayers.put(layer, new LayerInfo(modController.layer(), classLoader));
+        classLoader.setFallbackClassLoader(completedLayers.get(Layer.BOOT).cl());
         return new LayerInfo(modController.layer(), classLoader);
     }
     public LayerInfo buildLayer(final Layer layer) {
