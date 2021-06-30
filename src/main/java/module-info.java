@@ -6,7 +6,7 @@ module cpw.mods.modlauncher {
     requires jopt.simple;
     requires cpw.mods.securejarhandler;
     requires static org.jetbrains.annotations;
-    exports cpw.mods.modlauncher.log to org.apache.logging.log4j.core;
+    exports cpw.mods.modlauncher.log;
     exports cpw.mods.modlauncher.serviceapi;
     exports cpw.mods.modlauncher.api;
     exports cpw.mods.modlauncher.util;
