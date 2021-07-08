@@ -41,7 +41,7 @@ public class ArgumentHandler {
     Path setArgs(String[] args) {
         this.args = args;
         final OptionParser parser = new OptionParser();
-        final ArgumentAcceptingOptionSpec<Path> gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
+        final ArgumentAcceptingOptionSpec<Path> gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
         parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
         return optionSet.valueOf(gameDir);
@@ -51,7 +51,7 @@ public class ArgumentHandler {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         profileOption = parser.accepts("version", "The version we launched with").withRequiredArg();
-        gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
+        gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
         assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
