@@ -20,9 +20,11 @@ package cpw.mods.modlauncher.benchmarks;
 
 import cpw.mods.modlauncher.ClassTransformer;
 import cpw.mods.modlauncher.LaunchPluginHandler;
+import cpw.mods.modlauncher.ModuleLayerHandler;
 import cpw.mods.modlauncher.TransformStore;
 import cpw.mods.modlauncher.TransformerAuditTrail;
 import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.objectweb.asm.Type;
@@ -34,7 +36,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,13 +55,12 @@ public class TransformBenchmark {
     @Setup
     public void setup() {
         final TransformStore transformStore = new TransformStore();
-        final LaunchPluginHandler lph = new LaunchPluginHandler(null);
+        final LaunchPluginHandler lph = Whitebox.newInstance(LaunchPluginHandler.class);
         classTransformer = uncheck(()->Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null}));
         transform = uncheck(()->classTransformer.getClass().getDeclaredMethod("transform", byte[].class, String.class,String.class));
         transform.setAccessible(true);
-        LaunchPluginHandler pluginHandler = Whitebox.getInternalState(classTransformer, "pluginHandler");
-        Map<String, ILaunchPluginService> plugins = Whitebox.getInternalState(pluginHandler, "plugins");
-        try (InputStream is = getClass().getResourceAsStream("/cpw/mods/modlauncher/testjar/TestClass.class")) {
+        Map<String, ILaunchPluginService> plugins = new HashMap<>();
+        try (InputStream is = Files.newInputStream(Paths.get("./build/classes/java/testJars/cpw/mods/modlauncher/testjar/TestClass.class"))) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buf = new byte[2048];
             while (is.read(buf) >= 0) {
@@ -86,6 +91,7 @@ public class TransformBenchmark {
                 return EnumSet.of(Phase.BEFORE, Phase.AFTER);
             }
         });
+        Whitebox.setInternalState(lph, "plugins", plugins);
     }
 
     @Benchmark

@@ -80,6 +80,7 @@ dependencies {
     jmh("org.ow2.asm:asm:${asmVersion}")
     jmh('org.openjdk.jmh:jmh-core:1.32')
     jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
+    jmh('org.apache.logging.log4j:log4j-core:2.14.1') //Need this here so log4j finds the caller class
 }
 
 task testsJar(type: Jar) {
@@ -105,6 +106,7 @@ jmh {
 }
 
 tasks['jmh'].dependsOn(clean)
+tasks['jmh'].dependsOn(compileTestJarsJava)
 
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
