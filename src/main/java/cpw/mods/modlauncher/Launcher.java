@@ -22,6 +22,7 @@ import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -48,6 +49,7 @@ public class Launcher {
 
     private Launcher() {
         INSTANCE = this;
+        LoggerFactory.getILoggerFactory(); //This hack bootstraps SLF4J while we're still on MC-BOOTSTRAP, where the SLF4J Providers can be ServiceLoaded
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}", ()->IEnvironment.class.getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
         this.moduleLayerHandler = new ModuleLayerHandler();
         this.launchService = new LaunchServiceHandler(this.moduleLayerHandler);
