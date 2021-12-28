@@ -1,11 +1,12 @@
 import java.text.SimpleDateFormat
 
 plugins {
-    id 'org.ajoberstar.grgit' version '4.1.0'
     id 'com.github.ben-manes.versions' version '0.39.0'
+    id 'net.minecraftforge.gradleutils' version '2.+'
     id 'me.champeau.jmh' version '0.6.5'
     id 'org.javamodularity.moduleplugin' version '1.8.7' apply false
 }
+
 apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
@@ -55,7 +56,8 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 //    targetCompatibility = JavaVersion.VERSION_16
 //}
 
-version = grgit.describe(longDescr: true).split('-').with { "${it[0]}.${it[1]}" }
+version = gradleutils.getTagOffsetVersion()
+logger.lifecycle('Version: ' + version)
 
 dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
@@ -111,22 +113,22 @@ ext.sharedManifest = manifest {
                 'Specification-Vendor': 'forge',
                 'Specification-Version': '8.0', // We are version 7 of the modlauncher specification
                 'Implementation-Title': project.name,
-                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
+                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
-                'Git-Commit': grgit.head().abbreviatedId,
-                'Git-Branch': grgit.branch.current().getName(),
+                'Git-Commit': gradleutils.gitInfo.abbreviatedId,
+                'Git-Branch': gradleutils.gitInfo.branch,
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}" ],
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
                 'Specification-Version': '8.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
-                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${grgit.branch.current().getName()}.${grgit.head().abbreviatedId}",
+                'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
-                'Git-Commit': grgit.head().abbreviatedId,
-                'Git-Branch': grgit.branch.current().getName(),
+                'Git-Commit': gradleutils.gitInfo.abbreviatedId,
+                'Git-Branch': gradleutils.gitInfo.branch,
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}"],
             'cpw/mods/modlauncher/serviceapi/')
 }
@@ -155,15 +157,15 @@ publishing {
             pom {
                 name = 'Mod Launcher'
                 description = 'Common ModLauncher framework'
-                url = 'https://github.com/cpw/modlauncher'
+                url = 'https://github.com/McModLauncher/modlauncher'
                 scm {
-                    url = 'https://github.com/cpw/modlauncher'
-                    connection = 'scm:git:git://github.com/cpw/modlauncher.git'
-                    developerConnection = 'scm:git:git@github.com:cpw/modlauncher.git'
+                    url = 'https://github.com/McModLauncher/modlauncher'
+                    connection = 'scm:git:git://github.com/McModLauncher/modlauncher.git'
+                    developerConnection = 'scm:git:git@github.com:McModLauncher/modlauncher.git'
                 }
                 issueManagement {
                     system = 'github'
-                    url = 'https://github.com/cpw/modlauncher/issues'
+                    url = 'https://github.com/McModLauncher/modlauncher/issues'
                 }
 
                 developers {
@@ -176,15 +178,6 @@ publishing {
         }
     }
     repositories {
-        maven {
-            authentication {
-                basic(BasicAuthentication)
-            }
-            credentials {
-                username = System.env.MAVEN_USER ?: 'not'
-                password = System.env.MAVEN_PASSWORD ?: 'set'
-            }
-            url 'https://maven.minecraftforge.net/releases/'
-        }
+        maven gradleutils.getPublishingForgeMaven()
     }
 }
