@@ -17,3 +17,6 @@ hs_err_pid*
 !/gradle/wrapper/gradle-wrapper.jar
 /out/
 /modlauncher.iml
+/test/gamedir/config/fml.toml
+/.run/testfulllaunch.run.xml
+/tests.txt
