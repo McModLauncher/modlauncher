@@ -20,8 +20,6 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -32,7 +30,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class TransformerClassWriter extends ClassWriter {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, String> CLASS_PARENTS = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> CLASS_HIERARCHIES = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> IS_INTERFACE = new ConcurrentHashMap<>();
@@ -157,7 +154,7 @@ class TransformerClassWriter extends ClassWriter {
                 computeHierarchyFromClass(className, Class.forName(className.replace('/', '.'), false, classTransformer.getTransformingClassLoader()));
             } catch (ClassNotFoundException classNotFoundException) {
                 classNotFoundException.addSuppressed(e);
-                LOGGER.fatal("Failed to find class {} ", className, classNotFoundException);
+                LogHelper.fatal(LogHelper.MODLAUNCHER, "Failed to find class {} ", ()->className, ()->classNotFoundException);
                 throw new RuntimeException("Cannot find class " + className, classNotFoundException);
             }
         }

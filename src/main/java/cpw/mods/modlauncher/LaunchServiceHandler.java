@@ -20,25 +20,22 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.LogMarkers.*;
+import static cpw.mods.modlauncher.LogHelper.*;
 
 /**
  * Identifies the launch target and dispatches to it
  */
 class LaunchServiceHandler {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<String, LaunchServiceHandlerDecorator> launchHandlerLookup;
 
     public LaunchServiceHandler(final ModuleLayerHandler layerHandler) {
-        this.launchHandlerLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchHandlerService.class), sce -> LOGGER.fatal("Encountered serious error loading transformation service, expect problems", sce))
+        this.launchHandlerLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchHandlerService.class), sce -> LogHelper.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", ()->sce))
                 .collect(Collectors.toMap(ILaunchHandlerService::name, LaunchServiceHandlerDecorator::new));
-        LOGGER.debug(MODLAUNCHER,"Found launch services [{}]", () -> String.join(",",launchHandlerLookup.keySet()));
+        LogHelper.debug(MODLAUNCHER,"Found launch services [{}]", () -> String.join(",",launchHandlerLookup.keySet()));
     }
 
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
@@ -49,7 +46,7 @@ class LaunchServiceHandler {
         final LaunchServiceHandlerDecorator launchServiceHandlerDecorator = launchHandlerLookup.get(target);
         final NamedPath[] paths = launchServiceHandlerDecorator.getService().getPaths();
         launchPluginHandler.announceLaunch(classLoader, paths);
-        LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
+        LogHelper.info(MODLAUNCHER, "Launching target '{}' with arguments {}", ()->target, ()->hideAccessToken(arguments));
         launchServiceHandlerDecorator.launch(arguments, gameLayer);
     }
 
@@ -81,8 +78,8 @@ class LaunchServiceHandler {
 
     void validateLaunchTarget(final ArgumentHandler argumentHandler) {
         if (!launchHandlerLookup.containsKey(argumentHandler.getLaunchTarget())) {
-            LOGGER.error(MODLAUNCHER, "Cannot find launch target {}, unable to launch",
-                    argumentHandler.getLaunchTarget());
+            LogHelper.error(MODLAUNCHER, "Cannot find launch target {}, unable to launch",
+                    argumentHandler::getLaunchTarget);
             throw new RuntimeException("Cannot find launch target");
         }
     }

@@ -19,19 +19,16 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.*;
 
 import java.util.*;
 
-import static cpw.mods.modlauncher.LogMarkers.*;
+import static cpw.mods.modlauncher.LogHelper.*;
 
 /**
  * Transformer store - holds all the transformers
  */
 public class TransformStore {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final Set<String> classNeedsTransforming = new HashSet<>();
     private final EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers;
 
@@ -61,7 +58,7 @@ public class TransformStore {
 
     @SuppressWarnings("unchecked")
     <T> void addTransformer(TransformTargetLabel targetLabel, ITransformer<T> transformer, ITransformationService service) {
-        LOGGER.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
+        LogHelper.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
         classNeedsTransforming.add(targetLabel.getClassName().getInternalName());
         final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getLabelType());
         transformList.addTransformer(targetLabel, new TransformerHolder<>(transformer, service));

@@ -20,14 +20,12 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.*;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import org.powermock.reflect.*;
+import org.slf4j.MarkerFactory;
 
 import java.nio.file.*;
 import java.util.*;
@@ -40,10 +38,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClassTransformerTests {
     @Test
     void testClassTransformer() throws Exception {
-//        Configurator.setRootLevel(Level.TRACE);
-//        System.setProperty("modlauncher.logging.marker.classdump", "ACCEPT");
-        MarkerManager.getMarker("CLASSDUMP");
-        Configurator.setLevel(ClassTransformer.class.getName(), Level.TRACE);
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
+        MarkerFactory.getMarker("CLASSDUMP");
         final TransformStore transformStore = new TransformStore();
         final LaunchPluginHandler lph = new LaunchPluginHandler(null);
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});

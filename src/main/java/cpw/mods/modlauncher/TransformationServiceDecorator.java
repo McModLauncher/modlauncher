@@ -19,25 +19,21 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.*;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.*;
 
-import static cpw.mods.modlauncher.LogMarkers.*;
+import static cpw.mods.modlauncher.LogHelper.*;
 
 /**
  * Decorates {@link cpw.mods.modlauncher.api.ITransformationService} to track state and other runtime metadata.
  */
 public class TransformationServiceDecorator {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final ITransformationService service;
     private boolean isValid;
     private static Set<String> classPrefixes = new HashSet<>();
@@ -49,12 +45,12 @@ public class TransformationServiceDecorator {
 
     void onLoad(IEnvironment env, Set<String> otherServices) {
         try {
-            LOGGER.debug(MODLAUNCHER,"Loading service {}", this.service::name);
+            LogHelper.debug(MODLAUNCHER,"Loading service {}", this.service::name);
             this.service.onLoad(env, otherServices);
             this.isValid = true;
-            LOGGER.debug(MODLAUNCHER,"Loaded service {}", this.service::name);
+            LogHelper.debug(MODLAUNCHER,"Loaded service {}", this.service::name);
         } catch (IncompatibleEnvironmentException e) {
-            LOGGER.error(MODLAUNCHER,"Service failed to load {}", this.service.name(), e);
+            LogHelper.error(MODLAUNCHER,"Service failed to load {}", this.service::name, ()->e);
             this.isValid = false;
         }
     }
@@ -64,13 +60,13 @@ public class TransformationServiceDecorator {
     }
 
     void onInitialize(IEnvironment environment) {
-        LOGGER.debug(MODLAUNCHER,"Initializing transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"Initializing transformation service {}", this.service::name);
         this.service.initialize(environment);
-        LOGGER.debug(MODLAUNCHER,"Initialized transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"Initialized transformation service {}", this.service::name);
     }
 
     public void gatherTransformers(TransformStore transformStore) {
-        LOGGER.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
@@ -95,13 +91,13 @@ public class TransformationServiceDecorator {
                 if (targets.isEmpty()) continue;
                 final Map<TransformTargetLabel.LabelType, List<TransformTargetLabel>> labelTypeListMap = targets.stream().map(TransformTargetLabel::new).collect(Collectors.groupingBy(TransformTargetLabel::getLabelType));
                 if (labelTypeListMap.keySet().size() > 1 || labelTypes.stream().noneMatch(labelTypeListMap::containsKey)) {
-                    LOGGER.error(MODLAUNCHER,"Invalid target {} for transformer {}", labelTypes, xform);
+                    LogHelper.error(MODLAUNCHER,"Invalid target {} for transformer {}", ()->labelTypes, ()->xform);
                     throw new IllegalArgumentException("The transformer contains invalid targets");
                 }
                 labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform, service));
             }
         }
-        LOGGER.debug(MODLAUNCHER,"Initialized transformers for transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"Initialized transformers for transformation service {}", this.service::name);
     }
 
     ITransformationService getService() {
@@ -109,9 +105,9 @@ public class TransformationServiceDecorator {
     }
 
     List<ITransformationService.Resource> runScan(final Environment environment) {
-        LOGGER.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"Beginning scan trigger - transformation service {}", this.service::name);
         final List<ITransformationService.Resource> scanResults = this.service.beginScanning(environment);
-        LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
+        LogHelper.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
         return scanResults;
     }
 
@@ -133,7 +129,7 @@ public class TransformationServiceDecorator {
                             s.indexOf('.') <= 0).
                     collect(Collectors.toSet());
             if (!badPrefixes.isEmpty()) {
-                badPrefixes.forEach(s -> LOGGER.error("Illegal prefix specified for {} : {}", this.service.name(), s));
+                badPrefixes.forEach(s -> LogHelper.error(MODLAUNCHER,"Illegal prefix specified for {} : {}", this.service::name, ()->s));
                 throw new IllegalArgumentException("Bad prefixes specified");
             }
             classPrefixes.addAll(classesLocator.getKey());
@@ -146,7 +142,7 @@ public class TransformationServiceDecorator {
                     filter(s -> s.endsWith(".class") || resourceNames.contains(s)).
                     collect(Collectors.toSet());
             if (!badResourceNames.isEmpty()) {
-                badResourceNames.forEach(s -> LOGGER.error("Illegal resource name specified for {} : {}", this.service.name(), s));
+                badResourceNames.forEach(s -> LogHelper.error(MODLAUNCHER, "Illegal resource name specified for {} : {}", this.service::name, ()->s));
                 throw new IllegalArgumentException("Bad resources specified");
             }
             resourceNames.addAll(resourcesLocator.getKey());

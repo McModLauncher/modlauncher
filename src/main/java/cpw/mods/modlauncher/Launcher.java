@@ -20,7 +20,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.LoggerFactory;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.nio.file.Path;
@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import static cpw.mods.modlauncher.LogMarkers.*;
+import static cpw.mods.modlauncher.LogHelper.*;
 
 /**
  * Entry point for the ModLauncher.
@@ -48,7 +48,10 @@ public class Launcher {
 
     private Launcher() {
         INSTANCE = this;
-        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}", ()->IEnvironment.class.getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"));
+        LogHelper.info(MODLAUNCHER, "ModLauncher {} starting: java version {} by {}",
+                        ()->IEnvironment.class.getPackage().getImplementationVersion(),
+                        () -> System.getProperty("java.version"),
+                        ()->System.getProperty("java.vendor"));
         this.moduleLayerHandler = new ModuleLayerHandler();
         this.launchService = new LaunchServiceHandler(this.moduleLayerHandler);
         this.blackboard = new TypesafeMap();
@@ -73,7 +76,7 @@ public class Launcher {
             """, System.getProperty("java.vendor"));
             throw new IllegalStateException("Open J9 is not supported");
         }
-        LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
+        LogHelper.info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         new Launcher().run(args);
     }
 

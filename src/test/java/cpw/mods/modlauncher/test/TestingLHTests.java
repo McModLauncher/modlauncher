@@ -19,8 +19,8 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.*;
-import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.*;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
@@ -38,7 +38,7 @@ public class TestingLHTests {
             new Runnable() {
                 @Override
                 public void run() {
-                    LogManager.getLogger().info("Hello", new Throwable());
+                    LoggerFactory.getLogger("MODLAUNCHER").info("Hello", new Throwable());
                 }
             }.run();
             return null;

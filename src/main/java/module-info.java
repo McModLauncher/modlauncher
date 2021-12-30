@@ -1,12 +1,10 @@
 module cpw.mods.modlauncher {
     requires java.base;
-    requires org.apache.logging.log4j;
+    requires org.slf4j;
     requires org.objectweb.asm.tree;
-    requires org.apache.logging.log4j.core;
     requires jopt.simple;
     requires cpw.mods.securejarhandler;
     requires static org.jetbrains.annotations;
-    exports cpw.mods.modlauncher.log;
     exports cpw.mods.modlauncher.serviceapi;
     exports cpw.mods.modlauncher.api;
     exports cpw.mods.modlauncher.util;

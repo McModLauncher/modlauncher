@@ -23,8 +23,6 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
@@ -34,15 +32,14 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static cpw.mods.modlauncher.LogMarkers.*;
+import static cpw.mods.modlauncher.LogHelper.*;
 
 public class LaunchPluginHandler {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler(final ModuleLayerHandler layerHandler) {
         this.plugins = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchPluginService.class),
-                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e))
+                e->LogHelper.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", ()->e))
                 .collect(Collectors.toMap(ILaunchPluginService::name, Function.identity()));
         final var modlist = plugins.entrySet().stream().map(e->Map.of(
                 "name", e.getKey(),
@@ -55,7 +52,7 @@ public class LaunchPluginHandler {
                         throw new RuntimeException("The MODLIST isn't set, huh?");
                     });
         }
-        LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
+        LogHelper.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
     }
 
     public Optional<ILaunchPluginService> get(final String name) {
@@ -73,7 +70,7 @@ public class LaunchPluginHandler {
                 }
             }
         }
-        LOGGER.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap);
+        LogHelper.debug(LAUNCHPLUGIN, "LaunchPluginService {}", ()->phaseObjectEnumMap);
         return phaseObjectEnumMap;
     }
 
@@ -84,15 +81,16 @@ public class LaunchPluginHandler {
     int offerClassNodeToPlugins(final ILaunchPluginService.Phase phase, final List<ILaunchPluginService> plugins, @Nullable final ClassNode node, final Type className, TransformerAuditTrail auditTrail, final String reason) {
         int flags = 0;
         for (ILaunchPluginService iLaunchPluginService : plugins) {
-            LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService.name(), className.getClassName());
+            LogHelper.debug(LAUNCHPLUGIN, "LauncherPluginService {} offering transform {}", iLaunchPluginService::name, className::getClassName);
             final int pluginFlags = iLaunchPluginService.processClassWithFlags(phase, node, className, reason);
             if (pluginFlags != ILaunchPluginService.ComputeFlags.NO_REWRITE) {
                 auditTrail.addPluginAuditTrail(className.getClassName(), iLaunchPluginService, phase);
-                LOGGER.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute flags {}", iLaunchPluginService.name(), className.getClassName(), pluginFlags);
+                LogHelper.debug(LAUNCHPLUGIN, "LauncherPluginService {} transformed {} with class compute flags {}", iLaunchPluginService::name, className::getClassName, ()->pluginFlags);
                 flags |= pluginFlags;
             }
         }
-        LOGGER.debug(LAUNCHPLUGIN, "Final flags state for {} is {}", className.getClassName(), flags);
+        final int finalFlags = flags;
+        LogHelper.debug(LAUNCHPLUGIN, "Final flags state for {} is {}", className::getClassName, ()-> finalFlags);
         return flags;
     }
 
