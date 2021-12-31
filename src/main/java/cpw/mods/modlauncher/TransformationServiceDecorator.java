@@ -77,8 +77,7 @@ public class TransformationServiceDecorator {
                 t ->{
                     final Type[] genericInterfaces = t.getClass().getGenericInterfaces();
                     for (Type typ : genericInterfaces) {
-                        ParameterizedType pt = (ParameterizedType) typ;
-                        if (pt.getRawType().equals(ITransformer.class)) {
+                        if (typ instanceof ParameterizedType pt && pt.getRawType().equals(ITransformer.class)) {
                             return pt.getActualTypeArguments()[0];
                         }
                     }
