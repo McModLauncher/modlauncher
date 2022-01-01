@@ -48,7 +48,7 @@ compileTestJava {
 }
 
 group = 'cpw.mods'
-ext.asmVersion = 9.1
+ext.asmVersion = 9.2
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 //compileJava {

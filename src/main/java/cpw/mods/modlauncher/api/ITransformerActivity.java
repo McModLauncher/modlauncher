@@ -18,6 +18,10 @@
 
 package cpw.mods.modlauncher.api;
 
+import java.lang.reflect.Field;
+
+import org.objectweb.asm.Opcodes;
+
 public interface ITransformerActivity {
     /**
      * reason will be set to this value when TransformerClassWriter is trying to compute frames by loading the class
@@ -30,11 +34,33 @@ public interface ITransformerActivity {
      */
     String CLASSLOADING_REASON = "classloading";
 
+    /**
+     * the maximum ASM API version
+     */
+    int ASMAPI_VERSION = detectMaxASMAPIVersion();
+
     String[] getContext();
 
     Type getType();
 
     String getActivityString();
+
+    private static int detectMaxASMAPIVersion() {
+        int version = Opcodes.ASM4;
+        for (Field field : Opcodes.class.getDeclaredFields()) {
+            if (field.getType() == int.class && field.getName().startsWith("ASM")) {
+                if (field.getName().endsWith("_EXPERIMENTAL")) {
+                    break;
+                }
+                try {
+                    version = Math.max(version, field.getInt(null));
+                } catch (Exception e) {
+                    throw new RuntimeException(e); // should never happen
+                }
+            }
+        }
+        return version;
+    }
 
     enum Type {
         PLUGIN("pl"), TRANSFORMER("xf"), REASON("re");

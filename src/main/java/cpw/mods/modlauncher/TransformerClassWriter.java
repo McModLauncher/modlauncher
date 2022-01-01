@@ -166,7 +166,7 @@ class TransformerClassWriter extends ClassWriter {
     private class SuperCollectingVisitor extends ClassVisitor {
 
         public SuperCollectingVisitor() {
-            super(Opcodes.ASM7);
+            super(ITransformerActivity.ASMAPI_VERSION);
         }
 
         @Override

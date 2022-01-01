@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -31,17 +32,17 @@ public class PredicateVisitor extends ClassVisitor {
     private boolean result;
 
     PredicateVisitor(final ITransformerVotingContext.FieldPredicate fieldPredicate) {
-        super(Opcodes.ASM7);
+        super(ITransformerActivity.ASMAPI_VERSION);
         this.fieldPredicate = fieldPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.MethodPredicate methodPredicate) {
-        super(Opcodes.ASM7);
+        super(ITransformerActivity.ASMAPI_VERSION);
         this.methodPredicate = methodPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.ClassPredicate classPredicate) {
-        super(Opcodes.ASM7);
+        super(ITransformerActivity.ASMAPI_VERSION);
         this.classPredicate = classPredicate;
     }
 
