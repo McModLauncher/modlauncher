@@ -82,7 +82,7 @@ public class Launcher {
     }
 
     private void run(String... args) {
-        final Path gameDir = this.argumentHandler.setArgs(args);
+        final Path gameDir = this.argumentHandler.setArgs(args, this.environment);
         this.transformationServicesHandler.discoverServices(gameDir);
         final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
         var bylayer = scanResults.stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
