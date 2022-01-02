@@ -38,28 +38,16 @@ public class ArgumentHandler {
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
 
-    Path setArgs(String[] args, Environment env) {
+    Path setArgs(String[] args) {
         this.args = args;
-        final OptionParser parser = getDefaultParser();
-        
+        final OptionParser parser = new OptionParser();
+        final ArgumentAcceptingOptionSpec<Path> gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
+        parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
-        env.computePropertyIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
-        env.computePropertyIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
-        env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
-        env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
-        env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
-        return optionSet.valueOf(gameDirOption);
+        return optionSet.valueOf(gameDir);
     }
 
-    void processArguments(Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {
-        final OptionParser parser = getDefaultParser();
-        parserConsumer.accept(parser);
-        nonOption = parser.nonOptions();
-        this.optionSet = parser.parse(this.args);
-        resultConsumer.accept(this.optionSet, this::optionResults);
-    }
-    
-    OptionParser getDefaultParser() {
+    void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         profileOption = parser.accepts("version", "The version we launched with").withRequiredArg();
@@ -68,7 +56,16 @@ public class ArgumentHandler {
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
-        return parser;
+
+        parserConsumer.accept(parser);
+        nonOption = parser.nonOptions();
+        this.optionSet = parser.parse(this.args);
+        env.computePropertyIfAbsent(IEnvironment.Keys.VERSION.get(), s -> this.optionSet.valueOf(profileOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.GAMEDIR.get(), f -> this.optionSet.valueOf(gameDirOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
+        env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
+        resultConsumer.accept(this.optionSet, this::optionResults);
     }
 
     Path[] getSpecialJars() {

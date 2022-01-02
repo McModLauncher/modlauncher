@@ -66,7 +66,7 @@ class TransformationServicesHandler {
     private void processArguments(ArgumentHandler argumentHandler, Environment environment) {
         LOGGER.debug(MODLAUNCHER,"Configuring option handling for services");
 
-        argumentHandler.processArguments(this::computeArgumentsForServices, this::offerArgumentResultsToServices);
+        argumentHandler.processArguments(environment, this::computeArgumentsForServices, this::offerArgumentResultsToServices);
     }
 
     private void computeArgumentsForServices(OptionParser parser) {
