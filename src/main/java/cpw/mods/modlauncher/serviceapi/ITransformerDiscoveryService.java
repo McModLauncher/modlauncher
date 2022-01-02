@@ -34,4 +34,17 @@ public interface ITransformerDiscoveryService {
      * @return The list of services
      */
     List<NamedPath> candidates(final Path gameDirectory);
+
+    /**
+     * Return a list of additional paths to be added to transformer service discovery during loading.
+     *
+     * Defaults to calling {@link #candidates(Path)}
+     *
+     * @param gameDirectory The root game directory
+     * @param launchTarget The launch target
+     * @return The list of services
+     */
+    default List<NamedPath> candidates(final Path gameDirectory, final String launchTarget) {
+        return candidates(gameDirectory);
+    }
 }

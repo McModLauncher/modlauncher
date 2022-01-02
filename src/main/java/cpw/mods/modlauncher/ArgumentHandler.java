@@ -38,13 +38,16 @@ public class ArgumentHandler {
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
 
-    Path setArgs(String[] args) {
+    record DiscoveryData(Path gameDir, String launchTarget) {}
+
+    DiscoveryData setArgs(String[] args) {
         this.args = args;
         final OptionParser parser = new OptionParser();
-        final ArgumentAcceptingOptionSpec<Path> gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
+        final var gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
+        final var launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
         parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
-        return optionSet.valueOf(gameDir);
+        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget));
     }
 
     void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {
