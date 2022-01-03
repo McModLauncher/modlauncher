@@ -35,6 +35,7 @@ project {
         text("github_repository_name", "modlauncher", label = "The github repository name. Used to connect to it in VCS Roots.", description = "This is the repository slug on github. So for example `modlauncher` or `MinecraftForge`. It is interpolated into the global VCS Roots.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.PUBLISHED_JAVA_ARTIFACT_ID", "modlauncher", label = "Published artifact id", description = "The maven coordinate artifact id that has been published by this build. Can not be empty.", allowEmpty = false)
         text("env.PUBLISHED_JAVA_GROUP", "cpw.mods", label = "Published group", description = "The maven coordinate group that has been published by this build. Can not be empty.", allowEmpty = false)
+        text("publication_branches_regex", "main.*", label = "Publication Branches Name", description = "The regular expression which is used to match against the branch name to check if the publication on that branch needs to be executed.", allowEmpty = false)
     }
 
     features {
