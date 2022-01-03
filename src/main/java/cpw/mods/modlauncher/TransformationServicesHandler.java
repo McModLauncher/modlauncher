@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 
 
 import java.net.URL;
-import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -117,11 +116,11 @@ class TransformationServicesHandler {
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
     }
 
-    void discoverServices(final Path gameDir) {
+    void discoverServices(final ArgumentHandler.DiscoveryData discoveryData) {
         LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
         var bootLayer = layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow();
         var additionalPaths = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(bootLayer, ITransformerDiscoveryService.class),  sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", sce))
-                .map(s->s.candidates(gameDir))
+                .map(s->s.candidates(discoveryData.gameDir(), discoveryData.launchTarget()))
                 .<NamedPath>mapMulti(Iterable::forEach)
                 .toList();
         LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())));
