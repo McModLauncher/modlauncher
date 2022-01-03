@@ -27,15 +27,15 @@ version = "2021.2"
 
 project {
 
-    buildType(PullRequests)
     buildType(Build)
+    buildType(BuildSecondaryBranches)
+    buildType(PullRequests)
 
     params {
         text("git_main_branch", "main", label = "Git Main Branch", description = "The git main or default branch to use in VCS operations.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("github_repository_name", "modlauncher", label = "The github repository name. Used to connect to it in VCS Roots.", description = "This is the repository slug on github. So for example `modlauncher` or `MinecraftForge`. It is interpolated into the global VCS Roots.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.PUBLISHED_JAVA_ARTIFACT_ID", "modlauncher", label = "Published artifact id", description = "The maven coordinate artifact id that has been published by this build. Can not be empty.", allowEmpty = false)
         text("env.PUBLISHED_JAVA_GROUP", "cpw.mods", label = "Published group", description = "The maven coordinate group that has been published by this build. Can not be empty.", allowEmpty = false)
-        text("publication_branches_regex", "main.*", label = "Publication Branches Name", description = "The regular expression which is used to match against the branch name to check if the publication on that branch needs to be executed.", allowEmpty = false)
     }
 
     features {
@@ -52,6 +52,29 @@ object Build : BuildType({
     id("modlauncher__Build")
     name = "Build"
     description = "Builds and Publishes the main branches of the project."
+})
+
+object BuildSecondaryBranches : BuildType({
+    templates(AbsoluteId("MinecraftForge_SetupGradleUtilsCiEnvironmen"), AbsoluteId("MinecraftForge_BuildWithDiscordNotifications"), AbsoluteId("MinecraftForge_BuildMainBranches"), AbsoluteId("MinecraftForge_BuildUsingGradle"))
+    id("modlauncher__BuildSecondaryBranches")
+    name = "Build - Secondary Branches"
+    description = "Builds and Publishes the secondary branches of the project."
+
+    params {
+        text(
+            "git_branch_spec",
+            """+:ref/heads/(*)
+               -:refs/heads/(develop|release|staging|main|master)
+               -:<default>
+               -:refs/heads/%git_main_branch%
+               -:refs/heads/main*
+            """.trimIndent(),
+            label = "The branch specification of the repository",
+            description = "By default all main branches are build by the configuration. Modify this value to adapt the branches build.",
+            display = ParameterDisplay.HIDDEN,
+            allowEmpty = true
+        )
+    }
 })
 
 object PullRequests : BuildType({
