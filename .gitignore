@@ -20,3 +20,6 @@ hs_err_pid*
 /test/gamedir/config/fml.toml
 /.run/testfulllaunch.run.xml
 /tests.txt
+.project
+.settings/
+.classpath
