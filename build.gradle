@@ -50,7 +50,10 @@ compileTestJava {
 group = 'cpw.mods'
 ext.asmVersion = 9.1
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(16)
+    withSourcesJar()
+}
 //compileJava {
 //    sourceCompatibility = JavaVersion.VERSION_16
 //    targetCompatibility = JavaVersion.VERSION_16
@@ -87,11 +90,6 @@ dependencies {
 task testsJar(type: Jar) {
     archiveClassifier = 'testsjar'
     from sourceSets.testJars.output
-}
-
-task sourcesJar(type: Jar) {
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
 }
 
 jmh {
@@ -134,26 +132,24 @@ ext.sharedManifest = manifest {
 }
 
 jar {
-    manifest = project.manifest {
+    manifest = project.java.manifest {
         from sharedManifest
     }
 }
 
 tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
     options.compilerArgs << '-Xlint:unchecked'
 }
 
 artifacts {
     archives testsJar
-    archives jar
-    archives sourcesJar
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourcesJar
             pom {
                 name = 'Mod Launcher'
                 description = 'Common ModLauncher framework'
