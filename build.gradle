@@ -4,13 +4,53 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.39.0'
     id 'net.minecraftforge.gradleutils' version '2.+'
     id 'me.champeau.jmh' version '0.6.5'
-    id 'org.javamodularity.moduleplugin' version '1.8.7' apply false
 }
 
-apply plugin: 'java-library'
 apply plugin: 'maven-publish'
-apply plugin: 'eclipse'
-apply plugin: 'org.javamodularity.moduleplugin'
+
+ext.asmVersion = 9.1
+
+allprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'eclipse'
+
+    group = 'cpw.mods'
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(16)
+        withSourcesJar()
+    }
+    //compileJava {
+    //    sourceCompatibility = JavaVersion.VERSION_16
+    //    targetCompatibility = JavaVersion.VERSION_16
+    //}
+
+    
+    test {
+        useJUnitPlatform()
+    }
+
+    eclipse {
+        project {
+            if (!project.name.startsWith("${rootProject.name}")) {
+                name = "${rootProject.name}-${project.name}"
+            }
+        }
+        classpath {
+            file.whenMerged { classpath ->
+                classpath.entries.each { entry ->
+                    if (entry instanceof org.gradle.plugins.ide.eclipse.model.Library) {
+                        entry.entryAttributes['module'] = true
+                    } else if (entry instanceof org.gradle.plugins.ide.eclipse.model.SourceFolder) {
+                        def extraReads = ['org.junit.jupiter.api', 'powermock.core', 'powermock.reflect']
+                            .collect { "cpw.mods.modlauncher=$it" }
+                            .join(':')
+                        entry.entryAttributes['add-reads'] = extraReads
+                    }
+                }
+            }
+        }
+    }
+}
 
 repositories {
     mavenLocal()
@@ -18,10 +58,6 @@ repositories {
         name = 'forge'
         url = 'https://maven.minecraftforge.net/'
     }
-}
-
-sourceSets {
-    testJars
 }
 
 def isNonStable = { String version ->
@@ -39,25 +75,14 @@ dependencyUpdates {
 test {
     // exclude all tests for now
     exclude '**/*'
-    useJUnitPlatform()
 }
 
 compileTestJava {
     // exclude all tests - not compatible with modular system
     exclude '/**/*'
+    
+    options.compilerArgs << '--add-modules' << 'ALL-MODULE-PATH' // for tests, we don't have a separate module descriptor, so just read everything
 }
-
-group = 'cpw.mods'
-ext.asmVersion = 9.1
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(16)
-    withSourcesJar()
-}
-//compileJava {
-//    sourceCompatibility = JavaVersion.VERSION_16
-//    targetCompatibility = JavaVersion.VERSION_16
-//}
 
 version = gradleutils.getTagOffsetVersion()
 logger.lifecycle('Version: ' + version)
@@ -75,7 +100,7 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
-    testCompileOnly(sourceSets.testJars.output)
+    testCompileOnly(project(':testjars'))
     testCompileOnly('org.jetbrains:annotations:21.0.1')
     testRuntimeOnly('cpw.mods:bootstraplauncher:0.1.+')
     jmhImplementation('org.powermock:powermock-core:2.0.+')
@@ -85,11 +110,6 @@ dependencies {
     jmh("org.ow2.asm:asm:${asmVersion}")
     jmh('org.openjdk.jmh:jmh-core:1.32')
     jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
-}
-
-task testsJar(type: Jar) {
-    archiveClassifier = 'testsjar'
-    from sourceSets.testJars.output
 }
 
 jmh {
@@ -109,7 +129,7 @@ tasks['jmh'].dependsOn(clean)
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '8.0', // We are version 7 of the modlauncher specification
+                'Specification-Version': '8.0', // We are version 8 of the modlauncher specification
                 'Implementation-Title': project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -120,7 +140,7 @@ ext.sharedManifest = manifest {
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '8.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
+                'Specification-Version': '8.0', // We are version 8 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -142,8 +162,13 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
 }
 
-artifacts {
-    archives testsJar
+compileJava {
+    options.javaModuleVersion = project.version.toString()
+    options.javaModuleMainClass = 'cpw.mods.modlauncher.Launcher'
+   
+    doFirst {
+        options.compilerArgs << '--module-path' << classpath.asPath
+    } 
 }
 
 publishing {
