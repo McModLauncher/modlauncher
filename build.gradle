@@ -29,6 +29,16 @@ allprojects {
         useJUnitPlatform()
     }
 
+    configurations {
+        tWorkaround
+        testCompileOnly {
+            // for some reason, test-only project dependencies aren't registered properly due to an issue with the jmh plugin
+            // so we have our own extra configuration
+            // see https://github.com/melix/jmh-gradle-plugin/issues/216 for details
+            extendsFrom tWorkaround
+        }
+    }
+
     eclipse {
         project {
             if (!project.name.startsWith("${rootProject.name}")) {
@@ -36,12 +46,14 @@ allprojects {
             }
         }
         classpath {
+            plusConfigurations << configurations.tWorkaround // fix handling of test-only dep
             file.whenMerged { classpath ->
                 classpath.entries.each { entry ->
-                    if (entry instanceof org.gradle.plugins.ide.eclipse.model.Library) {
+                    if (entry instanceof org.gradle.plugins.ide.eclipse.model.Library
+                        || entry instanceof org.gradle.plugins.ide.eclipse.model.ProjectDependency) {
                         entry.entryAttributes['module'] = true
                     } else if (entry instanceof org.gradle.plugins.ide.eclipse.model.SourceFolder) {
-                        def extraReads = ['org.junit.jupiter.api', 'powermock.core', 'powermock.reflect']
+                        def extraReads = ['org.junit.jupiter.api', 'powermock.core', 'powermock.reflect', 'cpw.mods.modlauncher.testjars']
                             .collect { "cpw.mods.modlauncher=$it" }
                             .join(':')
                         entry.entryAttributes['add-reads'] = extraReads
@@ -100,7 +112,7 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
-    testCompileOnly(project(':testjars'))
+    tWorkaround(project(':testjars'))
     testCompileOnly('org.jetbrains:annotations:21.0.1')
     testRuntimeOnly('cpw.mods:bootstraplauncher:0.1.+')
     jmhImplementation('org.powermock:powermock-core:2.0.+')
