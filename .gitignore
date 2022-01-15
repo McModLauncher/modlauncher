@@ -27,3 +27,6 @@ hs_err_pid*
 .classpath
 /bin/
 /*/bin/
+
+# TC config
+/.teamcity/target
