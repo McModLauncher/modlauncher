@@ -63,7 +63,7 @@ object BuildSecondaryBranches : BuildType({
     params {
         text(
             "git_branch_spec",
-            """+:ref/heads/(*)
+            """+:refs/heads/(*)
             """.trimIndent(),
             label = "The branch specification of the repository",
             description = "By default all main branches are build by the configuration. Modify this value to adapt the branches build.",
