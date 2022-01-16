@@ -25,23 +25,25 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public class PredicateVisitor extends ClassVisitor {
+    private static final int ASM_API = Opcodes.ASM9;
+    
     private ITransformerVotingContext.MethodPredicate methodPredicate;
     private ITransformerVotingContext.FieldPredicate fieldPredicate;
     private ITransformerVotingContext.ClassPredicate classPredicate;
     private boolean result;
 
     PredicateVisitor(final ITransformerVotingContext.FieldPredicate fieldPredicate) {
-        super(Opcodes.ASM7);
+        super(ASM_API);
         this.fieldPredicate = fieldPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.MethodPredicate methodPredicate) {
-        super(Opcodes.ASM7);
+        super(ASM_API);
         this.methodPredicate = methodPredicate;
     }
 
     PredicateVisitor(final ITransformerVotingContext.ClassPredicate classPredicate) {
-        super(Opcodes.ASM7);
+        super(ASM_API);
         this.classPredicate = classPredicate;
     }
 
