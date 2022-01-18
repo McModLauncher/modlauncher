@@ -48,7 +48,7 @@ compileTestJava {
 }
 
 group = 'cpw.mods'
-ext.asmVersion = 9.1
+ext.asmVersion = 9.2
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 //compileJava {
@@ -67,7 +67,7 @@ dependencies {
     api("org.ow2.asm:asm-commons:${asmVersion}")
     implementation('org.apache.logging.log4j:log4j-api:2.17.1')
     implementation('org.apache.logging.log4j:log4j-core:2.17.1')
-    implementation('cpw.mods:securejarhandler:0.9.+')
+    implementation('cpw.mods:securejarhandler:1.0.+')
     annotationProcessor('org.apache.logging.log4j:log4j-core:2.17.1')
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
@@ -111,7 +111,7 @@ tasks['jmh'].dependsOn(clean)
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '8.0', // We are version 7 of the modlauncher specification
+                'Specification-Version': '9.0', // We are version 9 of the modlauncher specification
                 'Implementation-Title': project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
@@ -122,7 +122,7 @@ ext.sharedManifest = manifest {
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
                 'Specification-Vendor': 'forge',
-                'Specification-Version': '8.0', // We are version 7 of the modlauncher cpw.mods.modlauncher.serviceapi specification
+                'Specification-Version': '9.0', // We are version 9 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
                 'Implementation-Vendor' :'forge',
