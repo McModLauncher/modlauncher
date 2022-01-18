@@ -4,4 +4,6 @@ pluginManagement {
         maven { url = 'https://maven.minecraftforge.net/' }
     }
 }
-rootProject.name="modlauncher"
+rootProject.name = "modlauncher"
+
+include 'testjars'

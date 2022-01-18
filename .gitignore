@@ -10,8 +10,10 @@
 hs_err_pid*
 /.idea/
 /.gradle/
+/*/.gradle/
 /repo/
 /build/
+/*/build/
 /logs/
 
 !/gradle/wrapper/gradle-wrapper.jar
@@ -20,3 +22,11 @@ hs_err_pid*
 /test/gamedir/config/fml.toml
 /.run/testfulllaunch.run.xml
 /tests.txt
+.project
+.settings/
+.classpath
+/bin/
+/*/bin/
+
+# TC config
+/.teamcity/target
