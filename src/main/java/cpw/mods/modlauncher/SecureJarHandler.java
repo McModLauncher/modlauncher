@@ -24,6 +24,8 @@ import org.apache.logging.log4j.LogManager;
 import sun.security.util.ManifestEntryVerifier;
 
 import javax.annotation.Nullable;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,7 +33,9 @@ import java.net.URL;
 import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import static cpw.mods.modlauncher.LogMarkers.CLASSLOADING;
@@ -41,6 +45,7 @@ public class SecureJarHandler {
     private static final Method BEGIN_ENTRY = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("beginEntry", JarEntry.class, ManifestEntryVerifier.class));
     private static final Method UPDATE = LamdbaExceptionUtils.uncheck(()->JVCLASS.getMethod("update", int.class, byte[].class, int.class, int.class, ManifestEntryVerifier.class));
     private static final Field JV;
+    private static final Function<Manifest, ManifestEntryVerifier> MEV_FACTORY;
     static {
         Field jv;
         try {
@@ -52,7 +57,23 @@ public class SecureJarHandler {
             LogManager.getLogger().warn("LEGACY JDK DETECTED, SECURED JAR HANDLING DISABLED");
             jv = null;
         }
+
+        Function<Manifest, ManifestEntryVerifier> mevFactory;
+        try {
+            Constructor<ManifestEntryVerifier> mevConstructor = ManifestEntryVerifier.class.getConstructor(Manifest.class, String.class);
+            mevFactory = LamdbaExceptionUtils.rethrowFunction((manifest) -> mevConstructor.newInstance(manifest, JarFile.MANIFEST_NAME));
+        } catch (NoSuchMethodException e) {
+            try {
+                Constructor<ManifestEntryVerifier> mevConstructor = ManifestEntryVerifier.class.getConstructor(Manifest.class);
+                mevFactory = LamdbaExceptionUtils.rethrowFunction((manifest) -> mevConstructor.newInstance(manifest));
+            } catch (NoSuchMethodException e2) {
+                mevFactory = null;
+                jv = null;
+            }
+        }
+
         JV = jv;
+        MEV_FACTORY = mevFactory;
     }
 
 
@@ -63,7 +84,7 @@ public class SecureJarHandler {
         if (manifest == null) return null;
         if (url == null) return null;
         JarEntry je = new JarEntry(name);
-        ManifestEntryVerifier mev = new ManifestEntryVerifier(manifest);
+        ManifestEntryVerifier mev = MEV_FACTORY.apply(manifest);
         Object obj = LamdbaExceptionUtils.uncheck(()->JV.get(manifest));
         if (obj == null) {
             // we don't have a fully fledged manifest with security info, for some reason (likely loaded by default JAR code, rather than our stuff)
