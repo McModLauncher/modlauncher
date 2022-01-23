@@ -79,6 +79,7 @@ object BuildSecondaryBranches : BuildType({
         branchFilter = """
             +:*
             -:<default>
+            -:main*
         """.trimIndent()
     }
 })
