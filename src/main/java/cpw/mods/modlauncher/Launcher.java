@@ -65,12 +65,12 @@ public class Launcher {
     }
 
     public static void main(String... args) {
-        if (System.getProperty("java.vendor").contains("OpenJ9")) {
+        if (System.getProperty("java.vm.name").contains("OpenJ9")) {
             System.err.printf("""
             You are attempting to run with an unsupported Java Virtual Machine : %s
             Please visit https://adoptopenjdk.net and install the HotSpot variant.
             OpenJ9 is incompatible with several of the transformation behaviours that we rely on to work.
-            """, System.getProperty("java.vendor"));
+            """, System.getProperty("java.vm.name"));
             throw new IllegalStateException("Open J9 is not supported");
         }
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
