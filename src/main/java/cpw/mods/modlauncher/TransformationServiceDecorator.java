@@ -23,9 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Nullable;
-import java.lang.reflect.*;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -73,33 +71,24 @@ public class TransformationServiceDecorator {
         LOGGER.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
         final List<ITransformer> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
-        final Map<Type, List<ITransformer>> transformersByType = transformers.stream().collect(Collectors.groupingBy(
-                t ->{
-                    final Type[] genericInterfaces = t.getClass().getGenericInterfaces();
-                    for (Type typ : genericInterfaces) {
-                        if (typ instanceof ParameterizedType pt && pt.getRawType().equals(ITransformer.class)) {
-                            return pt.getActualTypeArguments()[0];
-                        }
-                    }
-                    throw new RuntimeException("How did a non-transformer get here????");
-                }
-        ));
-        for (Type type : transformersByType.keySet()) {
-            final List<TransformTargetLabel.LabelType> labelTypes = TransformTargetLabel.LabelType.getTypeFor(type);
-            if (labelTypes.isEmpty()) {
-                throw new IllegalArgumentException("Invalid transformer type found");
-            }
-            for (ITransformer<?> xform : transformersByType.get(type)) {
-                final Set<ITransformer.Target> targets = xform.targets();
-                if (targets.isEmpty()) continue;
-                final Map<TransformTargetLabel.LabelType, List<TransformTargetLabel>> labelTypeListMap = targets.stream().map(TransformTargetLabel::new).collect(Collectors.groupingBy(TransformTargetLabel::getLabelType));
-                if (labelTypeListMap.keySet().size() > 1 || labelTypes.stream().noneMatch(labelTypeListMap::containsKey)) {
-                    LOGGER.error(MODLAUNCHER,"Invalid target {} for transformer {}", labelTypes, xform);
+        transformers.forEach(xform -> {
+            final TargetType<?> targetType = xform.getTargetType();
+            Objects.requireNonNull(targetType, "Transformer type must not be null");
+            final Set<ITransformer.Target<?>> targets = xform.targets();
+            if (!targets.isEmpty()) {
+                final Map<TargetType<?>, List<TransformTargetLabel>> targetTypeListMap = targets.stream()
+                    .map(TransformTargetLabel::new)
+                    .collect(Collectors.groupingBy(TransformTargetLabel::getTargetType));
+                if (targetTypeListMap.keySet().size() > 1 || !targetTypeListMap.containsKey(targetType)) {
+                    LOGGER.error(MODLAUNCHER,"Invalid target {} for transformer {}", targetType, xform);
                     throw new IllegalArgumentException("The transformer contains invalid targets");
                 }
-                labelTypeListMap.values().stream().flatMap(Collection::stream).forEach(target -> transformStore.addTransformer(target, xform, service));
+                targetTypeListMap.values()
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .forEach(target -> transformStore.addTransformer(target, xform, service));
             }
-        }
+        });
         LOGGER.debug(MODLAUNCHER,"Initialized transformers for transformation service {}", this.service::name);
     }
 

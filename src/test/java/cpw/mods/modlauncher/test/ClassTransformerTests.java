@@ -106,8 +106,13 @@ class ClassTransformerTests {
 
             @NotNull
             @Override
-            public Set<Target> targets() {
+            public Set<Target<FieldNode>> targets() {
                 return Collections.emptySet();
+            }
+
+            @Override
+            public TargetType<FieldNode> getTargetType() {
+                return TargetType.FIELD;
             }
         };
     }
@@ -131,8 +136,13 @@ class ClassTransformerTests {
 
             @NotNull
             @Override
-            public Set<Target> targets() {
+            public Set<Target<ClassNode>> targets() {
                 return Collections.emptySet();
+            }
+
+            @Override
+            public TargetType<ClassNode> getTargetType() {
+                return TargetType.CLASS;
             }
         };
     }

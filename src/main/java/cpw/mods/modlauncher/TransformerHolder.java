@@ -18,10 +18,7 @@
 
 package cpw.mods.modlauncher;
 
-import cpw.mods.modlauncher.api.ITransformationService;
-import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.ITransformerVotingContext;
-import cpw.mods.modlauncher.api.TransformerVoteResult;
+import cpw.mods.modlauncher.api.*;
 
 import org.jetbrains.annotations.NotNull;
 import java.util.Set;
@@ -49,8 +46,13 @@ public class TransformerHolder<T> implements ITransformer<T> {
 
     @NotNull
     @Override
-    public Set<Target> targets() {
+    public Set<Target<T>> targets() {
         return wrapped.targets();
+    }
+
+    @Override
+    public TargetType<T> getTargetType() {
+        return wrapped.getTargetType();
     }
 
     @Override
