@@ -18,10 +18,10 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.api.*;
-import org.junit.jupiter.api.*;
+import cpw.mods.modlauncher.api.TypesafeMap;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,21 +35,21 @@ class TypesafeMapTests {
         assertThrows(IllegalArgumentException.class,
                 () ->
                 {
-                    TypesafeMap.Key<String> k1 = TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
-                    TypesafeMap.Key<Integer> k2 = TypesafeMap.Key.getOrCreate(context, "testkey1", Integer.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey1", Integer.class);
                 }
         );
 
         assertAll(
                 () ->
                 {
-                    TypesafeMap.Key<String> k1 = TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
-                    TypesafeMap.Key<String> k2 = TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
                 },
                 () ->
                 {
-                    TypesafeMap.Key<String> k1 = TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
-                    TypesafeMap.Key<Integer> k2 = TypesafeMap.Key.getOrCreate(context, "testkey2", Integer.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey1", String.class);
+                    TypesafeMap.Key.getOrCreate(context, "testkey2", Integer.class);
                 }
         );
     }
