@@ -1,29 +1,26 @@
-import java.text.SimpleDateFormat
-
 plugins {
     id 'com.github.ben-manes.versions' version '0.39.0'
     id 'net.minecraftforge.gradleutils' version '2.+'
+    id 'de.jjohannes.extra-java-module-info' version '0.11'
     id 'me.champeau.jmh' version '0.6.5'
+    id 'maven-publish'
 }
-
-apply plugin: 'maven-publish'
-
-ext.asmVersion = 9.1
 
 allprojects {
     apply plugin: 'java-library'
     apply plugin: 'eclipse'
 
     group = 'cpw.mods'
+    
     java {
         toolchain.languageVersion = JavaLanguageVersion.of(16)
         withSourcesJar()
     }
+    
     //compileJava {
     //    sourceCompatibility = JavaVersion.VERSION_16
     //    targetCompatibility = JavaVersion.VERSION_16
     //}
-
 
     test {
         useJUnitPlatform()
@@ -84,40 +81,33 @@ dependencyUpdates {
     }
 }
 
-test {
-    // exclude all tests for now
-    exclude '**/*'
-}
-
-compileTestJava {
-    // exclude all tests - not compatible with modular system
-    exclude '/**/*'
-
-    options.compilerArgs << '--add-modules' << 'ALL-MODULE-PATH' // for tests, we don't have a separate module descriptor, so just read everything
-}
-
-group = 'cpw.mods'
 ext.asmVersion = 9.2
 
 version = gradleutils.getTagOffsetVersion()
 logger.lifecycle('Version: ' + version)
 
 dependencies {
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    compileOnly('org.jetbrains:annotations:21.0.1')
     api("org.ow2.asm:asm:${asmVersion}")
     api("org.ow2.asm:asm-tree:${asmVersion}")
     api("org.ow2.asm:asm-commons:${asmVersion}")
+    
+    implementation('cpw.mods:securejarhandler:1.0.+')
     implementation('org.apache.logging.log4j:log4j-api:2.17.1')
     implementation('org.apache.logging.log4j:log4j-core:2.17.1')
-    implementation('cpw.mods:securejarhandler:1.0.+')
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
+    compileOnly('org.jetbrains:annotations:21.0.1')
+    
     annotationProcessor('org.apache.logging.log4j:log4j-core:2.17.1')
+    
+    testImplementation project(':testjars')
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
-    testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
-    tWorkaround(project(':testjars'))
+    testImplementation('org.powermock:powermock-core:2.0.+')
+    testImplementation('org.powermock:powermock-reflect:2.0.+')
     testCompileOnly('org.jetbrains:annotations:21.0.1')
-    testRuntimeOnly('cpw.mods:bootstraplauncher:0.1.+')
+    
+    tWorkaround(project(':testjars'))
+    
     jmhImplementation('org.powermock:powermock-core:2.0.+')
     jmhImplementation("org.ow2.asm:asm:${asmVersion}")
     jmhImplementation("org.ow2.asm:asm-tree:${asmVersion}")
@@ -125,6 +115,25 @@ dependencies {
     jmh("org.ow2.asm:asm:${asmVersion}")
     jmh('org.openjdk.jmh:jmh-core:1.32')
     jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
+}
+
+extraJavaModuleInfo {
+    automaticModule('javassist-3.27.0-GA.jar', 'javassist')
+    automaticModule('powermock-core-2.0.9.jar', 'powermock.core')
+    automaticModule('powermock-reflect-2.0.9.jar', 'powermock.reflect')
+    automaticModule('jopt-simple-5.0.4.jar', 'jopt.simple')
+}
+
+test {
+    dependsOn ':testjars:jar'
+
+    def testjar = project(':testjars').jar.archiveFile.get().asFile
+    systemProperty 'testJars.location', testjar
+    
+    jvmArgs(
+            '--module-path', classpath.asPath,
+            '--add-modules', 'ALL-MODULE-PATH'
+    )
 }
 
 jmh {
@@ -167,9 +176,7 @@ ext.sharedManifest = manifest {
 }
 
 jar {
-    manifest = project.java.manifest {
-        from sharedManifest
-    }
+    manifest.from(sharedManifest)
 }
 
 tasks.withType(JavaCompile) {
@@ -180,10 +187,6 @@ tasks.withType(JavaCompile) {
 compileJava {
     options.javaModuleVersion = project.version.toString()
     options.javaModuleMainClass = 'cpw.mods.modlauncher.Launcher'
-
-    doFirst {
-        options.compilerArgs << '--module-path' << classpath.asPath
-    }
 }
 
 publishing {

@@ -20,28 +20,23 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.testjar.ITestServiceLoader;
 import org.junit.jupiter.api.Test;
-import org.powermock.reflect.Whitebox;
 
-import java.io.File;
-import java.util.List;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ClassLoaderAPITest {
+class ClassLoaderAPITest {
     @Test
     void testGetResources() {
-        final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
-        String testJarPath = testJars.get(0);
+        String testJarPath = System.getProperty("testJars.location");
         Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
-        Launcher instance = Launcher.INSTANCE;
-        TransformingClassLoader tcl = Whitebox.getInternalState(instance, "classLoader");
-        final ServiceLoader<ITestServiceLoader> load = ServiceLoader.load(ITestServiceLoader.class, tcl);
+        ModuleLayer layer = Launcher.INSTANCE.findLayerManager()
+            .flatMap(manager -> manager.getLayer(IModuleLayerManager.Layer.BOOT))
+            .orElseThrow();
+        final ServiceLoader<ITestServiceLoader> load = ServiceLoader.load(layer, ITestServiceLoader.class);
         assertTrue(load.iterator().hasNext());
     }
 }

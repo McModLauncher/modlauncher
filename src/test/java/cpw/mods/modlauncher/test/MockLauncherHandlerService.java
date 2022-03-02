@@ -34,7 +34,7 @@ public class MockLauncherHandlerService implements ILaunchHandlerService {
 
     @Override
     public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
-        return;
+
     }
 
     @Override
