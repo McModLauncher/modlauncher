@@ -18,12 +18,14 @@
 
 package cpw.mods.modlauncher.test;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -63,16 +65,22 @@ public class MockTransformerService implements ITransformationService {
 
     }
 
+    @Override
+    public List<Resource> completeScan(IModuleLayerManager layerManager) {
+        SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
+        return List.of(new Resource(IModuleLayerManager.Layer.GAME, List.of(testjar)));
+    }
+
     @NotNull
     @Override
     public List<ITransformer> transformers() {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
-    private static class ClassNodeTransformer implements ITransformer<ClassNode> {
+    static class ClassNodeTransformer implements ITransformer<ClassNode> {
         private final List<String> classNames;
 
-        private ClassNodeTransformer(List<String> classNames) {
+        ClassNodeTransformer(List<String> classNames) {
             this.classNames = classNames;
         }
 

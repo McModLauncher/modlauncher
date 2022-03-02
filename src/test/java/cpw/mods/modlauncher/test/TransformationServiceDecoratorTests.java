@@ -18,17 +18,25 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.*;
-import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.TransformList;
+import cpw.mods.modlauncher.TransformStore;
+import cpw.mods.modlauncher.TransformTargetLabel;
+import cpw.mods.modlauncher.TransformationServiceDecorator;
+import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.ITransformerVotingContext;
+import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.*;
-import org.objectweb.asm.tree.*;
-import org.powermock.reflect.*;
+import org.junit.jupiter.api.Test;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.powermock.reflect.Whitebox;
 
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransformationServiceDecoratorTests {
     private final ClassNodeTransformer classNodeTransformer = new ClassNodeTransformer();

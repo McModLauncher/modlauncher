@@ -18,18 +18,27 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.*;
-import cpw.mods.modlauncher.api.*;
-import joptsimple.*;
-import org.junit.jupiter.api.*;
-import org.powermock.reflect.*;
+import cpw.mods.modlauncher.ArgumentHandler;
+import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.TransformationServiceDecorator;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.ITransformationService;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+import org.junit.jupiter.api.Test;
+import org.powermock.reflect.Whitebox;
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,12 +48,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class LauncherTests {
     @Test
     void testLauncher() throws Exception {
-        final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
-        String testJarPath = testJars.get(0);
+        String testJarPath = System.getProperty("testJars.location");
         Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<ITransformationService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "transformationServices");
-        final List<ITransformationService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
+        final Map<String, TransformationServiceDecorator> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "serviceLookup");
+        final List<ITransformationService> launcherServices = services.values().stream()
+            .map(dec -> Whitebox.<ITransformationService>getInternalState(dec, "service"))
+            .toList();
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
                 () -> assertEquals(MockTransformerService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")

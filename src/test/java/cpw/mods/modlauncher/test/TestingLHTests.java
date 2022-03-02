@@ -18,29 +18,25 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.*;
+import cpw.mods.modlauncher.Launcher;
 import org.apache.logging.log4j.LogManager;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestingLHTests {
+class TestingLHTests {
     boolean calledback;
+    
     @Test
-    public void testTestingLaunchHandler() {
+    void testTestingLaunchHandler() {
         System.setProperty("test.harness", "build/classes/java/testJars");
         System.setProperty("test.harness.callable", "cpw.mods.modlauncher.test.TestingLHTests$TestCallback");
         calledback = false;
         TestCallback.callable = () -> {
             calledback = true;
-            new Runnable() {
-                @Override
-                public void run() {
-                    LogManager.getLogger().info("Hello", new Throwable());
-                }
-            }.run();
+            LogManager.getLogger().info("Hello", new Throwable());
             return null;
         };
         Launcher.main("--version", "1.0", "--launchTarget", "testharness");
