@@ -24,11 +24,15 @@ import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
 
+import java.io.File;
 import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
     record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
@@ -49,7 +53,29 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
     private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
     ModuleLayerHandler() {
-        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), (ModuleClassLoader) getClass().getClassLoader()));
+        ModuleClassLoader cl;
+        ClassLoader classLoader = getClass().getClassLoader();
+        if (classLoader instanceof ModuleClassLoader moduleCl) cl = moduleCl;
+        else {
+            List<Path> paths = Stream.of(System.getProperty("jdk.module.path").split(File.pathSeparator))
+                .map(Path::of)
+                .toList();
+            SecureJar[] jars = ModuleLayer.boot().configuration().modules().stream()
+                .map(m -> m.reference().location()
+                    .map(Path::of)
+                    .filter(paths::contains)
+                    .orElse(null))
+                .filter(Objects::nonNull)
+                .map(SecureJar::from)
+                .toArray(SecureJar[]::new);
+            Collection<String> roots = Arrays.stream(jars)
+                .map(SecureJar::name)
+                .collect(Collectors.toSet());
+            Configuration configuration = Configuration.empty().resolveAndBind(JarModuleFinder.of(jars), ModuleFinder.ofSystem(), roots);
+            cl = new ModuleClassLoader("BOOT", configuration, List.of());
+        }
+
+        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), cl));
     }
 
     void addToLayer(final Layer layer, final SecureJar jar) {
