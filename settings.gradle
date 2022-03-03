@@ -5,5 +5,3 @@ pluginManagement {
     }
 }
 rootProject.name = "modlauncher"
-
-include 'testjars'
