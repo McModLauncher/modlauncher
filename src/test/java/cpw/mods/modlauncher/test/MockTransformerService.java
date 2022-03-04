@@ -18,7 +18,6 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
@@ -94,7 +93,7 @@ public class MockTransformerService implements ITransformationService {
 
     @NotNull
     @Override
-    public List<ITransformer> transformers() {
+    public List<? extends ITransformer<?>> transformers() {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 

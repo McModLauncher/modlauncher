@@ -50,7 +50,7 @@ class TransformingClassLoaderTests {
         MockTransformerService mockTransformerService = new MockTransformerService() {
             @NotNull
             @Override
-            public List<ITransformer<?>> transformers() {
+            public List<? extends ITransformer<?>> transformers() {
                 return Stream.of(new ClassNodeTransformer(List.of(TARGET_CLASS))).collect(Collectors.toList());
             }
         };

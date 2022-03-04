@@ -23,7 +23,6 @@ import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
 
@@ -97,7 +96,7 @@ public interface ITransformationService {
      * you find yourself in.
      */
     @NotNull
-    List<ITransformer> transformers();
+    List<? extends ITransformer<?>> transformers();
 
     /**
      * Allow transformation services to provide additional classes when asked for.

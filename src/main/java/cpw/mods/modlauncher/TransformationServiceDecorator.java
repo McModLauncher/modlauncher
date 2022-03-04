@@ -69,12 +69,12 @@ public class TransformationServiceDecorator {
 
     public void gatherTransformers(TransformStore transformStore) {
         LOGGER.debug(MODLAUNCHER,"Initializing transformers for transformation service {}", this.service::name);
-        final List<ITransformer> transformers = this.service.transformers();
+        final List<? extends ITransformer<?>> transformers = this.service.transformers();
         Objects.requireNonNull(transformers, "The transformers list should not be null");
         transformers.forEach(xform -> {
             final TargetType<?> targetType = xform.getTargetType();
             Objects.requireNonNull(targetType, "Transformer type must not be null");
-            final Set<ITransformer.Target<?>> targets = xform.targets();
+            final Set<? extends ITransformer.Target<?>> targets = xform.targets();
             if (!targets.isEmpty()) {
                 final Map<TargetType<?>, List<TransformTargetLabel>> targetTypeListMap = targets.stream()
                     .map(TransformTargetLabel::new)

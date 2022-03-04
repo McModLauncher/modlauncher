@@ -47,7 +47,7 @@ class TransformationServiceDecoratorTests {
         MockTransformerService mockTransformerService = new MockTransformerService() {
             @NotNull
             @Override
-            public List<ITransformer> transformers() {
+            public List<? extends ITransformer<?>> transformers() {
                 return Stream.of(classNodeTransformer, methodNodeTransformer).collect(Collectors.toList());
             }
         };
