@@ -18,10 +18,10 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.cl.ModuleClassLoader;
+import cpw.mods.cl.JarModuleFinder;
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.TypesafeMap;
 import org.jetbrains.annotations.NotNull;
@@ -29,9 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
 import java.lang.module.Configuration;
+import java.lang.module.ModuleFinder;
 import java.lang.reflect.Constructor;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,11 +60,10 @@ class TransformingClassLoaderTests {
         LaunchPluginHandler lph = new LaunchPluginHandler(layerHandler);
         TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(transformStore);
+        
         Environment environment = Whitebox.invokeConstructor(Environment.class, new Class[]{ Launcher.class }, new Object[]{ null });
         new TypesafeMap(IEnvironment.class);
-        Object bootLayerInfo = Whitebox.<Map<IModuleLayerManager.Layer, ?>>getInternalState(layerHandler, "completedLayers").get(IModuleLayerManager.Layer.BOOT);
-        ModuleClassLoader mcl = Whitebox.getInternalState(bootLayerInfo, "cl");
-        Configuration configuration = Whitebox.getInternalState(mcl, "configuration");
+        Configuration configuration = createTestJarsConfiguration();
         Class<?> builderClass = Class.forName("cpw.mods.modlauncher.TransformingClassLoaderBuilder");
         Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, builderClass, Environment.class, Configuration.class, List.class);
         TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of(ModuleLayer.boot()));
@@ -73,5 +74,11 @@ class TransformingClassLoaderTests {
 
         final Class<?> newClass = tcl.loadClass(TARGET_CLASS);
         assertEquals(aClass, newClass, "Class instance is the same from Class.forName and tcl.loadClass");
+    }
+    
+    private Configuration createTestJarsConfiguration() {
+        SecureJar testJars = SecureJar.from(Path.of(System.getProperty("testJars.location")));
+        JarModuleFinder finder = JarModuleFinder.of(testJars);
+        return Configuration.empty().resolveAndBind(finder, ModuleFinder.ofSystem(), Set.of("cpw.mods.modlauncher.testjars"));
     }
 }
