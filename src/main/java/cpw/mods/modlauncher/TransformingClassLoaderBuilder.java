@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.jar.Manifest;
 
-import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.rethrowFunction;
+import static cpw.mods.modlauncher.api.LambdaExceptionUtils.rethrowFunction;
 
 class TransformingClassLoaderBuilder implements ITransformingClassLoaderBuilder {
     private final List<Path> transformationPaths = new ArrayList<>();
