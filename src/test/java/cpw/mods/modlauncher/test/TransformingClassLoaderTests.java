@@ -66,7 +66,7 @@ class TransformingClassLoaderTests {
         Configuration configuration = createTestJarsConfiguration();
         Class<?> builderClass = Class.forName("cpw.mods.modlauncher.TransformingClassLoaderBuilder");
         Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, builderClass, Environment.class, Configuration.class, List.class);
-        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of(ModuleLayer.boot()));
+        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of());
         
         final Class<?> aClass = Class.forName(TARGET_CLASS, true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
