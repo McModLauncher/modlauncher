@@ -47,6 +47,7 @@ public class TransformingClassLoader extends ModuleClassLoader {
 
     @Override
     protected byte[] maybeTransformClassBytes(final byte[] bytes, final String name, final String context) {
+        if (bytes.length == 0) return bytes;
         return classTransformer.transform(bytes, name, context != null ? context : ITransformerActivity.CLASSLOADING_REASON);
     }
 
