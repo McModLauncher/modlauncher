@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class LauncherTests {
     @Test
     void testLauncher() throws Exception {
-        Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
+        Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass,cheese.Puffs", "--accessToken", "SUPERSECRET!");
         Launcher instance = Launcher.INSTANCE;
         final Map<String, TransformationServiceDecorator> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "serviceLookup");
         final List<ITransformationService> launcherServices = services.values().stream()
@@ -71,7 +71,7 @@ class LauncherTests {
 
         final MockTransformerService mockTransformerService = (MockTransformerService) launcherServices.get(0);
         assertAll("test launcher service is correctly configured",
-                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(mockTransformerService, "modList"), "modlist is configured"),
+                () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass", "cheese.Puffs"), Whitebox.getInternalState(mockTransformerService, "modList"), "modlist is configured"),
                 () -> assertEquals("INITIALIZED", Whitebox.getInternalState(mockTransformerService, "state"), "Initialized was called")
         );
 
@@ -88,6 +88,10 @@ class LauncherTests {
                     .orElseThrow();
             final Stream<Field> untransformedFields = Stream.of(Class.forName(testJarsModule, "cpw.mods.modlauncher.testjar.TestClass").getDeclaredFields());
             assertTrue(untransformedFields.noneMatch(f -> f.getName().equals("testfield")), "Didn't find transformed field");
+            
+            final Class<?> generatedClass = Class.forName("cheese.Puffs", true, Whitebox.getInternalState(Launcher.INSTANCE, "classLoader"));
+            assertEquals("cheese.Puffs", generatedClass.getName());
+            assertTrue(Stream.of(generatedClass.getDeclaredFields()).anyMatch(f -> f.getName().equals("testfield")), "Found generated field");
 
             Class<?> resClass = Class.forName("cpw.mods.modlauncher.testjar.ResourceLoadingClass", true, Whitebox.getInternalState(Launcher.INSTANCE, "classLoader"));
             assertFindResource(resClass);

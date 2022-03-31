@@ -83,6 +83,11 @@ public class MockTransformerService implements ITransformationService {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
+    @Override
+    public Map<String, Set<String>> additionalPackages() {
+        return Map.of("cpw.mods.modlauncher.testjars", Set.of("cheese"));
+    }
+
     static class ClassNodeTransformer implements ITransformer<ClassNode> {
         private final List<String> classNames;
 

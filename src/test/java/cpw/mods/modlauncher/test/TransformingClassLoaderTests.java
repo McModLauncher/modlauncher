@@ -33,6 +33,7 @@ import java.lang.module.ModuleFinder;
 import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Test class loader
  */
 class TransformingClassLoaderTests {
-    private static final String TARGET_CLASS = "cpw.mods.modlauncher.testjar.TestClass";
+    private static final String TARGET_CLASS = "cheese.Puffs";
 
     @Test
     void testClassLoader() throws Exception {
@@ -65,7 +66,7 @@ class TransformingClassLoaderTests {
         new TypesafeMap(IEnvironment.class);
         Class<?> builderClass = Class.forName("cpw.mods.modlauncher.TransformingClassLoaderBuilder");
         Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, builderClass, Environment.class, Configuration.class, List.class);
-        Configuration configuration = createTestJarsConfiguration();
+        Configuration configuration = createTestJarsConfiguration(mockTransformerService.additionalPackages());
         TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of(ModuleLayer.boot()));
         ModuleLayer.boot().defineModules(configuration, s -> tcl);
         
@@ -77,9 +78,9 @@ class TransformingClassLoaderTests {
         assertEquals(aClass, newClass, "Class instance is the same from Class.forName and tcl.loadClass");
     }
     
-    private Configuration createTestJarsConfiguration() {
+    private Configuration createTestJarsConfiguration(Map<String, Set<String>> additionalPackages) {
         SecureJar testJars = SecureJar.from(Path.of(System.getProperty("testJars.location")));
-        JarModuleFinder finder = JarModuleFinder.of(testJars);
+        JarModuleFinder finder = JarModuleFinder.of(additionalPackages, testJars);
         return ModuleLayer.boot().configuration().resolveAndBind(finder, ModuleFinder.ofSystem(), Set.of("cpw.mods.modlauncher.testjars"));
     }
 }
