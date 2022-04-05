@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -84,21 +85,22 @@ public class Launcher {
     private void run(String... args) {
         final ArgumentHandler.DiscoveryData discoveryData = this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.discoverServices(discoveryData);
-        final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler);
-        var bylayer = scanResults.stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
-        bylayer.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
+        final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler)
+                .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
+        scanResults.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
                 .stream()
                 .<SecureJar>mapMulti((resource, action) -> resource.resources().forEach(action))
                 .forEach(np->this.moduleLayerHandler.addToLayer(IModuleLayerManager.Layer.PLUGIN, np));
         this.moduleLayerHandler.buildLayer(IModuleLayerManager.Layer.PLUGIN);
-        final var gameResults = this.transformationServicesHandler.triggerScanCompletion(this.moduleLayerHandler);
-        bylayer = gameResults.stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
-        var gamecontents = bylayer.getOrDefault(IModuleLayerManager.Layer.GAME, List.of()).stream()
+        final var gameResults = this.transformationServicesHandler.triggerScanCompletion(this.moduleLayerHandler)
+                .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
+        final var gameContents = Stream.of(scanResults, gameResults)
+                .flatMap(m -> m.getOrDefault(IModuleLayerManager.Layer.GAME, List.of()).stream())
                 .<SecureJar>mapMulti((resource, action) -> resource.resources().forEach(action))
                 .toList();
-        gamecontents.forEach(j->this.moduleLayerHandler.addToLayer(IModuleLayerManager.Layer.GAME, j));
+        gameContents.forEach(j->this.moduleLayerHandler.addToLayer(IModuleLayerManager.Layer.GAME, j));
         this.transformationServicesHandler.initialiseServiceTransformers();
-        this.launchPlugins.offerScanResultsToPlugins(gamecontents);
+        this.launchPlugins.offerScanResultsToPlugins(gameContents);
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder, this.environment, this.moduleLayerHandler);
