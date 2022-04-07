@@ -63,10 +63,11 @@ class TransformingClassLoaderTests {
         
         Environment environment = Whitebox.invokeConstructor(Environment.class, new Class[]{ Launcher.class }, new Object[]{ null });
         new TypesafeMap(IEnvironment.class);
-        Configuration configuration = createTestJarsConfiguration();
         Class<?> builderClass = Class.forName("cpw.mods.modlauncher.TransformingClassLoaderBuilder");
         Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, builderClass, Environment.class, Configuration.class, List.class);
-        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of());
+        Configuration configuration = createTestJarsConfiguration();
+        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of(ModuleLayer.boot()));
+        ModuleLayer.boot().defineModules(configuration, s -> tcl);
         
         final Class<?> aClass = Class.forName(TARGET_CLASS, true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
@@ -79,6 +80,6 @@ class TransformingClassLoaderTests {
     private Configuration createTestJarsConfiguration() {
         SecureJar testJars = SecureJar.from(Path.of(System.getProperty("testJars.location")));
         JarModuleFinder finder = JarModuleFinder.of(testJars);
-        return Configuration.empty().resolveAndBind(finder, ModuleFinder.ofSystem(), Set.of("cpw.mods.modlauncher.testjars"));
+        return ModuleLayer.boot().configuration().resolveAndBind(finder, ModuleFinder.ofSystem(), Set.of("cpw.mods.modlauncher.testjars"));
     }
 }

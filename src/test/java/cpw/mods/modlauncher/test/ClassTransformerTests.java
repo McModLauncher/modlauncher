@@ -90,7 +90,7 @@ class ClassTransformerTests {
     }
 
     private ITransformer<FieldNode> fieldNodeTransformer1() {
-        return new ITransformer<FieldNode>() {
+        return new ITransformer<>() {
             @NotNull
             @Override
             public FieldNode transform(FieldNode input, ITransformerVotingContext context) {
@@ -113,7 +113,7 @@ class ClassTransformerTests {
     }
 
     private ITransformer<ClassNode> classTransformer() {
-        return new ITransformer<ClassNode>() {
+        return new ITransformer<>() {
             @NotNull
             @Override
             public ClassNode transform(ClassNode input, ITransformerVotingContext context) {

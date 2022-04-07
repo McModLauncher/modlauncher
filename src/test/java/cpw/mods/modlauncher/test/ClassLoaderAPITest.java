@@ -21,7 +21,6 @@ package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
-import cpw.mods.modlauncher.testjar.ITestServiceLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.ServiceLoader;
@@ -30,13 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassLoaderAPITest {
     @Test
-    void testGetResources() {
-        String testJarPath = System.getProperty("testJars.location");
-        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
+    void testGetResources() throws ClassNotFoundException {
+        Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
         ModuleLayer layer = Launcher.INSTANCE.findLayerManager()
-            .flatMap(manager -> manager.getLayer(IModuleLayerManager.Layer.BOOT))
+            .flatMap(manager -> manager.getLayer(IModuleLayerManager.Layer.GAME))
             .orElseThrow();
-        final ServiceLoader<ITestServiceLoader> load = ServiceLoader.load(layer, ITestServiceLoader.class);
+        final Class<?> service = Thread.currentThread().getContextClassLoader().loadClass("cpw.mods.modlauncher.testjar.ITestServiceLoader");
+        getClass().getModule().addUses(service);
+        
+        final ServiceLoader<?> load = ServiceLoader.load(layer, service);
         assertTrue(load.iterator().hasNext());
     }
 }

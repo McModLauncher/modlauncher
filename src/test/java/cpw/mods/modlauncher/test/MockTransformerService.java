@@ -66,6 +66,12 @@ public class MockTransformerService implements ITransformationService {
     }
 
     @Override
+    public List<Resource> beginScanning(IEnvironment environment) {
+        SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
+        return List.of(new Resource(IModuleLayerManager.Layer.PLUGIN, List.of(testjar)));
+    }
+
+    @Override
     public List<Resource> completeScan(IModuleLayerManager layerManager) {
         SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
         return List.of(new Resource(IModuleLayerManager.Layer.GAME, List.of(testjar)));

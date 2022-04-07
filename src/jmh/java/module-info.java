@@ -5,6 +5,4 @@ module cpw.mods.modlauncher.benchmarks {
     requires jmh.core;
     requires powermock.core;
     requires powermock.reflect;
-    
-    exports cpw.mods.modlauncher.benchmarks.jmh_generated;
 }

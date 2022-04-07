@@ -56,7 +56,7 @@ dependencies {
     
     annotationProcessor('org.apache.logging.log4j:log4j-core:2.17.1')
     
-    testImplementation(sourceSets.testJars.output)
+    testCompileOnly(sourceSets.testJars.output)
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
     testImplementation('org.powermock:powermock-core:2.0.+')
@@ -75,10 +75,7 @@ configurations.jmhImplementation.extendsFrom(configurations.implementation)
 extraJavaModuleInfo {
     failOnMissingModuleInfo = false
     
-    automaticModule('commons-math3-3.2.jar', 'commons.math')
     automaticModule('jmh-core-1.34.jar', 'jmh.core')
-    automaticModule('jmh-generator-annprocess-1.34.jar', 'jmh.generator.annprocess')
-    automaticModule('javassist-3.27.0-GA.jar', 'javassist')
     automaticModule('powermock-core-2.0.9.jar', 'powermock.core')
     automaticModule('powermock-reflect-2.0.9.jar', 'powermock.reflect')
     automaticModule('jopt-simple-5.0.4.jar', 'jopt.simple')
@@ -117,7 +114,8 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
                 '--module-path', sourceSets.jmh.runtimeClasspath.asPath,
                 '--add-modules', 'ALL-MODULE-PATH',
                 '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
-                '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=cpw.mods.modlauncher.benchmarks'
+                '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=cpw.mods.modlauncher.benchmarks',
+                '--add-exports', 'cpw.mods.modlauncher.benchmarks/cpw.mods.modlauncher.benchmarks.jmh_generated=jmh.core'
         )
     }
 
