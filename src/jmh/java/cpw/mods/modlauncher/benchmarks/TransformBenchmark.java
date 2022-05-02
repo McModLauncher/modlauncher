@@ -18,11 +18,7 @@
 
 package cpw.mods.modlauncher.benchmarks;
 
-import cpw.mods.modlauncher.ClassTransformer;
-import cpw.mods.modlauncher.LaunchPluginHandler;
-import cpw.mods.modlauncher.TransformStore;
-import cpw.mods.modlauncher.TransformerAuditTrail;
-import cpw.mods.modlauncher.TransformingClassLoader;
+import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.ITransformerActivity;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.objectweb.asm.Type;
@@ -47,15 +43,15 @@ public class TransformBenchmark {
     byte[] classBytes;
 
     @Setup
-    public void setup() {
+    public void setup() throws Exception {
         final TransformStore transformStore = new TransformStore();
-        final LaunchPluginHandler lph = new LaunchPluginHandler(null);
+        final ModuleLayerHandler layerHandler = Whitebox.invokeConstructor(ModuleLayerHandler.class);
+        final LaunchPluginHandler lph = new LaunchPluginHandler(layerHandler);
         classTransformer = uncheck(()->Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null}));
         transform = uncheck(()->classTransformer.getClass().getDeclaredMethod("transform", byte[].class, String.class,String.class));
         transform.setAccessible(true);
-        LaunchPluginHandler pluginHandler = Whitebox.getInternalState(classTransformer, "pluginHandler");
-        Map<String, ILaunchPluginService> plugins = Whitebox.getInternalState(pluginHandler, "plugins");
-        try (InputStream is = getClass().getResourceAsStream("/cpw/mods/modlauncher/testjar/TestClass.class")) {
+        Map<String, ILaunchPluginService> plugins = Whitebox.getInternalState(lph, "plugins");
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("cpw/mods/modlauncher/testjar/TestClass.class")) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buf = new byte[2048];
             while (is.read(buf) >= 0) {

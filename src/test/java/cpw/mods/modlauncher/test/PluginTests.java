@@ -18,19 +18,20 @@
 
 package cpw.mods.modlauncher.test;
 
-import org.junit.jupiter.api.*;
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import org.junit.jupiter.api.Test;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 
-import java.nio.file.*;
+import java.nio.file.Path;
 import java.util.EnumSet;
 
-public class PluginTests {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class PluginTests {
 
     @Test
     void pluginTests() {
-        @SuppressWarnings("unchecked")
         ILaunchPluginService plugin = new ILaunchPluginService() {
             @Override
             public String name() {
@@ -59,6 +60,6 @@ public class PluginTests {
         };
 
         String s = plugin.getExtension();
-        System.out.println(s);
+        assertEquals("CHEESE", s);
     }
 }

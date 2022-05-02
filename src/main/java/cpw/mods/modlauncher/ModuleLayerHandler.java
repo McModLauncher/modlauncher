@@ -49,7 +49,12 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
     private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
     ModuleLayerHandler() {
-        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), (ModuleClassLoader) getClass().getClassLoader()));
+        ClassLoader classLoader = getClass().getClassLoader();
+        // Create a new ModuleClassLoader from the boot module layer if it doesn't exist already.
+        // This allows us to launch without BootstrapLauncher.
+        ModuleClassLoader cl = classLoader instanceof ModuleClassLoader moduleCl ? moduleCl
+            : new ModuleClassLoader("BOOT", ModuleLayer.boot().configuration(), List.of());
+        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), cl));
     }
 
     void addToLayer(final Layer layer, final SecureJar jar) {

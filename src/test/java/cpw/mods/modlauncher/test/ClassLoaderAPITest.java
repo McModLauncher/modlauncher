@@ -20,28 +20,24 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.TransformingClassLoader;
-import cpw.mods.modlauncher.testjar.ITestServiceLoader;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
 import org.junit.jupiter.api.Test;
-import org.powermock.reflect.Whitebox;
 
-import java.io.File;
-import java.util.List;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ClassLoaderAPITest {
+class ClassLoaderAPITest {
     @Test
-    void testGetResources() {
-        final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
-        String testJarPath = testJars.get(0);
-        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
-        Launcher instance = Launcher.INSTANCE;
-        TransformingClassLoader tcl = Whitebox.getInternalState(instance, "classLoader");
-        final ServiceLoader<ITestServiceLoader> load = ServiceLoader.load(ITestServiceLoader.class, tcl);
+    void testGetResources() throws ClassNotFoundException {
+        Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
+        ModuleLayer layer = Launcher.INSTANCE.findLayerManager()
+            .flatMap(manager -> manager.getLayer(IModuleLayerManager.Layer.GAME))
+            .orElseThrow();
+        final Class<?> service = Thread.currentThread().getContextClassLoader().loadClass("cpw.mods.modlauncher.testjar.ITestServiceLoader");
+        getClass().getModule().addUses(service);
+        
+        final ServiceLoader<?> load = ServiceLoader.load(layer, service);
         assertTrue(load.iterator().hasNext());
     }
 }

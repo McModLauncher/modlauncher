@@ -18,18 +18,28 @@
 
 package cpw.mods.modlauncher.test;
 
-import cpw.mods.modlauncher.*;
-import cpw.mods.modlauncher.api.*;
-import joptsimple.*;
-import org.junit.jupiter.api.*;
-import org.powermock.reflect.*;
+import cpw.mods.modlauncher.ArgumentHandler;
+import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.TransformationServiceDecorator;
+import cpw.mods.modlauncher.api.IEnvironment;
+import cpw.mods.modlauncher.api.IModuleLayerManager;
+import cpw.mods.modlauncher.api.ITransformationService;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+import org.junit.jupiter.api.Test;
+import org.powermock.reflect.Whitebox;
 
-import java.io.*;
-import java.lang.reflect.*;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,12 +49,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class LauncherTests {
     @Test
     void testLauncher() throws Exception {
-        final List<String> testJars = Stream.of(System.getProperty("java.class.path").split(File.pathSeparator)).filter(s -> s.contains("testJars")).collect(Collectors.toList());
-        String testJarPath = testJars.get(0);
-        Launcher.main("--version", "1.0", "--minecraftJar", testJarPath, "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
+        Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
         Launcher instance = Launcher.INSTANCE;
-        final ServiceLoader<ITransformationService> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "transformationServices");
-        final List<ITransformationService> launcherServices = StreamSupport.stream(services.spliterator(), false).collect(Collectors.toList());
+        final Map<String, TransformationServiceDecorator> services = Whitebox.getInternalState(Whitebox.getInternalState(instance, "transformationServicesHandler"), "serviceLookup");
+        final List<ITransformationService> launcherServices = services.values().stream()
+            .map(dec -> Whitebox.<ITransformationService>getInternalState(dec, "service"))
+            .toList();
         assertAll("services are present and correct",
                 () -> assertEquals(1, launcherServices.size(), "Found 1 service"),
                 () -> assertEquals(MockTransformerService.class, launcherServices.get(0).getClass(), "Found Test Launcher Service")
@@ -52,7 +62,7 @@ class LauncherTests {
 
         final ArgumentHandler argumentHandler = Whitebox.getInternalState(instance, "argumentHandler");
         final OptionSet options = Whitebox.getInternalState(argumentHandler, "optionSet");
-        Map<String, OptionSpec<?>> optionsMap = options.specs().stream().collect(Collectors.toMap(s -> s.options().stream().collect(Collectors.joining(",")), s -> s, (u, u2) -> u));
+        Map<String, OptionSpec<?>> optionsMap = options.specs().stream().collect(Collectors.toMap(s -> String.join(",", s.options()), s -> s, (u, u2) -> u));
 
         assertAll("options are correctly setup",
                 () -> assertTrue(optionsMap.containsKey("version"), "Version field is correct"),
@@ -62,7 +72,7 @@ class LauncherTests {
         final MockTransformerService mockTransformerService = (MockTransformerService) launcherServices.get(0);
         assertAll("test launcher service is correctly configured",
                 () -> assertIterableEquals(Arrays.asList("A", "B", "C", "cpw.mods.modlauncher.testjar.TestClass"), Whitebox.getInternalState(mockTransformerService, "modList"), "modlist is configured"),
-                () -> assertEquals(Whitebox.getInternalState(mockTransformerService, "state"), "INITIALIZED", "Initialized was called")
+                () -> assertEquals("INITIALIZED", Whitebox.getInternalState(mockTransformerService, "state"), "Initialized was called")
         );
 
         assertAll(
@@ -72,7 +82,11 @@ class LauncherTests {
         try {
             final Stream<Field> transformedFields = Stream.of(Class.forName("cpw.mods.modlauncher.testjar.TestClass", true, Whitebox.getInternalState(Launcher.INSTANCE, "classLoader")).getDeclaredFields());
             assertTrue(transformedFields.anyMatch(f -> f.getName().equals("testfield")), "Found transformed field");
-            final Stream<Field> untransformedFields = Stream.of(Class.forName("cpw.mods.modlauncher.testjar.TestClass", true, this.getClass().getClassLoader()).getDeclaredFields());
+            final Module testJarsModule = Launcher.INSTANCE.findLayerManager()
+                    .flatMap(m -> m.getLayer(IModuleLayerManager.Layer.PLUGIN))
+                    .flatMap(l -> l.findModule("cpw.mods.modlauncher.testjars"))
+                    .orElseThrow();
+            final Stream<Field> untransformedFields = Stream.of(Class.forName(testJarsModule, "cpw.mods.modlauncher.testjar.TestClass").getDeclaredFields());
             assertTrue(untransformedFields.noneMatch(f -> f.getName().equals("testfield")), "Didn't find transformed field");
 
             Class<?> resClass = Class.forName("cpw.mods.modlauncher.testjar.ResourceLoadingClass", true, Whitebox.getInternalState(Launcher.INSTANCE, "classLoader"));

@@ -1,75 +1,15 @@
-import java.text.SimpleDateFormat
-
 plugins {
+    id 'java-library'
+    id 'eclipse'
     id 'com.github.ben-manes.versions' version '0.39.0'
     id 'net.minecraftforge.gradleutils' version '2.+'
-    id 'me.champeau.jmh' version '0.6.5'
+    id 'de.jjohannes.extra-java-module-info' version '0.11'
+    id 'maven-publish'
 }
 
-apply plugin: 'maven-publish'
-
-ext.asmVersion = 9.1
-
-allprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'eclipse'
-
-    group = 'cpw.mods'
-    java {
-        toolchain.languageVersion = JavaLanguageVersion.of(16)
-        withSourcesJar()
-    }
-    //compileJava {
-    //    sourceCompatibility = JavaVersion.VERSION_16
-    //    targetCompatibility = JavaVersion.VERSION_16
-    //}
-
-
-    test {
-        useJUnitPlatform()
-    }
-
-    configurations {
-        tWorkaround
-        testCompileOnly {
-            // for some reason, test-only project dependencies aren't registered properly due to an issue with the jmh plugin
-            // so we have our own extra configuration
-            // see https://github.com/melix/jmh-gradle-plugin/issues/216 for details
-            extendsFrom tWorkaround
-        }
-    }
-
-    eclipse {
-        project {
-            if (!project.name.startsWith("${rootProject.name}")) {
-                name = "${rootProject.name}-${project.name}"
-            }
-        }
-        classpath {
-            plusConfigurations << configurations.tWorkaround // fix handling of test-only dep
-            file.whenMerged { classpath ->
-                classpath.entries.each { entry ->
-                    if (entry instanceof org.gradle.plugins.ide.eclipse.model.Library
-                        || entry instanceof org.gradle.plugins.ide.eclipse.model.ProjectDependency) {
-                        entry.entryAttributes['module'] = true
-                    } else if (entry instanceof org.gradle.plugins.ide.eclipse.model.SourceFolder) {
-                        def extraReads = ['org.junit.jupiter.api', 'powermock.core', 'powermock.reflect', 'cpw.mods.modlauncher.testjars']
-                            .collect { "cpw.mods.modlauncher=$it" }
-                            .join(':')
-                        entry.entryAttributes['add-reads'] = extraReads
-                    }
-                }
-            }
-        }
-    }
-}
-
-repositories {
-    mavenLocal()
-    maven {
-        name = 'forge'
-        url = 'https://maven.minecraftforge.net/'
-    }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(16)
+    withSourcesJar()
 }
 
 def isNonStable = { String version ->
@@ -84,62 +24,115 @@ dependencyUpdates {
     }
 }
 
-test {
-    // exclude all tests for now
-    exclude '**/*'
-}
-
-compileTestJava {
-    // exclude all tests - not compatible with modular system
-    exclude '/**/*'
-
-    options.compilerArgs << '--add-modules' << 'ALL-MODULE-PATH' // for tests, we don't have a separate module descriptor, so just read everything
-}
-
-group = 'cpw.mods'
 ext.asmVersion = 9.2
 
+group = 'cpw.mods'
 version = gradleutils.getTagOffsetVersion()
 logger.lifecycle('Version: ' + version)
 
+sourceSets {
+    jmh
+    testJars
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        name = 'forge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+}
+
 dependencies {
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    compileOnly('org.jetbrains:annotations:21.0.1')
     api("org.ow2.asm:asm:${asmVersion}")
     api("org.ow2.asm:asm-tree:${asmVersion}")
     api("org.ow2.asm:asm-commons:${asmVersion}")
+    
+    implementation('cpw.mods:securejarhandler:1.0.+')
     implementation('org.apache.logging.log4j:log4j-api:2.17.1')
     implementation('org.apache.logging.log4j:log4j-core:2.17.1')
-    implementation('cpw.mods:securejarhandler:1.0.+')
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
+    compileOnly('org.jetbrains:annotations:21.0.1')
+    
     annotationProcessor('org.apache.logging.log4j:log4j-core:2.17.1')
+    
+    testCompileOnly(sourceSets.testJars.output)
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.7.+')
-    testImplementation('org.powermock:powermock-core:2.0.+')
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.7.+')
-    tWorkaround(project(':testjars'))
+    testImplementation('org.powermock:powermock-core:2.0.+')
+    testImplementation('org.powermock:powermock-reflect:2.0.+')
     testCompileOnly('org.jetbrains:annotations:21.0.1')
-    testRuntimeOnly('cpw.mods:bootstraplauncher:0.1.+')
-    jmhImplementation('org.powermock:powermock-core:2.0.+')
-    jmhImplementation("org.ow2.asm:asm:${asmVersion}")
-    jmhImplementation("org.ow2.asm:asm-tree:${asmVersion}")
-    jmhImplementation("org.ow2.asm:asm-commons:${asmVersion}")
-    jmh("org.ow2.asm:asm:${asmVersion}")
-    jmh('org.openjdk.jmh:jmh-core:1.32')
-    jmh('org.openjdk.jmh:jmh-generator-bytecode:1.31')
+    
+    jmhImplementation(sourceSets.main.output)
+    jmhImplementation(sourceSets.testJars.output)
+    jmhImplementation('org.openjdk.jmh:jmh-core:1.34')
+    jmhImplementation('org.powermock:powermock-core:2.0.9')
+    jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.34')
 }
 
-jmh {
-    includes = [ 'cpw.mods.modlauncher.benchmarks.TransformBenchmark' ]
-    benchmarkMode = ['avgt' ]
-    profilers = [ 'stack' ]
-    timeOnIteration = '3s'
-    warmup = '3s'
-    warmupIterations = 3
-    iterations = 3
-    fork = 3
-    timeUnit = 'us'
+configurations.jmhImplementation.extendsFrom(configurations.implementation)
+
+extraJavaModuleInfo {
+    failOnMissingModuleInfo = false
+    
+    automaticModule('jmh-core-1.34.jar', 'jmh.core')
+    automaticModule('powermock-core-2.0.9.jar', 'powermock.core')
+    automaticModule('powermock-reflect-2.0.9.jar', 'powermock.reflect')
+    automaticModule('jopt-simple-5.0.4.jar', 'jopt.simple')
 }
 
-tasks['jmh'].dependsOn(clean)
+task testsJar(type: Jar) {
+    archiveClassifier = 'testsjar'
+    from sourceSets.testJars.output
+}
+
+test {
+    dependsOn 'testsJar'
+    
+    useJUnitPlatform()
+    
+    systemProperty 'testJars.location', testsJar.archiveFile.get().asFile
+    
+    jvmArgs(
+            '--module-path', classpath.asPath,
+            '--add-modules', 'ALL-MODULE-PATH',
+            '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
+            '--add-opens', 'java.base/java.lang=powermock.reflect',
+            '--add-opens', 'cpw.mods.securejarhandler/cpw.mods.cl=powermock.reflect',
+            '--add-reads', 'cpw.mods.modlauncher=cpw.mods.modlauncher.test'
+    )
+}
+
+task jmh(type: JavaExec, dependsOn: jmhClasses) {
+    mainClass = 'org.openjdk.jmh.Main'
+
+    def results = file("${project.reportsDir}/jmh/result.json")
+    doFirst {
+        results.parentFile.mkdirs()
+
+        jvmArgs(
+                '--module-path', sourceSets.jmh.runtimeClasspath.asPath,
+                '--add-modules', 'ALL-MODULE-PATH',
+                '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
+                '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=cpw.mods.modlauncher.benchmarks',
+                '--add-exports', 'cpw.mods.modlauncher.benchmarks/cpw.mods.modlauncher.benchmarks.jmh_generated=jmh.core'
+        )
+    }
+
+    args = [
+            'cpw.mods.modlauncher.benchmarks.TransformBenchmark',
+            '-bm', 'avgt',
+            '-prof', 'stack',
+            '-r', '3s',
+            '-w', '3s',
+            '-wi', '3',
+            '-i', '3',
+            '-f', '3',
+            '-tu', 'us',
+            '-rf', 'json',
+            '-rff', results
+    ]
+}
 
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
@@ -167,9 +160,7 @@ ext.sharedManifest = manifest {
 }
 
 jar {
-    manifest = project.java.manifest {
-        from sharedManifest
-    }
+    manifest.from(sharedManifest)
 }
 
 tasks.withType(JavaCompile) {
@@ -180,10 +171,6 @@ tasks.withType(JavaCompile) {
 compileJava {
     options.javaModuleVersion = project.version.toString()
     options.javaModuleMainClass = 'cpw.mods.modlauncher.Launcher'
-
-    doFirst {
-        options.compilerArgs << '--module-path' << classpath.asPath
-    }
 }
 
 publishing {
