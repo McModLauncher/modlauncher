@@ -19,13 +19,18 @@
 package cpw.mods.modlauncher.api;
 
 import cpw.mods.jarhandling.SecureJar;
-import joptsimple.*;
+import joptsimple.OptionSpec;
+import joptsimple.OptionSpecBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Users who wish to provide a mod service which plugs into this API
@@ -129,6 +134,18 @@ public interface ITransformationService {
      */
     default Map.Entry<Set<String>,Supplier<Function<String, Optional<URL>>>> additionalResourcesLocator() {
         return null;
+    }
+
+    /**
+     * Allow transformation services to provide additional packages when asked for.
+     *
+     * Rules:
+     * The Strings in value Sets must be valid package names.
+     *
+     * @return a map of module names to a set of package names that will be added to the module descriptor upon resolution
+     */
+    default Map<String, Set<String>> additionalPackages() {
+        return Map.of();
     }
 
     interface OptionResult {

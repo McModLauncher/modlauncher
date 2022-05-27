@@ -67,12 +67,12 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
         layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(namedPath));
     }
 
-    public LayerInfo buildLayer(final Layer layer, BiFunction<Configuration, List<ModuleLayer>, ModuleClassLoader> classLoaderSupplier) {
+    public LayerInfo buildLayer(final Layer layer, BiFunction<Configuration, List<ModuleLayer>, ModuleClassLoader> classLoaderSupplier, final Map<String, Set<String>> additionalPackages) {
         final var finder = layers.getOrDefault(layer, List.of()).stream()
                 .map(PathOrJar::build)
                 .toArray(SecureJar[]::new);
         final var targets = Arrays.stream(finder).map(SecureJar::name).toList();
-        final var newConf = Configuration.resolveAndBind(JarModuleFinder.of(finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li->li.layer().configuration()).toList(), ModuleFinder.of(), targets);
+        final var newConf = Configuration.resolveAndBind(JarModuleFinder.of(additionalPackages, finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li->li.layer().configuration()).toList(), ModuleFinder.of(), targets);
         final var allParents = Arrays.stream(layer.getParent()).map(completedLayers::get).map(LayerInfo::layer).<ModuleLayer>mapMulti((moduleLayer, comp)-> {
             comp.accept(moduleLayer);
             moduleLayer.parents().forEach(comp);
@@ -84,7 +84,7 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
         return new LayerInfo(modController.layer(), classLoader);
     }
     public LayerInfo buildLayer(final Layer layer) {
-        return buildLayer(layer, (cf, p) -> new ModuleClassLoader("LAYER "+layer.name(), cf, p));
+        return buildLayer(layer, (cf, p) -> new ModuleClassLoader("LAYER "+layer.name(), cf, p), Map.of());
     }
 
     @Override

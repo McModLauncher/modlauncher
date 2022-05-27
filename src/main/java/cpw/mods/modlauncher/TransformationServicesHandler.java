@@ -57,7 +57,12 @@ class TransformationServicesHandler {
 
     TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment, final ModuleLayerHandler layerHandler) {
         final List<Function<String, Optional<URL>>> classLocatorList = serviceLookup.values().stream().map(TransformationServiceDecorator::getClassLoader).filter(Objects::nonNull).collect(Collectors.toList());
-        final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, builder, environment, cf, parents));
+        // Get provided additional packages from all transformation services and merge them into a single map
+        final Map<String, Set<String>> additionalPackages = serviceLookup.values().stream()
+                .map(TransformationServiceDecorator::getService)
+                .flatMap(s -> s.additionalPackages().entrySet().stream())
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> Stream.concat(a.stream(), b.stream()).collect(Collectors.toSet())));
+        final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, builder, environment, cf, parents), additionalPackages);
         layerHandler.updateLayer(IModuleLayerManager.Layer.PLUGIN, li->li.cl().setFallbackClassLoader(layerInfo.cl()));
         return (TransformingClassLoader) layerInfo.cl();
     }
