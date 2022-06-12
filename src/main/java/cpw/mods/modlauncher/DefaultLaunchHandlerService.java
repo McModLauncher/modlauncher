@@ -45,13 +45,12 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer) {
+    public ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer) {
 
         return () -> {
             final Class<?> mcClass = Class.forName(gameLayer.findModule("minecraft").orElseThrow(), "net.minecraft.client.main.Main");
             final Method mcClassMethod = mcClass.getMethod("main", String[].class);
             mcClassMethod.invoke(null, (Object) arguments);
-            return null;
         };
     }
 

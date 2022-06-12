@@ -42,12 +42,12 @@ class LaunchServiceHandler {
     }
 
     public Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
-        return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::getService);
+        return Optional.ofNullable(launchHandlerLookup.getOrDefault(name, null)).map(LaunchServiceHandlerDecorator::service);
     }
 
     private void launch(String target, String[] arguments, ModuleLayer gameLayer, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
         final LaunchServiceHandlerDecorator launchServiceHandlerDecorator = launchHandlerLookup.get(target);
-        final NamedPath[] paths = launchServiceHandlerDecorator.getService().getPaths();
+        final NamedPath[] paths = launchServiceHandlerDecorator.service().getPaths();
         launchPluginHandler.announceLaunch(classLoader, paths);
         LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
         launchServiceHandlerDecorator.launch(arguments, gameLayer);

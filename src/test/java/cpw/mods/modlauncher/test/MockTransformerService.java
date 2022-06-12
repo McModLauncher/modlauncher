@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.*;
@@ -67,14 +68,28 @@ public class MockTransformerService implements ITransformationService {
 
     @Override
     public List<Resource> beginScanning(IEnvironment environment) {
-        SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
-        return List.of(new Resource(IModuleLayerManager.Layer.PLUGIN, List.of(testjar)));
+        if (System.getProperty("testJars.location")!=null) {
+            SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
+            return List.of(new Resource(IModuleLayerManager.Layer.PLUGIN, List.of(testjar)));
+        } else if (System.getProperty("test.harness")!=null) {
+            return List.of(new Resource(IModuleLayerManager.Layer.PLUGIN,
+                    Arrays.stream(System.getProperty("test.harness").split(","))
+                    .map(FileSystems.getDefault()::getPath)
+                    .map(SecureJar::from)
+                    .toList()));
+        } else {
+            return List.of();
+        }
     }
 
     @Override
     public List<Resource> completeScan(IModuleLayerManager layerManager) {
-        SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
-        return List.of(new Resource(IModuleLayerManager.Layer.GAME, List.of(testjar)));
+        if (System.getProperty("testJars.location")!=null) {
+            SecureJar testjar = SecureJar.from(Path.of(System.getProperty("testJars.location")));
+            return List.of(new Resource(IModuleLayerManager.Layer.GAME, List.of(testjar)));
+        } else {
+            return List.of();
+        }
     }
 
     @NotNull

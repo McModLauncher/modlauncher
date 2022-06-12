@@ -19,11 +19,9 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.api.ServiceRunner;
 
 import java.lang.invoke.*;
-import java.nio.file.*;
-import java.util.Arrays;
-import java.util.concurrent.*;
 
 /**
  * Test harness launch service - this will do nothing, but will take "test.harness" and offer it to the transformer
@@ -37,21 +35,19 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
 
     @Override
     public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
-        Arrays.stream(System.getProperty("test.harness").split(",")).
-                map(FileSystems.getDefault()::getPath).
-                forEach(builder::addTransformationPath);
     }
 
-    public Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer) {
+    public ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer) {
         try {
-            Class<?> callableLaunch = Class.forName(System.getProperty("test.harness.callable"));
-            MethodHandle handle = MethodHandles.lookup().findStatic(callableLaunch, "supplier", MethodType.methodType(Callable.class));
-            return (Callable<Void>) handle.invoke();
+            Class<?> callableLaunch = Class.forName(System.getProperty("test.harness.callable"), true, Thread.currentThread().getContextClassLoader());
+            getClass().getModule().addReads(callableLaunch.getModule());
+            MethodHandle handle = MethodHandles.lookup().findStatic(callableLaunch, "supplier", MethodType.methodType(ServiceRunner.class));
+            return (ServiceRunner) handle.invoke();
         } catch (ClassNotFoundException | NoSuchMethodException | LambdaConversionException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e);
         } catch (Throwable throwable) {
             throwable.printStackTrace();
+            throw new RuntimeException(throwable);
         }
-        return () -> null;
     }
 }

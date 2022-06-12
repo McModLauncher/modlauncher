@@ -27,9 +27,10 @@ import java.util.concurrent.*;
 public interface ILaunchHandlerService {
     String name();
 
+    @Deprecated(forRemoval = true, since = "10.0")
     void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder);
 
-    Callable<Void> launchService(String[] arguments, ModuleLayer gameLayer);
+    ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer);
 
     default NamedPath[] getPaths() { return new NamedPath[0]; }
 }

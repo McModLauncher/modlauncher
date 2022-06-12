@@ -1,7 +1,7 @@
 /*
  * ModLauncher - for launching Java programs with in-flight transformation ability.
  *
- *     Copyright (C) 2017-2019 cpw
+ *     Copyright (C) 2017-2022 cpw
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -16,26 +16,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package cpw.mods.modlauncher.test;
-
-import cpw.mods.modlauncher.api.*;
+package cpw.mods.modlauncher.api;
 
 /**
- * Mock launch handler for testing
+ * A type of Runnable that throws a Throwable. Allows for tidier implementations than Callable<Void>
  */
-public class MockLauncherHandlerService implements ILaunchHandlerService {
-    @Override
-    public String name() {
-        return "mockLaunch";
-    }
+public interface ServiceRunner {
+    void run() throws Throwable;
 
-    @Override
-    public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
-
-    }
-
-    @Override
-    public ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer) {
-        return ServiceRunner.NOOP;
-    }
+    ServiceRunner NOOP = () -> {};
 }
