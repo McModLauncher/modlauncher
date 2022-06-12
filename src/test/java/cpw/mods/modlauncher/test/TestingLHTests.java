@@ -19,6 +19,7 @@
 package cpw.mods.modlauncher.test;
 
 import cpw.mods.modlauncher.Launcher;
+import cpw.mods.modlauncher.api.ServiceRunner;
 import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.Test;
 
@@ -37,15 +38,14 @@ class TestingLHTests {
         TestCallback.callable = () -> {
             calledback = true;
             LogManager.getLogger().info("Hello", new Throwable());
-            return null;
         };
         Launcher.main("--version", "1.0", "--launchTarget", "testharness");
         assertTrue(calledback, "We got called back");
     }
 
     public static class TestCallback {
-        private static Callable<Void> callable;
-        public static Callable<Void> supplier() {
+        private static ServiceRunner callable;
+        public static ServiceRunner supplier() {
             return callable;
         }
     }
