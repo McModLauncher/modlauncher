@@ -123,7 +123,7 @@ class TransformationServicesHandler {
                 .map(s->s.candidates(discoveryData.gameDir(), discoveryData.launchTarget()))
                 .<NamedPath>mapMulti(Iterable::forEach)
                 .toList();
-        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())));
+        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())).collect(Collectors.joining()));
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
         serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
