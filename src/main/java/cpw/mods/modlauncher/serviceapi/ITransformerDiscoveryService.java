@@ -47,4 +47,15 @@ public interface ITransformerDiscoveryService {
     default List<NamedPath> candidates(final Path gameDirectory, final String launchTarget) {
         return candidates(gameDirectory);
     }
+
+    /**
+     * An opportunity for early transformer services to do something once the service layer has
+     * been built.
+     *
+     * @param launchTarget The launch target
+     * @param arguments The full command arguments to the game
+     */
+    default void earlyInitialization(final String launchTarget, final String[] arguments) {
+
+    }
 }

@@ -38,7 +38,7 @@ public class ArgumentHandler {
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
 
-    record DiscoveryData(Path gameDir, String launchTarget) {}
+    record DiscoveryData(Path gameDir, String launchTarget, String[] arguments) {}
 
     DiscoveryData setArgs(String[] args) {
         this.args = args;
@@ -47,7 +47,7 @@ public class ArgumentHandler {
         final var launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
         parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
-        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget));
+        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget), args);
     }
 
     void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {

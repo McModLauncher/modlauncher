@@ -119,13 +119,16 @@ class TransformationServicesHandler {
     void discoverServices(final ArgumentHandler.DiscoveryData discoveryData) {
         LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
         var bootLayer = layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow();
-        var additionalPaths = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(bootLayer, ITransformerDiscoveryService.class),  sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", sce))
+        var earlyDiscoveryServices = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(bootLayer, ITransformerDiscoveryService.class),  sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", sce))
+                .toList();
+        var additionalPaths = earlyDiscoveryServices.stream()
                 .map(s->s.candidates(discoveryData.gameDir(), discoveryData.launchTarget()))
                 .<NamedPath>mapMulti(Iterable::forEach)
                 .toList();
         LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())).collect(Collectors.joining()));
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
+        earlyDiscoveryServices.forEach(s->s.earlyInitialization(discoveryData.launchTarget(), discoveryData.arguments()));
         serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
                 .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
         var modlist = serviceLookup.entrySet().stream().map(e->Map.of(
