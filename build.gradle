@@ -101,6 +101,7 @@ test {
             '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
             '--add-opens', 'java.base/java.lang=powermock.reflect',
             '--add-opens', 'cpw.mods.securejarhandler/cpw.mods.cl=powermock.reflect',
+            '--add-opens', 'java.base/java.lang.invoke=cpw.mods.securejarhandler',
             '--add-reads', 'cpw.mods.modlauncher=cpw.mods.modlauncher.test'
     )
 }
