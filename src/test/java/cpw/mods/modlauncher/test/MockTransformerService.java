@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.test;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;

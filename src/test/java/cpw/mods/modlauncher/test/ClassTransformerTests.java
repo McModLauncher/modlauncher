@@ -22,6 +22,7 @@ import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.ITransformationService;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
+import cpw.mods.modlauncher.api.TargetType;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.MarkerManager;
@@ -53,7 +54,7 @@ class ClassTransformerTests {
         final LaunchPluginHandler lph = new LaunchPluginHandler(layerHandler);
         final ClassTransformer classTransformer = Whitebox.invokeConstructor(ClassTransformer.class, new Class[] { transformStore.getClass(),  lph.getClass(), TransformingClassLoader.class }, new Object[] { transformStore, lph, null});
         final ITransformationService dummyService = new MockTransformerService();
-        Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass", TransformTargetLabel.LabelType.CLASS), classTransformer(), dummyService);
+        Whitebox.invokeMethod(transformStore, "addTransformer", new TransformTargetLabel("test.MyClass", TargetType.CLASS), classTransformer(), dummyService);
         byte[] result = Whitebox.invokeMethod(classTransformer, "transform", new Class[]{byte[].class, String.class,String.class}, new byte[0], "test.MyClass","testing");
         assertAll("Class loads and is valid",
                 () -> assertNotNull(result),
