@@ -104,7 +104,7 @@ public interface ITransformationService {
      *
      * Rules:
      * The Strings in the set must end with a dot. They must have at least one dot. They cannot include "net.minecraft."
-     * "net.minecraftforge.". Conflicts with other ITransformationServices will result in an immediate crash.
+     * "net.minecraftforge.", or "net.neoforged.". Conflicts with other ITransformationServices will result in an immediate crash.
      *
      * @return a set of strings (tested with "startsWith" for classNames in "internal" format (my.package.Clazz))
      * with a function that receives the full classname and returns an Optional URL for loading that class. The null

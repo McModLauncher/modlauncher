@@ -22,7 +22,7 @@
     </repository>
     <repository>
       <id>teamcity-server</id>
-      <url>https://teamcity.minecraftforge.net/app/dsl-plugins-repository</url>
+      <url>https://teamcity.neoforged.net/app/dsl-plugins-repository</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>

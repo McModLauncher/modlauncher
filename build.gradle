@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'com.github.ben-manes.versions' version '0.39.0'
-    id 'net.minecraftforge.gradleutils' version '2.+'
+    id 'net.neoforged.gradleutils' version '2.+'
     id 'de.jjohannes.extra-java-module-info' version '0.11'
     id 'maven-publish'
 }
@@ -39,7 +39,7 @@ repositories {
     mavenLocal()
     maven {
         name = 'forge'
-        url = 'https://maven.minecraftforge.net/'
+        url = 'https://maven.neoforged.net/releases'
     }
 }
 
@@ -140,22 +140,22 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
 
 ext.sharedManifest = manifest {
     attributes(['Specification-Title': 'modlauncher',
-                'Specification-Vendor': 'forge',
+                'Specification-Vendor': 'neoforged',
                 'Specification-Version': '9.0', // We are version 9 of the modlauncher specification
                 'Implementation-Title': project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
-                'Implementation-Vendor' :'forge',
+                'Implementation-Vendor' :'neoforged',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
                 'Git-Commit': gradleutils.gitInfo.abbreviatedId,
                 'Git-Branch': gradleutils.gitInfo.branch,
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}" ],
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
-                'Specification-Vendor': 'forge',
+                'Specification-Vendor': 'neoforged',
                 'Specification-Version': '9.0', // We are version 9 of the modlauncher cpw.mods.modlauncher.serviceapi specification
                 "Implementation-Title": project.name,
                 'Implementation-Version': "${project.version}+${System.getenv('BUILD_NUMBER')?:0}+${gradleutils.gitInfo.branch}.${gradleutils.gitInfo.abbreviatedId}",
-                'Implementation-Vendor' :'forge',
+                'Implementation-Vendor' :'neoforged',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
                 'Git-Commit': gradleutils.gitInfo.abbreviatedId,
                 'Git-Branch': gradleutils.gitInfo.branch,

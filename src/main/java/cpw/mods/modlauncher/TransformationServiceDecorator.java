@@ -124,6 +124,8 @@ public class TransformationServiceDecorator {
                             s.startsWith("net.minecraft.") ||
                             // No prefixes starting with net.minecraftforge.
                             s.startsWith("net.minecraftforge.") ||
+                            // No prefixes starting with net.neoforged.
+                            s.startsWith("net.neoforged.") ||
                             // No prefixes already claimed
                             classPrefixes.contains(s) ||
                             // No prefixes not ending in a dot
