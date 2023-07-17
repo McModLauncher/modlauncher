@@ -21,7 +21,6 @@ package cpw.mods.modlauncher;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
-import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,7 +95,7 @@ public class LaunchPluginHandler {
         return flags;
     }
 
-    void announceLaunch(final TransformingClassLoader transformerLoader, final NamedPath[] specialPaths) {
+    void announceLaunch(final TransformingClassLoader transformerLoader, final SecureJar[] specialPaths) {
         plugins.forEach((k, p)->p.initializeLaunch((s->transformerLoader.buildTransformedClassNodeFor(s, k)), specialPaths));
     }
 }

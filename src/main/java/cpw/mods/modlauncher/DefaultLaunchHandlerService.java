@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 
 import java.lang.reflect.*;
@@ -55,7 +56,7 @@ public class DefaultLaunchHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public NamedPath[] getPaths() {
-        return new NamedPath[] {new NamedPath("launch",FileSystems.getDefault().getPath(LAUNCH_PATH_STRING))};
+    public SecureJar[] getPaths() {
+        return new SecureJar[] {SecureJar.from(FileSystems.getDefault().getPath(LAUNCH_PATH_STRING))};
     }
 }

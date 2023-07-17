@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +48,7 @@ class LaunchServiceHandler {
 
     private void launch(String target, String[] arguments, ModuleLayer gameLayer, TransformingClassLoader classLoader, final LaunchPluginHandler launchPluginHandler) {
         final LaunchServiceHandlerDecorator launchServiceHandlerDecorator = launchHandlerLookup.get(target);
-        final NamedPath[] paths = launchServiceHandlerDecorator.service().getPaths();
+        final SecureJar[] paths = launchServiceHandlerDecorator.service().getPaths();
         launchPluginHandler.announceLaunch(classLoader, paths);
         LOGGER.info(MODLAUNCHER, "Launching target '{}' with arguments {}", target, hideAccessToken(arguments));
         launchServiceHandlerDecorator.launch(arguments, gameLayer);

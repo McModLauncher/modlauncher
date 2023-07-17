@@ -18,7 +18,7 @@
 
 package cpw.mods.modlauncher.serviceapi;
 
-import cpw.mods.modlauncher.api.NamedPath;
+import cpw.mods.jarhandling.SecureJar;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -33,7 +33,7 @@ public interface ITransformerDiscoveryService {
      * @param gameDirectory The root game directory
      * @return The list of services
      */
-    List<NamedPath> candidates(final Path gameDirectory);
+    List<SecureJar> candidates(final Path gameDirectory);
 
     /**
      * Return a list of additional paths to be added to transformer service discovery during loading.
@@ -44,7 +44,7 @@ public interface ITransformerDiscoveryService {
      * @param launchTarget The launch target
      * @return The list of services
      */
-    default List<NamedPath> candidates(final Path gameDirectory, final String launchTarget) {
+    default List<SecureJar> candidates(final Path gameDirectory, final String launchTarget) {
         return candidates(gameDirectory);
     }
 

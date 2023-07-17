@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.jarhandling.SecureJar;
 import java.nio.file.Path;
 import java.util.concurrent.*;
 
@@ -32,5 +33,5 @@ public interface ILaunchHandlerService {
 
     ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer);
 
-    default NamedPath[] getPaths() { return new NamedPath[0]; }
+    default SecureJar[] getPaths() { return new SecureJar[0]; }
 }
