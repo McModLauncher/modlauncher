@@ -52,7 +52,7 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
 
     @Deprecated
     void addToLayer(final Layer layer, final NamedPath namedPath) {
-        this.addToLayer(layer, SecureJar.from(namedPath.paths()));
+        addToLayer(layer, namedPath.build());
     }
 
     public LayerInfo buildLayer(final Layer layer, BiFunction<Configuration, List<ModuleLayer>, ModuleClassLoader> classLoaderSupplier) {
