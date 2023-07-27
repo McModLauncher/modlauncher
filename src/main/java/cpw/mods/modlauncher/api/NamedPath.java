@@ -18,7 +18,12 @@
 
 package cpw.mods.modlauncher.api;
 
+import cpw.mods.jarhandling.SecureJar;
+
 import java.nio.file.Path;
 
 public record NamedPath(String name, Path... paths) {
+    public SecureJar build() {
+        return SecureJar.from(paths);
+    }
 }

@@ -18,6 +18,7 @@
 
 package cpw.mods.modlauncher;
 
+import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
@@ -124,8 +125,9 @@ class TransformationServicesHandler {
         var additionalPaths = earlyDiscoveryServices.stream()
                 .map(s->s.candidates(discoveryData.gameDir(), discoveryData.launchTarget()))
                 .<NamedPath>mapMulti(Iterable::forEach)
+                .map(NamedPath::build)
                 .toList();
-        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())).collect(Collectors.joining()));
+        LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(SecureJar::name).collect(Collectors.joining()));
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
         earlyDiscoveryServices.forEach(s->s.earlyInitialization(discoveryData.launchTarget(), discoveryData.arguments()));

@@ -31,21 +31,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
-    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
+    public record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
 
-    private record PathOrJar(NamedPath path, SecureJar jar) {
-        static PathOrJar from(SecureJar jar) {
-            return new PathOrJar(null, jar);
-        }
-        static PathOrJar from(NamedPath path) {
-            return new PathOrJar(path, null);
-        }
-
-        SecureJar build() {
-            return jar != null ? jar : SecureJar.from(path.paths());
-        }
-    }
-    private final EnumMap<Layer, List<PathOrJar>> layers = new EnumMap<>(Layer.class);
+    private final EnumMap<Layer, List<SecureJar>> layers = new EnumMap<>(Layer.class);
     private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
     ModuleLayerHandler() {
@@ -59,17 +47,16 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
 
     void addToLayer(final Layer layer, final SecureJar jar) {
         if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
-        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(jar));
+        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(jar);
     }
 
+    @Deprecated
     void addToLayer(final Layer layer, final NamedPath namedPath) {
-        if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
-        layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(namedPath));
+        this.addToLayer(layer, SecureJar.from(namedPath.paths()));
     }
 
     public LayerInfo buildLayer(final Layer layer, BiFunction<Configuration, List<ModuleLayer>, ModuleClassLoader> classLoaderSupplier) {
-        final var finder = layers.getOrDefault(layer, List.of()).stream()
-                .map(PathOrJar::build)
+        final var finder = layers.getOrDefault(layer, List.of())
                 .toArray(SecureJar[]::new);
         final var targets = Arrays.stream(finder).map(SecureJar::name).toList();
         final var newConf = Configuration.resolveAndBind(JarModuleFinder.of(finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li->li.layer().configuration()).toList(), ModuleFinder.of(), targets);
