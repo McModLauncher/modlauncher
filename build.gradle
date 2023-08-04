@@ -104,12 +104,14 @@ test {
     )
 }
 
-task jmh(type: JavaExec, dependsOn: jmhClasses) {
+tasks.register('jmh', JavaExec) {
+    dependsOn('jmhClasses')
     mainClass = 'org.openjdk.jmh.Main'
 
-    def results = file("${project.reportsDir}/jmh/result.json")
+    final results = file("${project.reportsDir}/jmh/result.json")
     doFirst {
         results.parentFile.mkdirs()
+
         jvmArgs(
                 '--module-path', sourceSets.jmh.runtimeClasspath.asPath,
                 '--add-modules', 'ALL-MODULE-PATH',
@@ -133,6 +135,16 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
             '-rf', 'json',
             '-rff', results
     ]
+
+    if (project.hasProperty('jmhVendor') && project.hasProperty('jmhVersion')) {
+        final specifiedVendor = project.property('jmhVendor').toString()
+        final actualVendor = specifiedVendor.endsWith('-J9') ? specifiedVendor.substring(0, specifiedVendor.length() - 3) : specifiedVendor
+        javaLauncher.set(javaToolchains.launcherFor {
+            it.vendor.set(JvmVendorSpec."${actualVendor.toUpperCase(Locale.ROOT)}" as JvmVendorSpec)
+            it.languageVersion.set(JavaLanguageVersion.of(project.property('jmhVersion') as int))
+            it.implementation.set(specifiedVendor.endsWith('-J9') ? JvmImplementation.J9 : JvmImplementation.VENDOR_SPECIFIC)
+        })
+    }
 }
 
 ext.sharedManifest = manifest {
