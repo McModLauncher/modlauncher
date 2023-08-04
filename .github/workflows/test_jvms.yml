@@ -15,9 +15,9 @@ jobs:
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
         jvm: [ Graal_VM, Adoptium, AdoptOpenJDK, AdoptOpenJDK-J9, Azul, IBM, Oracle, Microsoft, Amazon  ]
-    exclude:
-      - jvm: Graal_VM
-        jvm_version: 18 # Graal doesn't have a dedicated J18 version
+        exclude:
+          - jvm: Graal_VM
+            jvm_version: 18 # Graal doesn't have a dedicated J18 version
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
