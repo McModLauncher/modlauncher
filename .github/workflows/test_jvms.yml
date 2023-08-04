@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
-        jvm: [ Graal_VM, Adoptium, AdoptOpenJDK ]
+        jvm: [ Graal_VM, Adoptium, AdoptOpenJDK, Azul, IMB, Oracle ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
