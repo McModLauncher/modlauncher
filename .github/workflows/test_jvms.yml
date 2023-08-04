@@ -8,7 +8,7 @@ on:
 
 jobs:
   testjdks:
-    name: Test JDK ${{ matrix.jvm }} version ${{ matrix.jvm_version }}
+    name: Test JDK ${{ matrix.jdk }} version ${{ matrix.jvm_version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
