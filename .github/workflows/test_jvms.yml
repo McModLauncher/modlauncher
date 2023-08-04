@@ -24,7 +24,7 @@ jobs:
         include:
           - jdk: Microsoft
             jvm_version: 17 # MS OpenJDK only has 11 and 17
-            os: [ ubuntu-latest, windows-latest, macos-latest ]
+            os: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
