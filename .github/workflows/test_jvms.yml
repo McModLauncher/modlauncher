@@ -14,8 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
-        #jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
-        jdk: [ Graal_VM ]
+        jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
         exclude:
           - jdk: Graal_VM
             jvm_version: 18 # Graal doesn't have a dedicated J18 version
