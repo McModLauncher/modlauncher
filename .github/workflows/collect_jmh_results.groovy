@@ -18,32 +18,24 @@ final resultsPath = Path.of('jmh_results')
 Files.list(resultsPath).map { it.resolve('result.json') }
         .map { [new JsonSlurper().parse(it.toFile()), it.parent.fileName.toString().substring('jmh_'.length())] }
         .forEach {
-            final split = it[1].split('_', 2)
-            final osName = split[0]
-            dummyClassResults.computeIfAbsent(osName, k -> [:])[split[1]] = "${it[0][0].primaryMetric.score.round(2)} ± ${it[0][0].primaryMetric.scoreError.round(2)} ${it[0][0].primaryMetric.scoreUnit}"
-            noopResults.computeIfAbsent(osName, k -> [:])[split[1]] = "${it[0][1].primaryMetric.score.round(2)} ± ${it[0][1].primaryMetric.scoreError.round(2)} ${it[0][1].primaryMetric.scoreUnit}"
+            dummyClassResults[it[1]] = "${it[0][0].primaryMetric.score.round(2)} ± ${it[0][0].primaryMetric.scoreError.round(2)} ${it[0][0].primaryMetric.scoreUnit}"
+            noopResults[it[1]] = "${it[0][1].primaryMetric.score.round(2)} ± ${it[0][1].primaryMetric.scoreError.round(2)} ${it[0][1].primaryMetric.scoreUnit}"
         }
 
-resultsText = '# Jmh Results'
-['Ubuntu': 'ubuntu-latest', 'MacOS': 'macos-latest', 'Windows': 'windows-latest'].each { osName, os ->
-    Table.Builder dummyClassTable = new Table.Builder()
-            .withAlignments(Table.ALIGN_RIGHT, Table.ALIGN_RIGHT)
-            .addRow('JDK name & Version', 'Benchmark results')
-    (dummyClassResults[os] as Map).sort { a, b -> a.value <=> b.value }.forEach { type, results -> dummyClassTable.addRow(type, results) }
+Table.Builder dummyClassTable = new Table.Builder()
+        .withAlignments(Table.ALIGN_RIGHT, Table.ALIGN_RIGHT)
+        .addRow('JDK name & Version', 'Benchmark results')
+dummyClassResults.sort { a, b -> a.value <=> b.value }.forEach { type, results -> dummyClassTable.addRow(type, results) }
 
-    Table.Builder noopTable = new Table.Builder()
-            .withAlignments(Table.ALIGN_RIGHT, Table.ALIGN_RIGHT)
-            .addRow('JDK name & Version', 'Benchmark results')
-    (noopResults[os] as Map).sort { a, b -> a.value <=> b.value }.forEach { type, results -> noopTable.addRow(type, results) }
+Table.Builder noopTable = new Table.Builder()
+        .withAlignments(Table.ALIGN_RIGHT, Table.ALIGN_RIGHT)
+        .addRow('JDK name & Version', 'Benchmark results')
+noopResults.sort { a, b -> a.value <=> b.value }.forEach { type, results -> noopTable.addRow(type, results) }
 
-    resultsText += """
-\n## $osName
-### `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformDummyClass` results
+new File('jmh_results.md').text = """
+# `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformDummyClass` results
 ${dummyClassTable.build()}
 
-### `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformNoop` results
+# `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformNoop` results
 ${noopTable.build()}
 """
-}
-
-new File('jmh_results.md').text = resultsText

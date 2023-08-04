@@ -10,31 +10,25 @@ on:
 
 jobs:
   testjdks:
-    name: Test JDK ${{ matrix.jdk }} version ${{ matrix.jvm_version }} on OS ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Test JDK ${{ matrix.jdk }} version ${{ matrix.jvm_version }}
+    runs-on: ubuntu-latest
     strategy:
+      max-parallel: 10
       fail-fast: false
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
         jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
         exclude:
           - jdk: Graal_VM
             jvm_version: 18 # Graal doesn't have a dedicated J18 version
         include:
           - jdk: Microsoft
-            jvm_version: 17 # MS OpenJDK only has 11 and 17
-            os: ubuntu-latest
+            jvm_version: 17 # MS OpenJDK only has 11 and 177
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
         with:
           fetch-depth: 0
-      - name: Setup Temurin 17 for building
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
@@ -42,13 +36,12 @@ jobs:
           generate-job-summary: false
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-        if: ${{ matrix.os != 'windows-latest' }}
       - name: Run Jmh with Gradle Wrapper
         run: ./gradlew :jmh -PjmhVendor=${{ matrix.jdk }} -PjmhVersion=${{ matrix.jvm_version }}
       - uses: actions/upload-artifact@v3
         name: Upload Results
         with:
-          name: jmh_${{ matrix.os }}_${{ matrix.jdk }}-${{ matrix.jvm_version }}
+          name: jmh_${{ matrix.jdk }}-${{ matrix.jvm_version }}
           path: build/reports/jmh/result.json
 
   upload_results:
