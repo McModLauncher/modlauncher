@@ -1,0 +1,33 @@
+name: Test JVMs and publish Jmh results
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  testjvms:
+    name: Test JVM ${{ matrix.jvm }} version ${{ matrix.jvm_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jvm_version: [ 17, 18, 19, 20 ]
+        jvm: [ Graal_VM, Adoptium, AdoptOpenJDK ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Run Jmh with Gradle Wrapper
+        run: ./gradlew :jmh -PjmhVendor=${{ matrix.jvm }} -PjmhVersion=${{ matrix.jvm_version }}
+      - uses: actions/upload-artifact@v3
+        name: Upload Results
+        with:
+          name: jmh_${{ matrix.jvm }}-${{ matrix.jvm_version }}
+          path: build/reports/jmh/result.json
