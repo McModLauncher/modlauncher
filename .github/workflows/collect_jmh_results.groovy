@@ -4,11 +4,11 @@ import net.steppschuh.markdowngenerator.table.Table
 import java.nio.file.Files
 import java.nio.file.Path
 
-@GrabResolver(name = 'bintray', root='https://dl.bintray.com/steppschuh/Markdown-Generator/')
+@GrabResolver(name='jitpack.io', root='https://jitpack.io/')
 @GrabResolver(name = 'central', root='https://repo1.maven.org/maven2/')
 @Grapes([
     @Grab('org.apache.groovy:groovy-json:4.0.13'),
-    @Grab('net.steppschuh.markdowngenerator:markdowngenerator:1.3.2')
+    @Grab('com.github.Steppschuh:Java-Markdown-Generator:1.3.2')
 ])
 
 final dummyClassResults = [:]
@@ -32,11 +32,10 @@ Table.Builder noopTable = new Table.Builder()
         .addRow('JDK name & Version', 'Benchmark results')
 noopResults.forEach { type, results -> noopTable.addRow(type, results) }
 
-new File('jmh_results.md').text = """
-# Jmh Results
-## `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformDummyClass` results
+new File('jmh_results/final.md').text = """
+# `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformDummyClass` results
 ${dummyClassTable.build()}
 
-## `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformNoop` results
+# `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformNoop` results
 ${noopTable.build()}
 """
