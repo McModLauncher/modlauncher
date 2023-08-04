@@ -19,7 +19,7 @@ Files.list(resultsPath).map { it.resolve('result.json') }
     .map { [new JsonSlurper().parse(it.toFile()), it.parent.fileName.toString().substring('jmh_'.length())] }
     .forEach {
         dummyClassResults[it[1]] = "${it[0][0].primaryMetric.score.round(2)} ± ${it[0][0].primaryMetric.scoreError.round(2)} ${it[0][0].primaryMetric.scoreUnit}"
-        noopResults[it[1]] = "${it[1][0].primaryMetric.score.round(2)} ± ${it[1][0].primaryMetric.scoreError.round(2)} ${it[1][0].primaryMetric.scoreUnit}"
+        noopResults[it[1]] = "${it[0][1].primaryMetric.score.round(2)} ± ${it[0][1].primaryMetric.scoreError.round(2)} ${it[0][1].primaryMetric.scoreUnit}"
     }
 
 Table.Builder dummyClassTable = new Table.Builder()
