@@ -7,19 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  testjvms:
-    name: Test JVM ${{ matrix.jvm }} version ${{ matrix.jvm_version }}
+  testjdks:
+    name: Test JDK ${{ matrix.jvm }} version ${{ matrix.jvm_version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
-        jvm: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
+        #jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
+        jdk: []
         exclude:
-          - jvm: Graal_VM
+          - jdk: Graal_VM
             jvm_version: 18 # Graal doesn't have a dedicated J18 version
         include:
-          - jvm: Microsoft
+          - jdk: Microsoft
             jvm_version: 17 # MS OpenJDK only has 11 and 177
     steps:
       - name: Checkout repository
@@ -33,12 +34,35 @@ jobs:
             caches
             notifications
             jdks
+          generate-job-summary: false
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Run Jmh with Gradle Wrapper
-        run: ./gradlew :jmh -PjmhVendor=${{ matrix.jvm }} -PjmhVersion=${{ matrix.jvm_version }}
+        run: ./gradlew :jmh -PjmhVendor=${{ matrix.jdk }} -PjmhVersion=${{ matrix.jvm_version }}
       - uses: actions/upload-artifact@v3
         name: Upload Results
         with:
-          name: jmh_${{ matrix.jvm }}-${{ matrix.jvm_version }}
+          name: jmh_${{ matrix.jdk }}-${{ matrix.jvm_version }}
           path: build/reports/jmh/result.json
+
+  upload_results:
+    name: Upload Jmh results
+    needs: [testjdks]
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Setup Groovy
+        uses: wtfjoke/setup-groovy@v1
+        with:
+          groovy-version: '4.x'
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Downloads results
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          path: jmh_results
+      - name: Collect results
+        run: groovy .github/workflows/collect_jmh_results.groovy
+      - name: Upload Final Results
+        run: cat jmh_results.md >> $GITHUB_STEP_SUMMARY
