@@ -32,7 +32,7 @@ Table.Builder noopTable = new Table.Builder()
         .addRow('JDK name & Version', 'Benchmark results')
 noopResults.forEach { type, results -> noopTable.addRow(type, results) }
 
-new File('jmh_results/final.md').text = """
+new File('jmh_results.md').text = """
 # `cpw.mods.modlauncher.benchmarks.TransformBenchmark.transformDummyClass` results
 ${dummyClassTable.build()}
 
