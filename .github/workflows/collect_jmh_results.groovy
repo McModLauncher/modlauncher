@@ -18,9 +18,10 @@ final resultsPath = Path.of('jmh_results')
 Files.list(resultsPath).map { it.resolve('result.json') }
         .map { [new JsonSlurper().parse(it.toFile()), it.parent.fileName.toString().substring('jmh_'.length())] }
         .forEach {
-            final osName = it[1].split('_')[1]
-            dummyClassResults.computeIfAbsent(osName, k -> [:])[it[1]] = "${it[0][0].primaryMetric.score.round(2)} ± ${it[0][0].primaryMetric.scoreError.round(2)} ${it[0][0].primaryMetric.scoreUnit}"
-            noopResults.computeIfAbsent(osName, k -> [:])[it[1]] = "${it[0][1].primaryMetric.score.round(2)} ± ${it[0][1].primaryMetric.scoreError.round(2)} ${it[0][1].primaryMetric.scoreUnit}"
+            final split = it[1].split('_', 2)
+            final osName = split[0]
+            dummyClassResults.computeIfAbsent(osName, k -> [:])[split[1]] = "${it[0][0].primaryMetric.score.round(2)} ± ${it[0][0].primaryMetric.scoreError.round(2)} ${it[0][0].primaryMetric.scoreUnit}"
+            noopResults.computeIfAbsent(osName, k -> [:])[split[1]] = "${it[0][1].primaryMetric.score.round(2)} ± ${it[0][1].primaryMetric.scoreError.round(2)} ${it[0][1].primaryMetric.scoreUnit}"
         }
 
 resultsText = '# Jmh Results'
