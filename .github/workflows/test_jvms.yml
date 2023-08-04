@@ -14,10 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         jvm_version: [ 17, 18, 19, 20 ]
-        jvm: [ Graal_VM, Adoptium, AdoptOpenJDK, AdoptOpenJDK-J9, Azul, IBM, Oracle, Microsoft, Amazon  ]
+        jvm: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Microsoft, Amazon, BellSoft, SAP ]
         exclude:
           - jvm: Graal_VM
             jvm_version: 18 # Graal doesn't have a dedicated J18 version
+        include:
+          - jvm: Microsoft
+            jvm_version: 17 # MS OpenJDK only has 11 and 177
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
@@ -25,6 +28,10 @@ jobs:
           fetch-depth: 0
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        gradle-home-cache-includes: |
+          caches
+          notifications
+          jdks
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Run Jmh with Gradle Wrapper
