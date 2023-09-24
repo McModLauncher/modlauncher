@@ -1,9 +1,9 @@
 plugins {
     id 'java-library'
     id 'eclipse'
-    id 'com.github.ben-manes.versions' version '0.39.0'
+    id 'com.github.ben-manes.versions' version '0.48.0'
     id 'net.neoforged.gradleutils' version '2.+'
-    id 'de.jjohannes.extra-java-module-info' version '0.11'
+    id 'org.gradlex.extra-java-module-info' version '1.4.2'
     id 'maven-publish'
 }
 
@@ -43,31 +43,31 @@ repositories {
 
 
 dependencies {
-    api("org.ow2.asm:asm:${asmVersion}")
-    api("org.ow2.asm:asm-tree:${asmVersion}")
-    api("org.ow2.asm:asm-commons:${asmVersion}")
+    api("org.ow2.asm:asm:${asm_version}")
+    api("org.ow2.asm:asm-tree:${asm_version}")
+    api("org.ow2.asm:asm-commons:${asm_version}")
     
-    implementation('cpw.mods:securejarhandler:2.1.2')
-    implementation('org.apache.logging.log4j:log4j-api:2.17.1')
-    implementation('org.apache.logging.log4j:log4j-core:2.17.1')
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4')
-    compileOnly('org.jetbrains:annotations:23.0.0')
+    implementation("cpw.mods:securejarhandler:${sjh_version}")
+    implementation("org.apache.logging.log4j:log4j-api:${log4j_version}")
+    implementation("org.apache.logging.log4j:log4j-core:${log4j_version}")
+    implementation("net.sf.jopt-simple:jopt-simple:${jopt_version}")
+    compileOnly("org.jetbrains:annotations:${jetbrains_ann_version}")
     
-    annotationProcessor('org.apache.logging.log4j:log4j-core:2.17.1')
+    annotationProcessor("org.apache.logging.log4j:log4j-core:${log4j_version}")
     
     testCompileOnly(sourceSets.testJars.output)
-    testCompileOnly('org.jetbrains:annotations:23.0.0')
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.8.+')
-    testImplementation('org.junit.jupiter:junit-jupiter-engine:5.8.+')
-    testImplementation('org.powermock:powermock-core:2.0.+')
-    testImplementation('org.powermock:powermock-reflect:2.0.+')
-    testRuntimeOnly('org.apiguardian:apiguardian-api:1.1.2')
+    testCompileOnly("org.jetbrains:annotations:${jetbrains_ann_version}")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junit_version}")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:${junit_version}")
+    testImplementation("org.powermock:powermock-core:${powermock_version}")
+    testImplementation("org.powermock:powermock-reflect:${powermock_version}")
+    testRuntimeOnly("org.apiguardian:apiguardian-api:${apiguardian_version}")
 
     jmhImplementation(sourceSets.main.output)
     jmhImplementation(sourceSets.testJars.output)
-    jmhImplementation('org.openjdk.jmh:jmh-core:1.35')
-    jmhImplementation('org.powermock:powermock-core:2.0.9')
-    jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.35')
+    jmhImplementation("org.openjdk.jmh:jmh-core:${jmh_version}")
+    jmhImplementation("org.powermock:powermock-core:${powermock_version}")
+    jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:${jmh_version}")
 }
 
 configurations.jmhImplementation.extendsFrom(configurations.implementation)
@@ -75,10 +75,10 @@ configurations.jmhImplementation.extendsFrom(configurations.implementation)
 extraJavaModuleInfo {
     failOnMissingModuleInfo = false
     
-    automaticModule('jmh-core-1.35.jar', 'jmh.core')
-    automaticModule('powermock-core-2.0.9.jar', 'powermock.core')
-    automaticModule('powermock-reflect-2.0.9.jar', 'powermock.reflect')
-    automaticModule('jopt-simple-5.0.4.jar', 'jopt.simple')
+    automaticModule("jmh-core-${jmh_version}.jar", 'jmh.core')
+    automaticModule("powermock-core-${powermock_version}.jar", 'powermock.core')
+    automaticModule("powermock-reflect-${powermock_version}.jar", 'powermock.reflect')
+    automaticModule("jopt-simple-${jopt_version}.jar", 'jopt.simple')
 }
 
 task testsJar(type: Jar) {
@@ -104,7 +104,7 @@ test {
     )
 }
 
-tasks.register('jmh', JavaExec) {
+task jmh(type: JavaExec) {
     dependsOn('jmhClasses')
     mainClass = 'org.openjdk.jmh.Main'
 
@@ -135,7 +135,6 @@ tasks.register('jmh', JavaExec) {
             '-rf', 'json',
             '-rff', results
     ]
-
     if (project.hasProperty('jmhVendor') && project.hasProperty('jmhVersion')) {
         final specifiedVendor = project.property('jmhVendor').toString()
         final actualVendor = specifiedVendor.endsWith('-J9') ? specifiedVendor.substring(0, specifiedVendor.length() - 3) : specifiedVendor
@@ -144,6 +143,8 @@ tasks.register('jmh', JavaExec) {
             it.languageVersion.set(JavaLanguageVersion.of(project.property('jmhVersion') as int))
             it.implementation.set(specifiedVendor.endsWith('-J9') ? JvmImplementation.J9 : JvmImplementation.VENDOR_SPECIFIC)
         })
+    } else {
+        javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
     }
 }
 
