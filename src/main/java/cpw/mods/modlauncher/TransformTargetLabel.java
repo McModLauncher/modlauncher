@@ -37,7 +37,7 @@ public final class TransformTargetLabel {
     private final TargetType<?> labelType;
     
     TransformTargetLabel(ITransformer.Target<?> target) {
-        this(target.getClassName(), target.getElementName(), target.getElementDescriptor(), target.getTargetType());
+        this(target.className(), target.elementName(), target.elementDescriptor(), target.targetType());
     }
     private TransformTargetLabel(String className, String elementName, String elementDescriptor, TargetType<?> labelType) {
         this.className = Type.getObjectType(className.replace('.', '/'));
