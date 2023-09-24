@@ -34,7 +34,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
+import static cpw.mods.modlauncher.api.LambdaExceptionUtils.uncheck;
 
 @State(Scope.Benchmark)
 public class TransformBenchmark {
