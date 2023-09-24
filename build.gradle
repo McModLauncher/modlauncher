@@ -157,7 +157,7 @@ ext.sharedManifest = manifest {
                 'Implementation-Vendor' :'neoforged',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
                 'Git-Commit': gradleutils.gitInfo.abbreviatedId,
-                'Git-Branch': gradleutils.gitInfo.branch,
+                'Git-Branch': gradleutils.gitInfo.branch?:'NONE',
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}" ],
             'cpw/mods/modlauncher/api/')
     attributes(['Specification-Title': 'modlauncherserviceapi',
@@ -168,7 +168,7 @@ ext.sharedManifest = manifest {
                 'Implementation-Vendor' :'neoforged',
                 'Implementation-Timestamp': java.time.Instant.now().toString(),
                 'Git-Commit': gradleutils.gitInfo.abbreviatedId,
-                'Git-Branch': gradleutils.gitInfo.branch,
+                'Git-Branch': gradleutils.gitInfo.branch?:'NONE',
                 'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}"],
             'cpw/mods/modlauncher/serviceapi/')
 }
