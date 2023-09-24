@@ -1,0 +1,67 @@
+name: Test JVMs and publish Jmh results
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  testjdks:
+    name: Test JDK ${{ matrix.jdk }} version ${{ matrix.jvm_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 10
+      fail-fast: false
+      matrix:
+        jvm_version: [ 17, 18, 19, 20 ]
+        jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
+        exclude:
+          - jdk: Graal_VM
+            jvm_version: 18 # Graal doesn't have a dedicated J18 version
+        include:
+          - jdk: Microsoft
+            jvm_version: 17 # MS OpenJDK only has 11 and 177
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          cache-disabled: true
+          generate-job-summary: false
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Run Jmh with Gradle Wrapper
+        run: ./gradlew :jmh -PjmhVendor=${{ matrix.jdk }} -PjmhVersion=${{ matrix.jvm_version }}
+      - uses: actions/upload-artifact@v3
+        name: Upload Results
+        with:
+          name: jmh_${{ matrix.jdk }}-${{ matrix.jvm_version }}
+          path: build/reports/jmh/result.json
+
+  upload_results:
+    name: Upload Jmh results
+    needs: [testjdks]
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Setup Groovy
+        uses: wtfjoke/setup-groovy@v1
+        with:
+          groovy-version: '4.x'
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Downloads results
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          path: jmh_results
+      - name: Collect results
+        run: groovy .github/workflows/collect_jmh_results.groovy
+      - name: Upload Final Results
+        run: cat jmh_results.md >> $GITHUB_STEP_SUMMARY
