@@ -19,6 +19,9 @@
 package cpw.mods.modlauncher.api;
 
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
 
@@ -77,7 +80,10 @@ public interface ITransformer<T> {
      * @return The set of targets this transformer wishes to apply to
      */
     @NotNull
-    Set<Target> targets();
+    Set<Target<T>> targets();
+    
+    @NotNull
+    TargetType<T> getTargetType();
 
     /**
      * @return A string array for uniquely identifying this transformer instance within the service.
@@ -85,39 +91,16 @@ public interface ITransformer<T> {
     default String[] labels() {
         return DEFAULT_LABEL;
     }
-    /**
-     * Specifies the target type for the {@link Target}. Note that the type of the transformer T
-     * dictates what are acceptable targets for this transformer.
-     */
-    enum TargetType {
-        /**
-         * Target a class. The {@link ITransformer} T variable must refer to {@link org.objectweb.asm.tree.ClassNode}
-         */
-        CLASS,
-        /**
-         * Target a method. The {@link ITransformer} T variable must refer to {@link org.objectweb.asm.tree.MethodNode}
-         */
-        METHOD,
-        /**
-         * Target a field. The {@link ITransformer} T variable must refer to {@link org.objectweb.asm.tree.FieldNode}
-         */
-        FIELD,
-        /**
-         * Target a class, before field and method transforms operate. SHOULD ONLY BE USED to "replace" a complete class
-         * The {@link ITransformer} T variable must refer to {@link org.objectweb.asm.tree.ClassNode}
-         */
-        PRE_CLASS;
-    }
 
     /**
      * Simple data holder indicating where the {@link ITransformer} can target.
      */
     @SuppressWarnings("SameParameterValue")
-    final class Target {
+    final class Target<T> {
         private final String className;
         private final String elementName;
         private final String elementDescriptor;
-        private final TargetType targetType;
+        private final TargetType<T> targetType;
 
         /**
          * Build a new target. Ensure that the targetType matches the T type for the ITransformer
@@ -133,7 +116,7 @@ public interface ITransformer<T> {
          * @param targetType        The {@link TargetType} for this target - it should match the ITransformer
          *                          type variable T
          */
-        Target(String className, String elementName, String elementDescriptor, TargetType targetType) {
+        Target(String className, String elementName, String elementDescriptor, TargetType<T> targetType) {
             Objects.requireNonNull(className, "Class Name cannot be null");
             Objects.requireNonNull(elementName, "Element Name cannot be null");
             Objects.requireNonNull(elementDescriptor, "Element Descriptor cannot be null");
@@ -151,8 +134,8 @@ public interface ITransformer<T> {
          * @return A target for the named class
          */
         @NotNull
-        public static Target targetClass(String className) {
-            return new Target(className, "", "", TargetType.CLASS);
+        public static Target<ClassNode> targetClass(String className) {
+            return new Target<>(className, "", "", TargetType.CLASS);
         }
 
         /**
@@ -162,8 +145,8 @@ public interface ITransformer<T> {
          * @return A target for the named class
          */
         @NotNull
-        public static Target targetPreClass(String className) {
-            return new Target(className, "", "", TargetType.PRE_CLASS);
+        public static Target<ClassNode> targetPreClass(String className) {
+            return new Target<>(className, "", "", TargetType.PRE_CLASS);
         }
         /**
          * Convenience method return a {@link Target} for a method
@@ -174,8 +157,8 @@ public interface ITransformer<T> {
          * @return A target for the named method
          */
         @NotNull
-        public static Target targetMethod(String className, String methodName, String methodDescriptor) {
-            return new Target(className, methodName, methodDescriptor, TargetType.METHOD);
+        public static Target<MethodNode> targetMethod(String className, String methodName, String methodDescriptor) {
+            return new Target<>(className, methodName, methodDescriptor, TargetType.METHOD);
         }
 
         /**
@@ -186,8 +169,8 @@ public interface ITransformer<T> {
          * @return A target for the named field
          */
         @NotNull
-        public static Target targetField(String className, String fieldName) {
-            return new Target(className, fieldName, "", TargetType.FIELD);
+        public static Target<FieldNode> targetField(String className, String fieldName) {
+            return new Target<>(className, fieldName, "", TargetType.FIELD);
         }
 
         /**
@@ -214,7 +197,7 @@ public interface ITransformer<T> {
         /**
          * @return The target type of this target
          */
-        public TargetType getTargetType() {
+        public TargetType<T> getTargetType() {
             return targetType;
         }
     }

@@ -33,29 +33,29 @@ import static cpw.mods.modlauncher.LogMarkers.*;
 public class TransformStore {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Set<String> classNeedsTransforming = new HashSet<>();
-    private final EnumMap<TransformTargetLabel.LabelType, TransformList<?>> transformers;
+    private final Map<TargetType<?>, TransformList<?>> transformers;
 
     public TransformStore() {
-        transformers = new EnumMap<>(TransformTargetLabel.LabelType.class);
-        for (TransformTargetLabel.LabelType type : TransformTargetLabel.LabelType.values())
+        transformers = new HashMap<>();
+        for (TargetType<?> type : TargetType.VALUES)
             transformers.put(type, new TransformList<>(type.getNodeType()));
     }
 
     List<ITransformer<FieldNode>> getTransformersFor(String className, FieldNode field) {
         TransformTargetLabel tl = new TransformTargetLabel(className, field.name);
-        TransformList<FieldNode> transformerlist = TransformTargetLabel.LabelType.FIELD.getFromMap(this.transformers);
+        TransformList<FieldNode> transformerlist = TargetType.FIELD.get(this.transformers);
         return transformerlist.getTransformersForLabel(tl);
     }
 
     List<ITransformer<MethodNode>> getTransformersFor(String className, MethodNode method) {
         TransformTargetLabel tl = new TransformTargetLabel(className, method.name, method.desc);
-        TransformList<MethodNode> transformerlist = TransformTargetLabel.LabelType.METHOD.getFromMap(this.transformers);
+        TransformList<MethodNode> transformerlist = TargetType.METHOD.get(this.transformers);
         return transformerlist.getTransformersForLabel(tl);
     }
 
-    List<ITransformer<ClassNode>> getTransformersFor(String className, TransformTargetLabel.LabelType classType) {
+    List<ITransformer<ClassNode>> getTransformersFor(String className, TargetType<ClassNode> classType) {
         TransformTargetLabel tl = new TransformTargetLabel(className, classType);
-        TransformList<ClassNode> transformerlist = classType.getFromMap(this.transformers);
+        TransformList<ClassNode> transformerlist = classType.get(this.transformers);
         return transformerlist.getTransformersForLabel(tl);
     }
 
@@ -63,7 +63,7 @@ public class TransformStore {
     <T> void addTransformer(TransformTargetLabel targetLabel, ITransformer<T> transformer, ITransformationService service) {
         LOGGER.debug(MODLAUNCHER,"Adding transformer {} to {}", () -> transformer, () -> targetLabel);
         classNeedsTransforming.add(targetLabel.getClassName().getInternalName());
-        final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getLabelType());
+        final TransformList<T> transformList = (TransformList<T>) this.transformers.get(targetLabel.getTargetType());
         transformList.addTransformer(targetLabel, new TransformerHolder<>(transformer, service));
     }
 

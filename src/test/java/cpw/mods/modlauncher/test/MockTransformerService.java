@@ -94,7 +94,7 @@ public class MockTransformerService implements ITransformationService {
 
     @NotNull
     @Override
-    public List<ITransformer> transformers() {
+    public List<? extends ITransformer<?>> transformers() {
         return Stream.of(new ClassNodeTransformer(modList)).collect(Collectors.toList());
     }
 
@@ -121,8 +121,13 @@ public class MockTransformerService implements ITransformationService {
 
         @NotNull
         @Override
-        public Set<Target> targets() {
+        public Set<Target<ClassNode>> targets() {
             return classNames.stream().map(Target::targetClass).collect(Collectors.toSet());
+        }
+
+        @Override
+        public TargetType<ClassNode> getTargetType() {
+            return TargetType.CLASS;
         }
     }
 

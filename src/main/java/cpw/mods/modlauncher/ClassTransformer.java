@@ -94,7 +94,7 @@ public class ClassTransformer {
         if (needsTransforming) {
             VotingContext context = new VotingContext(className, empty, digest, auditTrail.getActivityFor(className), reason);
 
-            List<ITransformer<ClassNode>> preClassTransformers = new ArrayList<>(transformers.getTransformersFor(className, TransformTargetLabel.LabelType.PRE_CLASS));
+            List<ITransformer<ClassNode>> preClassTransformers = new ArrayList<>(transformers.getTransformersFor(className, TargetType.PRE_CLASS));
             clazz = this.performVote(preClassTransformers, clazz, context);
 
             List<FieldNode> fieldList = new ArrayList<>(clazz.fields.size());
@@ -113,7 +113,7 @@ public class ClassTransformer {
 
             clazz.fields = fieldList;
             clazz.methods = methodList;
-            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className, TransformTargetLabel.LabelType.CLASS));
+            List<ITransformer<ClassNode>> classTransformers = new ArrayList<>(transformers.getTransformersFor(className, TargetType.CLASS));
             clazz = this.performVote(classTransformers, clazz, context);
         }
 
