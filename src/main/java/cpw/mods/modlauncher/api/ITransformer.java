@@ -94,39 +94,14 @@ public interface ITransformer<T> {
 
     /**
      * Simple data holder indicating where the {@link ITransformer} can target.
+     * @param className         The name of the class being targetted
+     * @param elementName       The name of the element being targetted. This is the field name for a field,
+     *                          the method name for a method. Empty string for other types
+     * @param elementDescriptor The method's descriptor. Empty string for other types
+     * @param targetType        The {@link TargetType} for this target - it should match the ITransformer
+     *                          type variable T
      */
-    @SuppressWarnings("SameParameterValue")
-    final class Target<T> {
-        private final String className;
-        private final String elementName;
-        private final String elementDescriptor;
-        private final TargetType<T> targetType;
-
-        /**
-         * Build a new target. Ensure that the targetType matches the T type for the ITransformer
-         * supplying the target.
-         * <p>
-         * In an obfuscated environment, this will be the obfuscated "notch" naming, in a
-         * deobfuscated environment this will be the searge naming.
-         *
-         * @param className         The name of the class being targetted
-         * @param elementName       The name of the element being targetted. This is the field name for a field,
-         *                          the method name for a method. Empty string for other types
-         * @param elementDescriptor The method's descriptor. Empty string for other types
-         * @param targetType        The {@link TargetType} for this target - it should match the ITransformer
-         *                          type variable T
-         */
-        Target(String className, String elementName, String elementDescriptor, TargetType<T> targetType) {
-            Objects.requireNonNull(className, "Class Name cannot be null");
-            Objects.requireNonNull(elementName, "Element Name cannot be null");
-            Objects.requireNonNull(elementDescriptor, "Element Descriptor cannot be null");
-            Objects.requireNonNull(targetType, "Target Type cannot be null");
-            this.className = className;
-            this.elementName = elementName;
-            this.elementDescriptor = elementDescriptor;
-            this.targetType = targetType;
-        }
-
+    record Target<T>(String className, String elementName, String elementDescriptor, TargetType<T> targetType) {
         /**
          * Convenience method returning a {@link Target} for a class
          *
@@ -171,34 +146,6 @@ public interface ITransformer<T> {
         @NotNull
         public static Target<FieldNode> targetField(String className, String fieldName) {
             return new Target<>(className, fieldName, "", TargetType.FIELD);
-        }
-
-        /**
-         * @return The class name for this target
-         */
-        public String getClassName() {
-            return className;
-        }
-
-        /**
-         * @return The element name for this target, either the field name or the method name
-         */
-        public String getElementName() {
-            return elementName;
-        }
-
-        /**
-         * @return The element's descriptor. Usually the method descriptor
-         */
-        public String getElementDescriptor() {
-            return elementDescriptor;
-        }
-
-        /**
-         * @return The target type of this target
-         */
-        public TargetType<T> getTargetType() {
-            return targetType;
         }
     }
 }

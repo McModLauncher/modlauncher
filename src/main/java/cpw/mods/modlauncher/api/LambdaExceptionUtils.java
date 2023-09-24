@@ -23,7 +23,7 @@ import java.util.function.*;
 /**
  * From stackoverflow: https://stackoverflow.com/a/27644392
  */
-public class LamdbaExceptionUtils {
+public class LambdaExceptionUtils {
 
     /**
      * .forEach(rethrowConsumer(name -> System.out.println(Class.forName(name)))); or .forEach(rethrowConsumer(ClassNameUtil::println));
