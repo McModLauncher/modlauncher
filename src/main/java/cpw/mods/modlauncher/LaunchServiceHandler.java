@@ -71,14 +71,6 @@ class LaunchServiceHandler {
         launch(launchTarget, args, gameLayer, classLoader, launchPluginHandler);
     }
 
-    TransformingClassLoaderBuilder identifyTransformationTargets(final ArgumentHandler argumentHandler) {
-        final String launchTarget = argumentHandler.getLaunchTarget();
-        final TransformingClassLoaderBuilder builder = new TransformingClassLoaderBuilder();
-        Arrays.stream(argumentHandler.getSpecialJars()).forEach(builder::addTransformationPath);
-        launchHandlerLookup.get(launchTarget).configureTransformationClassLoaderBuilder(builder);
-        return builder;
-    }
-
     void validateLaunchTarget(final ArgumentHandler argumentHandler) {
         if (!launchHandlerLookup.containsKey(argumentHandler.getLaunchTarget())) {
             LOGGER.error(MODLAUNCHER, "Cannot find launch target {}, unable to launch",

@@ -33,10 +33,6 @@ public class TestingLaunchHandlerService implements ILaunchHandlerService {
         return "testharness";
     }
 
-    @Override
-    public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
-    }
-
     public ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer) {
         try {
             Class<?> callableLaunch = Class.forName(System.getProperty("test.harness.callable"), true, Thread.currentThread().getContextClassLoader());

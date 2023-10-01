@@ -23,7 +23,6 @@ import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -103,8 +102,7 @@ public class Launcher {
         this.transformationServicesHandler.initialiseServiceTransformers();
         this.launchPlugins.offerScanResultsToPlugins(gameContents);
         this.launchService.validateLaunchTarget(this.argumentHandler);
-        final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
-        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder, this.environment, this.moduleLayerHandler);
+        this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, this.environment, this.moduleLayerHandler);
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.moduleLayerHandler.getLayer(IModuleLayerManager.Layer.GAME).orElseThrow(), this.classLoader, this.launchPlugins);
     }

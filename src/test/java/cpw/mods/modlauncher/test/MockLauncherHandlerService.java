@@ -30,11 +30,6 @@ public class MockLauncherHandlerService implements ILaunchHandlerService {
     }
 
     @Override
-    public void configureTransformationClassLoader(final ITransformingClassLoaderBuilder builder) {
-
-    }
-
-    @Override
     public ServiceRunner launchService(String[] arguments, ModuleLayer gameLayer) {
         return ServiceRunner.NOOP;
     }

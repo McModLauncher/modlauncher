@@ -63,10 +63,9 @@ class TransformingClassLoaderTests {
         
         Environment environment = Whitebox.invokeConstructor(Environment.class, new Class[]{ Launcher.class }, new Object[]{ null });
         new TypesafeMap(IEnvironment.class);
-        Class<?> builderClass = Class.forName("cpw.mods.modlauncher.TransformingClassLoaderBuilder");
-        Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, builderClass, Environment.class, Configuration.class, List.class);
+        Constructor<TransformingClassLoader> constructor = Whitebox.getConstructor(TransformingClassLoader.class, TransformStore.class, LaunchPluginHandler.class, Environment.class, Configuration.class, List.class);
         Configuration configuration = createTestJarsConfiguration();
-        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, null, environment, configuration, List.of(ModuleLayer.boot()));
+        TransformingClassLoader tcl = constructor.newInstance(transformStore, lph, environment, configuration, List.of(ModuleLayer.boot()));
         ModuleLayer.boot().defineModules(configuration, s -> tcl);
         
         final Class<?> aClass = Class.forName(TARGET_CLASS, true, tcl);

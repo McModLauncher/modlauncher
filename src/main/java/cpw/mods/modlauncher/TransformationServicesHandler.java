@@ -25,8 +25,6 @@ import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
-import java.net.URL;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -55,8 +53,8 @@ class TransformationServicesHandler {
         return runScanningTransformationServices(environment);
     }
 
-    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment, final ModuleLayerHandler layerHandler) {
-        final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, builder, environment, cf, parents));
+    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final Environment environment, final ModuleLayerHandler layerHandler) {
+        final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, environment, cf, parents));
         layerHandler.updateLayer(IModuleLayerManager.Layer.PLUGIN, li->li.cl().setFallbackClassLoader(layerInfo.cl()));
         return (TransformingClassLoader) layerInfo.cl();
     }
