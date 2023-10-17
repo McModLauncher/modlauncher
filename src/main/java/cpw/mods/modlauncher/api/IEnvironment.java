@@ -20,6 +20,7 @@ package cpw.mods.modlauncher.api;
 
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
+import java.net.URI;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
@@ -117,6 +118,11 @@ public interface IEnvironment {
          * True if we can compute secured JAR state. JVMs < 8.0.61 do not have this feature because reasons
          */
         public static final Supplier<TypesafeMap.Key<Boolean>> SECURED_JARS_ENABLED = buildKey("securedJarsEnabled", Boolean.class);
+
+        /**
+         * Logging configurations to be composited together when configuring logging.
+         */
+        public static final Supplier<TypesafeMap.Key<List<URI>>> LOGGING_CONFIG = buildKey("loggingConfig", List.class);
     }
 
 

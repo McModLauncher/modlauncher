@@ -27,7 +27,7 @@ import java.util.ServiceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ClassLoaderAPITest {
+class ClassLoaderAPITest extends LoggingStateTestBase {
     @Test
     void testGetResources() throws ClassNotFoundException {
         Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");

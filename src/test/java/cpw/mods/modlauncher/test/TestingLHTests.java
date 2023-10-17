@@ -27,7 +27,7 @@ import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TestingLHTests {
+class TestingLHTests extends LoggingStateTestBase {
     boolean calledback;
     
     @Test

@@ -19,10 +19,13 @@
 package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.util.UriConverter;
 import joptsimple.*;
 import joptsimple.util.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
@@ -37,17 +40,19 @@ public class ArgumentHandler {
     private OptionSpec<String> nonOption;
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
+    private OptionSpec<URI> loggingConfigOption;
 
-    record DiscoveryData(Path gameDir, String launchTarget, String[] arguments) {}
+    record DiscoveryData(Path gameDir, String launchTarget, List<URI> loggingConfigs, String[] arguments) {}
 
     DiscoveryData setArgs(String[] args) {
         this.args = args;
         final OptionParser parser = new OptionParser();
         final var gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
         final var launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
+        final var loggingConfig = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',').defaultsTo(getDefaultLoggingConfiguration());
         parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
-        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget), args);
+        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget), optionSet.valuesOf(loggingConfig), args);
     }
 
     void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {
@@ -59,6 +64,7 @@ public class ArgumentHandler {
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
+        loggingConfigOption = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',').defaultsTo(getDefaultLoggingConfiguration());
 
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
@@ -68,7 +74,16 @@ public class ArgumentHandler {
         env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
         env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
+        env.computePropertyIfAbsent(IEnvironment.Keys.LOGGING_CONFIG.get(), f -> this.optionSet.valuesOf(loggingConfigOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
+    }
+
+    private static URI getDefaultLoggingConfiguration() {
+        try {
+            return Objects.requireNonNull(ArgumentHandler.class.getClassLoader().getResource("log4j2.xml")).toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Path[] getSpecialJars() {

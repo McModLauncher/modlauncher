@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test overall launcher
  */
-class LauncherTests {
+class LauncherTests extends LoggingStateTestBase {
     @Test
     void testLauncher() throws Exception {
         Launcher.main("--version", "1.0", "--launchTarget", "mockLaunch", "--test.mods", "A,B,C,cpw.mods.modlauncher.testjar.TestClass", "--accessToken", "SUPERSECRET!");
