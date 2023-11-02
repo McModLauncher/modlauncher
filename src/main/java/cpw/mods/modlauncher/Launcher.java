@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.log.MarkerLogLevelFilter;
+import cpw.mods.modlauncher.util.LoggingUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
@@ -67,6 +68,7 @@ public class Launcher {
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLIMPL_VERSION.get(), s->IEnvironment.class.getPackage().getImplementationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), s->new ArrayList<>());
         environment.computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k-> ProtectionDomainHelper.canHandleSecuredJars());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.LOGGING_CONFIG.get(), k -> new ArrayList<>(LoggingUtils.getConfigurationSources(this.moduleLayerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow())));
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
         this.argumentHandler = new ArgumentHandler();
@@ -97,13 +99,17 @@ public class Launcher {
         final ArgumentHandler.DiscoveryData discoveryData = this.argumentHandler.setArgs(args);
         reconfigureLogger(discoveryData.loggingConfigs());
         this.transformationServicesHandler.discoverServices(discoveryData);
+        reconfigureLogger(discoveryData.loggingConfigs());
         final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         scanResults.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
                 .stream()
                 .<SecureJar>mapMulti((resource, action) -> resource.resources().forEach(action))
                 .forEach(np->this.moduleLayerHandler.addToLayer(IModuleLayerManager.Layer.PLUGIN, np));
-        this.moduleLayerHandler.buildLayer(IModuleLayerManager.Layer.PLUGIN);
+        final var pluginLayer = this.moduleLayerHandler.buildLayer(IModuleLayerManager.Layer.PLUGIN);
+        var sources = LoggingUtils.getConfigurationSources(pluginLayer.layer());
+        this.environment.getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).ifPresent(lc -> lc.addAll(sources));
+        reconfigureLogger(discoveryData.loggingConfigs());
         final var gameResults = this.transformationServicesHandler.triggerScanCompletion(this.moduleLayerHandler)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         final var gameContents = Stream.of(scanResults, gameResults)
@@ -116,20 +122,23 @@ public class Launcher {
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder, this.environment, this.moduleLayerHandler);
+        reconfigureLogger(discoveryData.loggingConfigs());
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.moduleLayerHandler.getLayer(IModuleLayerManager.Layer.GAME).orElseThrow(), this.classLoader, this.launchPlugins);
     }
 
-    private void reconfigureLogger(List<URI> configurationFiles) {
-        final var configurations = configurationFiles.stream()
+    private void reconfigureLogger(List<URI> additionalConfigurationFiles) {
+        final var configurations = this.environment.getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).orElseThrow().stream()
             .map(ConfigurationSource::fromUri)
             .map(source -> ConfigurationFactory.getInstance().getConfiguration(LoggerContext.getContext(), source))
-            .peek(config -> {
-                if (!(config instanceof AbstractConfiguration))
-                    throw new RuntimeException("Configuration not an instance of AbstractConfiguration");
-            })
-            .map(config -> (AbstractConfiguration)config)
+            .map(AbstractConfiguration.class::cast)
             .collect(Collectors.toList());
+
+        additionalConfigurationFiles.stream()
+            .map(ConfigurationSource::fromUri)
+            .map(source -> ConfigurationFactory.getInstance().getConfiguration(LoggerContext.getContext(), source))
+            .map(AbstractConfiguration.class::cast)
+            .forEach(configurations::add);
 
         final var levelConfigBuilder = ConfigurationBuilderFactory.newConfigurationBuilder()
             .setConfigurationName("MODLAUNCHER-LOGLEVELS");

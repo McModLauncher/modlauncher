@@ -20,6 +20,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;
+import cpw.mods.modlauncher.util.LoggingUtils;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import joptsimple.*;
 import org.apache.logging.log4j.LogManager;
@@ -58,6 +59,8 @@ class TransformationServicesHandler {
     TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final TransformingClassLoaderBuilder builder, final Environment environment, final ModuleLayerHandler layerHandler) {
         final List<Function<String, Optional<URL>>> classLocatorList = serviceLookup.values().stream().map(TransformationServiceDecorator::getClassLoader).filter(Objects::nonNull).collect(Collectors.toList());
         final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, builder, environment, cf, parents));
+        var sources = LoggingUtils.getConfigurationSources(layerInfo.layer());
+        Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).ifPresent(lc -> lc.addAll(sources));
         layerHandler.updateLayer(IModuleLayerManager.Layer.PLUGIN, li->li.cl().setFallbackClassLoader(layerInfo.cl()));
         return (TransformingClassLoader) layerInfo.cl();
     }
@@ -128,6 +131,8 @@ class TransformationServicesHandler {
         LOGGER.debug(MODLAUNCHER, "Found additional transformation services from discovery services: {}", ()->additionalPaths.stream().map(ap->Arrays.toString(ap.paths())).collect(Collectors.joining()));
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
+        var sources = LoggingUtils.getConfigurationSources(serviceLayer.layer());
+        Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).ifPresent(lc -> lc.addAll(sources));
         earlyDiscoveryServices.forEach(s->s.earlyInitialization(discoveryData.launchTarget(), discoveryData.arguments()));
         serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
                 .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));

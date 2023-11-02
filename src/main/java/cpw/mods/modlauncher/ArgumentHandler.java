@@ -49,7 +49,7 @@ public class ArgumentHandler {
         final OptionParser parser = new OptionParser();
         final var gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
         final var launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
-        final var loggingConfig = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',').defaultsTo(getDefaultLoggingConfiguration());
+        final var loggingConfig = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',');
         parser.allowsUnrecognizedOptions();
         final OptionSet optionSet = parser.parse(args);
         return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget), optionSet.valuesOf(loggingConfig), args);
@@ -64,7 +64,7 @@ public class ArgumentHandler {
         minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
-        loggingConfigOption = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',').defaultsTo(getDefaultLoggingConfiguration());
+        loggingConfigOption = parser.accepts("loggingConfig", "Log4j configuration files to composite together").withOptionalArg().withValuesConvertedBy(new UriConverter()).withValuesSeparatedBy(',');
 
         parserConsumer.accept(parser);
         nonOption = parser.nonOptions();
@@ -74,16 +74,7 @@ public class ArgumentHandler {
         env.computePropertyIfAbsent(IEnvironment.Keys.ASSETSDIR.get(), f -> this.optionSet.valueOf(assetsDirOption));
         env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
         env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
-        env.computePropertyIfAbsent(IEnvironment.Keys.LOGGING_CONFIG.get(), f -> this.optionSet.valuesOf(loggingConfigOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
-    }
-
-    private static URI getDefaultLoggingConfiguration() {
-        try {
-            return Objects.requireNonNull(ArgumentHandler.class.getClassLoader().getResource("log4j2.xml")).toURI();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     Path[] getSpecialJars() {
