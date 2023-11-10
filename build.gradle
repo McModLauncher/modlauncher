@@ -189,7 +189,7 @@ publishing {
             from components.java
             pom {
                 name = 'Mod Launcher'
-                description = 'Common ModLauncher framework'
+                description = 'Java 17 mod launcher'
                 pomUtils.githubRepo(it, 'modlauncher', 'McModLauncher')
 
                 developers {
