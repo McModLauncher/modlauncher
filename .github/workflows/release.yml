@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  release:
+    uses: neoforged/actions/.github/workflows/gradle-publish.yml@main
+    with:
+      java: 17
+      pre_gradle_tasks: test
+      gradle_tasks: publish 
+    secrets:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      MAVEN_USER: ${{ secrets.MAVEN_USER }}
+      MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
