@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn" packages="cpw.mods.modlauncher.log">
-    <filters>
-        <MarkerFilter marker="NETWORK_PACKETS" onMatch="DENY" onMismatch="NEUTRAL"/>
-        <MarkerFilter marker="CLASSLOADING" onMatch="DENY" onMismatch="NEUTRAL"/>
-        <MarkerFilter marker="LAUNCHPLUGIN" onMatch="DENY" onMismatch="NEUTRAL"/>
-        <MarkerFilter marker="CLASSDUMP" onMatch="${sys:modlauncher.logging.marker.classdump:-DENY}" onMismatch="NEUTRAL"/>
-    </filters>
     <Appenders>
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout pattern="%highlight{[%d{HH:mm:ss.SSS}] [%t/%level] [%c{-3}/%markerSimpleName]: %msg %tEx%n}"/>
         </Console>
         <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY" />
             <PatternLayout pattern="[%d{ddMMMyyyy HH:mm:ss.SSS}] [%t/%level] [%logger/%markerSimpleName]: %msg%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -18,6 +13,7 @@
             </Policies>
         </RollingRandomAccessFile>
         <RollingRandomAccessFile name="DebugFile" fileName="logs/debug.log" filePattern="logs/debug-%i.log.gz">
+            <ThresholdFilter level="ALL" onMatch="ACCEPT" onMismatch="DENY" />
             <PatternLayout pattern="[%d{ddMMMyyyy HH:mm:ss.SSS}] [%t/%level] [%logger/%markerSimpleName]: %msg%n"/>
             <Policies>
                 <OnStartupTriggeringPolicy/>
@@ -27,12 +23,12 @@
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
-        <Logger level="INFO" name="com.mojang"/>
-        <Logger level="INFO" name="net.minecraft"/>
-        <Root level="all">
-            <AppenderRef ref="SysOut" level="INFO"/>
-            <AppenderRef ref="File" level="INFO"/>
-            <AppenderRef ref="DebugFile" level="TRACE"/>
+        <Logger name="com.mojang" level="INFO" />
+        <Logger name="net.minecraft" level="INFO" />
+        <Root level="DEBUG">
+            <AppenderRef ref="SysOut" />
+            <AppenderRef ref="File" />
+            <AppenderRef ref="DebugFile" />
         </Root>
     </Loggers>
 </Configuration>

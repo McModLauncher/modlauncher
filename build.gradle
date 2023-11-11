@@ -59,6 +59,7 @@ dependencies {
     testCompileOnly("org.jetbrains:annotations:${jetbrains_ann_version}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junit_version}")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:${junit_version}")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${junit_version}")
     testImplementation("org.powermock:powermock-core:${powermock_version}")
     testImplementation("org.powermock:powermock-reflect:${powermock_version}")
     testRuntimeOnly("org.apiguardian:apiguardian-api:${apiguardian_version}")
@@ -92,7 +93,7 @@ test {
     useJUnitPlatform()
     
     systemProperty 'testJars.location', testsJar.archiveFile.get().asFile
-    
+
     jvmArgs(
             '--module-path', classpath.asPath,
             '--add-modules', 'ALL-MODULE-PATH',

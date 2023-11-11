@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test core transformer functionality
  */
-class ClassTransformerTests {
+class ClassTransformerTests extends LoggingStateTestBase {
     @Test
     void testClassTransformer() throws Exception {
         MarkerManager.getMarker("CLASSDUMP");

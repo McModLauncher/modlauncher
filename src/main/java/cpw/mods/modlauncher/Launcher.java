@@ -20,9 +20,19 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
+import cpw.mods.modlauncher.log.MarkerLogLevelFilter;
+import cpw.mods.modlauncher.util.LoggingUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.*;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.composite.CompositeConfiguration;
+import org.apache.logging.log4j.core.filter.MarkerFilter;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -58,6 +68,7 @@ public class Launcher {
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLIMPL_VERSION.get(), s->IEnvironment.class.getPackage().getImplementationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), s->new ArrayList<>());
         environment.computePropertyIfAbsent(IEnvironment.Keys.SECURED_JARS_ENABLED.get(), k-> ProtectionDomainHelper.canHandleSecuredJars());
+        environment.computePropertyIfAbsent(IEnvironment.Keys.LOGGING_CONFIG.get(), k -> new ArrayList<>(LoggingUtils.getConfigurationSources(this.moduleLayerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow())));
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
         this.argumentHandler = new ArgumentHandler();
@@ -74,6 +85,7 @@ public class Launcher {
             JVM information: %s %s %s
             """, props.getProperty("java.vm.vendor"), props.getProperty("java.vm.name"), props.getProperty("java.vm.version"));
         }
+
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         LogManager.getLogger().info(MODLAUNCHER, "JVM identified as {} {} {}", props.getProperty("java.vm.vendor"), props.getProperty("java.vm.name"), props.getProperty("java.vm.version"));
         new Launcher().run(args);
@@ -85,14 +97,19 @@ public class Launcher {
 
     private void run(String... args) {
         final ArgumentHandler.DiscoveryData discoveryData = this.argumentHandler.setArgs(args);
+        reconfigureLogger(discoveryData.loggingConfigs());
         this.transformationServicesHandler.discoverServices(discoveryData);
+        reconfigureLogger(discoveryData.loggingConfigs());
         final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         scanResults.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
                 .stream()
                 .<SecureJar>mapMulti((resource, action) -> resource.resources().forEach(action))
                 .forEach(np->this.moduleLayerHandler.addToLayer(IModuleLayerManager.Layer.PLUGIN, np));
-        this.moduleLayerHandler.buildLayer(IModuleLayerManager.Layer.PLUGIN);
+        final var pluginLayer = this.moduleLayerHandler.buildLayer(IModuleLayerManager.Layer.PLUGIN);
+        var sources = LoggingUtils.getConfigurationSources(pluginLayer.layer());
+        this.environment.getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).ifPresent(lc -> lc.addAll(sources));
+        reconfigureLogger(discoveryData.loggingConfigs());
         final var gameResults = this.transformationServicesHandler.triggerScanCompletion(this.moduleLayerHandler)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         final var gameContents = Stream.of(scanResults, gameResults)
@@ -105,8 +122,66 @@ public class Launcher {
         this.launchService.validateLaunchTarget(this.argumentHandler);
         final TransformingClassLoaderBuilder classLoaderBuilder = this.launchService.identifyTransformationTargets(this.argumentHandler);
         this.classLoader = this.transformationServicesHandler.buildTransformingClassLoader(this.launchPlugins, classLoaderBuilder, this.environment, this.moduleLayerHandler);
+        reconfigureLogger(discoveryData.loggingConfigs());
         Thread.currentThread().setContextClassLoader(this.classLoader);
         this.launchService.launch(this.argumentHandler, this.moduleLayerHandler.getLayer(IModuleLayerManager.Layer.GAME).orElseThrow(), this.classLoader, this.launchPlugins);
+    }
+
+    private void reconfigureLogger(List<URI> additionalConfigurationFiles) {
+        final var configurations = this.environment.getProperty(IEnvironment.Keys.LOGGING_CONFIG.get()).orElseThrow().stream()
+            .map(ConfigurationSource::fromUri)
+            .map(source -> ConfigurationFactory.getInstance().getConfiguration(LoggerContext.getContext(), source))
+            .map(AbstractConfiguration.class::cast)
+            .collect(Collectors.toList());
+
+        additionalConfigurationFiles.stream()
+            .map(ConfigurationSource::fromUri)
+            .map(source -> ConfigurationFactory.getInstance().getConfiguration(LoggerContext.getContext(), source))
+            .map(AbstractConfiguration.class::cast)
+            .forEach(configurations::add);
+
+        final var levelConfigBuilder = ConfigurationBuilderFactory.newConfigurationBuilder()
+            .setConfigurationName("MODLAUNCHER-LOGLEVELS");
+        System.getProperties().entrySet().stream()
+            .map(entry -> (Map.Entry<String, String>)(Map.Entry<?,?>)entry)
+            .filter(entry -> entry.getKey().startsWith("logging.loglevel."))
+            .forEach(entry -> {
+                final var loggerName = entry.getKey().substring("logging.loglevel.".length());
+                final var level = Level.getLevel(entry.getValue());
+                if (loggerName.equals("default")) {
+                    levelConfigBuilder.add(levelConfigBuilder.newRootLogger(level));
+                } else {
+                    levelConfigBuilder.add(levelConfigBuilder.newLogger(loggerName, level));
+                }
+            });
+
+        final var markerConfigBuilder = ConfigurationBuilderFactory.newConfigurationBuilder()
+            .setConfigurationName("MODLAUNCHER-MARKERS");
+        System.getProperties().entrySet().stream()
+            .map(entry -> (Map.Entry<String, String>)(Map.Entry<?, ?>)entry)
+            .filter(entry -> entry.getKey().startsWith("logging.marker."))
+            .forEach(entry -> {
+                final var markerName = entry.getKey().substring("logging.marker.".length());
+                final var minimumLevel = Level.getLevel(entry.getValue());
+                markerConfigBuilder.add(markerConfigBuilder.newFilter("MarkerLogLevelFilter", Filter.Result.ACCEPT, Filter.Result.DENY)
+                    .addAttribute(MarkerLogLevelFilter.ATTR_MARKER, markerName)
+                    .addAttribute(MarkerLogLevelFilter.ATTR_MINIMUM_LEVEL, minimumLevel));
+            });
+
+        // These are the default markers; they have to be specified at the very end so that they have the lowest priority.
+        markerConfigBuilder.add(markerConfigBuilder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL)
+                .addAttribute(MarkerFilter.ATTR_MARKER, "NETWORK_PACKETS"))
+            .add(markerConfigBuilder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL)
+                .addAttribute(MarkerFilter.ATTR_MARKER, "CLASSLOADING"))
+            .add(markerConfigBuilder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL)
+                .addAttribute(MarkerFilter.ATTR_MARKER, "LAUNCHPLUGIN"))
+            .add(markerConfigBuilder.newFilter("MarkerFilter", Filter.Result.DENY, Filter.Result.NEUTRAL)
+                .addAttribute(MarkerFilter.ATTR_MARKER, "CLASSDUMP"));
+
+        configurations.add(levelConfigBuilder.build());
+        configurations.add(markerConfigBuilder.build());
+        Configurator.reconfigure(new CompositeConfiguration(configurations));
+        LogManager.getLogger().trace(MODLAUNCHER, "Logger reconfigured from {} sources", configurations.size());
     }
 
     public Environment environment() {

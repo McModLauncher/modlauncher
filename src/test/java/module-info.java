@@ -4,6 +4,7 @@ open module cpw.mods.modlauncher.test {
     requires static cpw.mods.modlauncher.testjars;
     
     requires org.junit.jupiter.api;
+    requires org.junit.jupiter.params;
     requires powermock.core;
     requires powermock.reflect;
     requires org.objectweb.asm;
@@ -16,5 +17,6 @@ open module cpw.mods.modlauncher.test {
     exports cpw.mods.modlauncher.test;
 
     provides cpw.mods.modlauncher.api.ILaunchHandlerService with cpw.mods.modlauncher.test.MockLauncherHandlerService;
+    provides cpw.mods.modlauncher.serviceapi.ILaunchPluginService with cpw.mods.modlauncher.test.MockLaunchPluginService;
     provides cpw.mods.modlauncher.api.ITransformationService with cpw.mods.modlauncher.test.MockTransformerService;
 }
