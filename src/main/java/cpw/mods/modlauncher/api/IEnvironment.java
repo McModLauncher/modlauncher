@@ -64,13 +64,6 @@ public interface IEnvironment {
 
     Optional<IModuleLayerManager> findModuleLayerManager();
 
-    /**
-     * Find the naming translation for the targetMapping.
-     * @param targetMapping the name of the mapping to lookup
-     * @return a function mapping names from the current naming domain to the requested one, if available
-     */
-    Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(String targetMapping);
-
     final class Keys {
         /**
          * Version passed in through arguments
@@ -92,10 +85,6 @@ public interface IEnvironment {
          * The name of the identified launch target (passed as an argument)
          */
         public static final Supplier<TypesafeMap.Key<String>> LAUNCHTARGET = buildKey("launchtarget", String.class);
-        /**
-         * The naming scheme in use. Populated at startup. See: {@link INameMappingService}
-         */
-        public static final Supplier<TypesafeMap.Key<String>> NAMING = buildKey("naming", String.class);
         /**
          * The audit trail for transformers applied to a class. See {@link ITransformerAuditTrail}
          */

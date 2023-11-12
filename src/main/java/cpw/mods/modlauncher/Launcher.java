@@ -23,9 +23,7 @@ import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
-import java.nio.file.Path;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,7 +38,6 @@ public class Launcher {
     private final TransformationServicesHandler transformationServicesHandler;
     private final Environment environment;
     private final TransformStore transformStore;
-    private final NameMappingServiceHandler nameMappingServiceHandler;
     private final ArgumentHandler argumentHandler;
     private final LaunchServiceHandler launchService;
     private final LaunchPluginHandler launchPlugins;
@@ -61,7 +58,6 @@ public class Launcher {
         this.transformStore = new TransformStore();
         this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
         this.argumentHandler = new ArgumentHandler();
-        this.nameMappingServiceHandler = new NameMappingServiceHandler(this.moduleLayerHandler);
         this.launchPlugins = new LaunchPluginHandler(this.moduleLayerHandler);
     }
 
@@ -86,7 +82,7 @@ public class Launcher {
     private void run(String... args) {
         final ArgumentHandler.DiscoveryData discoveryData = this.argumentHandler.setArgs(args);
         this.transformationServicesHandler.discoverServices(discoveryData);
-        final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment, this.nameMappingServiceHandler)
+        final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         scanResults.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
                 .stream()
@@ -119,10 +115,6 @@ public class Launcher {
 
     Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
         return launchService.findLaunchHandler(name);
-    }
-
-    Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(final String targetMapping) {
-        return nameMappingServiceHandler.findNameTranslator(targetMapping);
     }
 
     public Optional<IModuleLayerManager> findLayerManager() {

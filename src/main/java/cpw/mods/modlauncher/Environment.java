@@ -22,7 +22,6 @@ import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -55,11 +54,6 @@ public final class Environment implements IEnvironment {
     @Override
     public Optional<IModuleLayerManager> findModuleLayerManager() {
         return launcher.findLayerManager();
-    }
-
-    @Override
-    public Optional<BiFunction<INameMappingService.Domain, String, String>> findNameMapping(final String targetMapping) {
-        return launcher.findNameMapping(targetMapping);
     }
 
     @Override
