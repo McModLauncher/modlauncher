@@ -12,7 +12,6 @@ module cpw.mods.modlauncher {
     exports cpw.mods.modlauncher.util;
     exports cpw.mods.modlauncher;
     uses cpw.mods.modlauncher.api.ILaunchHandlerService;
-    uses cpw.mods.modlauncher.api.INameMappingService;
     uses cpw.mods.modlauncher.api.ITransformationService;
     uses cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
     uses cpw.mods.modlauncher.serviceapi.ITransformerDiscoveryService;

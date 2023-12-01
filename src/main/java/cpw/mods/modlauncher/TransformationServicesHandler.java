@@ -44,14 +44,11 @@ class TransformationServicesHandler {
         this.layerHandler = layerHandler;
     }
 
-    List<ITransformationService.Resource> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment, final NameMappingServiceHandler nameMappingServiceHandler) {
+    List<ITransformationService.Resource> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
         loadTransformationServices(environment);
         validateTransformationServices();
         processArguments(argumentHandler, environment);
         initialiseTransformationServices(environment);
-        // force the naming to "mojang" if nothing has been populated during transformer setup
-        environment.computePropertyIfAbsent(IEnvironment.Keys.NAMING.get(), a-> "mojang");
-        nameMappingServiceHandler.bindNamingServices(environment.getProperty(Environment.Keys.NAMING.get()).orElse("mojang"));
         return runScanningTransformationServices(environment);
     }
 
