@@ -197,7 +197,7 @@ public interface ILaunchPluginService {
      * If this transformer should only run when a class' constant pool contains a given byte sequence,
      * return it here. Multiple byte sequences will be treated as an OR relationship, and an empty
      * array indicates that no filtering should be performed.
-     * <p></p>
+     * <p>
      * The return value of this method should be cached as it will be called frequently.
      * @param classType class type being transformed
      * @param reason the reason for the class being loaded/transformed
