@@ -61,7 +61,7 @@ public class ClassTransformer {
         final String internalName = className.replace('.', '/');
         final Type classDesc = Type.getObjectType(internalName);
 
-        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass.length == 0, reason, this.auditTrail);
+        final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> launchPluginTransformerSet = pluginHandler.computeLaunchPluginTransformerSet(classDesc, inputClass, reason, this.auditTrail);
 
         final boolean needsTransforming = transformers.needsTransforming(internalName);
         if (!needsTransforming && launchPluginTransformerSet.isEmpty()) {

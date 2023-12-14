@@ -24,6 +24,7 @@ import cpw.mods.modlauncher.*;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.TypesafeMap;
+import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
@@ -33,6 +34,7 @@ import java.lang.module.ModuleFinder;
 import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,6 +60,9 @@ class TransformingClassLoaderTests {
         TransformStore transformStore = new TransformStore();
         ModuleLayerHandler layerHandler = Whitebox.invokeConstructor(ModuleLayerHandler.class);
         LaunchPluginHandler lph = new LaunchPluginHandler(layerHandler);
+        MockLaunchPluginService mockLaunchPluginService = new MockLaunchPluginService();
+        // Inject it
+        ((Map<String, ILaunchPluginService>)Whitebox.getField(LaunchPluginHandler.class, "plugins").get(lph)).put(mockLaunchPluginService.name(), mockLaunchPluginService);
         TransformationServiceDecorator sd = Whitebox.invokeConstructor(TransformationServiceDecorator.class, mockTransformerService);
         sd.gatherTransformers(transformStore);
         
@@ -72,6 +77,8 @@ class TransformingClassLoaderTests {
         final Class<?> aClass = Class.forName(TARGET_CLASS, true, tcl);
         assertEquals(Whitebox.getField(aClass, "testfield").getType(), String.class);
         assertEquals(Whitebox.getField(aClass, "testfield").get(null), "CHEESE!");
+        // Check that the field injected by our MockLaunchPluginService that uses a filter works
+        assertEquals(Whitebox.getField(aClass, "testfield2").get(null), "BUTTER!");
 
         final Class<?> newClass = tcl.loadClass(TARGET_CLASS);
         assertEquals(aClass, newClass, "Class instance is the same from Class.forName and tcl.loadClass");
