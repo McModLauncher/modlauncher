@@ -33,7 +33,6 @@ public class ArgumentHandler {
     private OptionSpec<String> profileOption;
     private OptionSpec<Path> gameDirOption;
     private OptionSpec<Path> assetsDirOption;
-    private OptionSpec<Path> minecraftJarOption;
     private OptionSpec<String> nonOption;
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
@@ -56,7 +55,6 @@ public class ArgumentHandler {
         profileOption = parser.accepts("version", "The version we launched with").withRequiredArg();
         gameDirOption = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
         assetsDirOption = parser.accepts("assetsDir", "Assets directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING));
-        minecraftJarOption = parser.accepts("minecraftJar", "Path to minecraft jar").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.READABLE)).withValuesSeparatedBy(',');
         uuidOption = parser.accepts("uuid", "The UUID of the logging in player").withRequiredArg();
         launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
 
@@ -69,10 +67,6 @@ public class ArgumentHandler {
         env.computePropertyIfAbsent(IEnvironment.Keys.LAUNCHTARGET.get(), f -> this.optionSet.valueOf(launchTarget));
         env.computePropertyIfAbsent(IEnvironment.Keys.UUID.get(), f -> this.optionSet.valueOf(uuidOption));
         resultConsumer.accept(this.optionSet, this::optionResults);
-    }
-
-    Path[] getSpecialJars() {
-        return this.optionSet.valuesOf(minecraftJarOption).toArray(new Path[0]);
     }
 
     String getLaunchTarget() {

@@ -32,8 +32,4 @@ record LaunchServiceHandlerDecorator(ILaunchHandlerService service) {
             throw new RuntimeException(e);
         }
     }
-
-    public void configureTransformationClassLoaderBuilder(ITransformingClassLoaderBuilder builder) {
-        this.service.configureTransformationClassLoader(builder);
-    }
 }

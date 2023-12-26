@@ -22,11 +22,7 @@ import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.jetbrains.annotations.Nullable;
-import java.net.URL;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
@@ -38,8 +34,6 @@ public class TransformationServiceDecorator {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ITransformationService service;
     private boolean isValid;
-    private static Set<String> classPrefixes = new HashSet<>();
-    private static Set<String> resourceNames = new HashSet<>();
 
     TransformationServiceDecorator(ITransformationService service) {
         this.service = service;
@@ -101,64 +95,6 @@ public class TransformationServiceDecorator {
         final List<ITransformationService.Resource> scanResults = this.service.beginScanning(environment);
         LOGGER.debug(MODLAUNCHER,"End scan trigger - transformation service {}", this.service::name);
         return scanResults;
-    }
-
-    Function<String,Optional<URL>> getClassLoader() {
-        final Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> classesLocator = this.service.additionalClassesLocator();
-        if (classesLocator != null) {
-            final HashSet<String> packagePrefixes = new HashSet<>(classesLocator.getKey());
-            final Set<String> badPrefixes = packagePrefixes.stream().
-                    filter(s ->
-                            // No prefixes starting with net.minecraft.
-                            s.startsWith("net.minecraft.") ||
-                            // No prefixes starting with net.minecraftforge.
-                            s.startsWith("net.minecraftforge.") ||
-                            // No prefixes starting with net.neoforged.
-                            s.startsWith("net.neoforged.") ||
-                            // No prefixes already claimed
-                            classPrefixes.contains(s) ||
-                            // No prefixes not ending in a dot
-                            !s.endsWith(".") ||
-                            // No prefixes starting without a dot after the first character
-                            s.indexOf('.') <= 0).
-                    collect(Collectors.toSet());
-            if (!badPrefixes.isEmpty()) {
-                badPrefixes.forEach(s -> LOGGER.error("Illegal prefix specified for {} : {}", this.service.name(), s));
-                throw new IllegalArgumentException("Bad prefixes specified");
-            }
-            classPrefixes.addAll(classesLocator.getKey());
-        }
-
-        final Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> resourcesLocator = this.service.additionalResourcesLocator();
-        if (resourcesLocator!=null) {
-            final HashSet<String> resNames = new HashSet<>(resourcesLocator.getKey());
-            final Set<String> badResourceNames = resNames.stream().
-                    filter(s -> s.endsWith(".class") || resourceNames.contains(s)).
-                    collect(Collectors.toSet());
-            if (!badResourceNames.isEmpty()) {
-                badResourceNames.forEach(s -> LOGGER.error("Illegal resource name specified for {} : {}", this.service.name(), s));
-                throw new IllegalArgumentException("Bad resources specified");
-            }
-            resourceNames.addAll(resourcesLocator.getKey());
-        }
-        return s -> getOptionalURL(classesLocator, resourcesLocator, s);
-    }
-
-    private Optional<URL> getOptionalURL(@Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> classes, @org.jetbrains.annotations.Nullable Map.Entry<Set<String>, Supplier<Function<String, Optional<URL>>>> resources, final String name) {
-        if (classes != null && name.endsWith(".class")) {
-            for (String pfx : classes.getKey()) {
-                if (name.startsWith(pfx.replace('.','/'))) {
-                    return classes.getValue().get().apply(name);
-                }
-            }
-        } else if (resources != null && !name.endsWith(".class")) {
-            for (String pfx : resources.getKey()) {
-                if (Objects.equals(name, pfx)) {
-                    return resources.getValue().get().apply(name);
-                }
-            }
-        }
-        return Optional.empty();
     }
 
     public List<ITransformationService.Resource> onCompleteScan(IModuleLayerManager moduleLayerManager) {

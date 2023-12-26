@@ -22,7 +22,6 @@ import cpw.mods.jarhandling.SecureJar;
 import joptsimple.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URL;
 import java.util.*;
 import java.util.function.*;
 
@@ -97,38 +96,6 @@ public interface ITransformationService {
      */
     @NotNull
     List<? extends ITransformer<?>> transformers();
-
-    /**
-     * Allow transformation services to provide additional classes when asked for.
-     *
-     * Rules:
-     * The Strings in the set must end with a dot. They must have at least one dot. They cannot include "net.minecraft."
-     * "net.minecraftforge.", or "net.neoforged.". Conflicts with other ITransformationServices will result in an immediate crash.
-     *
-     * @return a set of strings (tested with "startsWith" for classNames in "internal" format (my.package.Clazz))
-     * with a function that receives the full classname and returns an Optional URL for loading that class. The null
-     * return value means no classlocator will be used for this transformation service.
-     *
-     */
-    default Map.Entry<Set<String>,Supplier<Function<String, Optional<URL>>>> additionalClassesLocator() {
-        return null;
-    }
-
-    /**
-     * Allow transformation services to provide additional resource files when asked for.
-     *
-     * Rules:
-     * The Strings in the set must not end with ".class". Conflicts with other ITransformationServices will result
-     * in an immediate crash.
-     *
-     * @return a set of strings (tested with "equals" for classResources in "internal" format (my/package/Resource))
-     * with a function that receives the full resource being searched and returns an Optional URL for loading that
-     * class. The null return value means no classlocator will be used for this transformation service.
-     *
-     */
-    default Map.Entry<Set<String>,Supplier<Function<String, Optional<URL>>>> additionalResourcesLocator() {
-        return null;
-    }
 
     interface OptionResult {
         <V> V value(OptionSpec<V> options);
