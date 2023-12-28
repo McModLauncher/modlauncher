@@ -193,6 +193,20 @@ public interface ILaunchPluginService {
     default void customAuditConsumer(String className, Consumer<String[]> auditDataAcceptor) {
     }
 
+    /**
+     * If this transformer should only run when a class' constant pool contains a given byte sequence,
+     * return it here. Multiple byte sequences will be treated as an OR relationship, and an empty
+     * array indicates that no filtering should be performed.
+     * <p>
+     * The return value of this method should be cached as it will be called frequently.
+     * @param classType class type being transformed
+     * @param reason the reason for the class being loaded/transformed
+     * @return an array of sequences of bytes to search for in the class' constant pool
+     */
+    default byte[][] constantsFilter(Type classType, String reason) {
+        return new byte[0][0];
+    }
+
     interface ITransformerLoader {
         byte[] buildTransformedClassNodeFor(final String className) throws ClassNotFoundException;
     }
