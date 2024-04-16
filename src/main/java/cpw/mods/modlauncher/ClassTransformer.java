@@ -73,7 +73,7 @@ public class ClassTransformer {
         boolean empty;
         if (inputClass.length > 0) {
             final ClassReader classReader = new ClassReader(inputClass);
-            classReader.accept(clazz, 0);
+            classReader.accept(clazz, ClassReader.EXPAND_FRAMES);
             digest = ()->getSha256().digest(inputClass);
             empty = false;
         } else {
