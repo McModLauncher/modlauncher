@@ -8,7 +8,7 @@ plugins {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
 }
 
@@ -115,6 +115,7 @@ tasks.register('jmh', JavaExec) {
         jvmArgs(
                 '--module-path', sourceSets.jmh.runtimeClasspath.asPath,
                 '--add-modules', 'ALL-MODULE-PATH',
+                '--add-opens', 'java.base/java.lang.invoke=cpw.mods.securejarhandler',
                 '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
                 '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=cpw.mods.modlauncher.benchmarks',
                 '--add-exports', 'cpw.mods.modlauncher.benchmarks/cpw.mods.modlauncher.benchmarks.jmh_generated=jmh.core'
@@ -189,7 +190,7 @@ publishing {
             from components.java
             pom {
                 name = 'Mod Launcher'
-                description = 'Java 17 mod launcher'
+                description = 'Java 21 mod launcher'
                 pomUtils.githubRepo(it, 'modlauncher', 'McModLauncher')
 
                 developers {

@@ -16,14 +16,13 @@ jobs:
       max-parallel: 10
       fail-fast: false
       matrix:
-        jvm_version: [ 17, 18, 19, 20 ]
-        jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
-        exclude:
-          - jdk: Graal_VM
-            jvm_version: 18 # Graal doesn't have a dedicated J18 version
+        jvm_version: [ 21, 22 ]
+        jdk: [ Graal_VM, Adoptium, Azul, Oracle, Amazon, BellSoft, SAP ]
         include:
+          - jdk: IBM
+            jvm_version: 21 # IBM only has 21
           - jdk: Microsoft
-            jvm_version: 17 # MS OpenJDK only has 11 and 177
+            jvm_version: 21 # MS OpenJDK only has 21
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
