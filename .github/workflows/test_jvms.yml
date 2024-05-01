@@ -19,6 +19,8 @@ jobs:
         jvm_version: [ 21, 22 ]
         jdk: [ Graal_VM, Adoptium, Azul, IBM, Oracle, Amazon, BellSoft, SAP ]
         include:
+          - jdk: IBM
+            jvm_version: 21 # IBM only has 21
           - jdk: Microsoft
             jvm_version: 21 # MS OpenJDK only has 21
     steps:
