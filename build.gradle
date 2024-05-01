@@ -115,6 +115,7 @@ tasks.register('jmh', JavaExec) {
         jvmArgs(
                 '--module-path', sourceSets.jmh.runtimeClasspath.asPath,
                 '--add-modules', 'ALL-MODULE-PATH',
+                '--add-opens', 'java.base/java.lang.invoke=cpw.mods.securejarhandler',
                 '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=powermock.reflect',
                 '--add-opens', 'cpw.mods.modlauncher/cpw.mods.modlauncher=cpw.mods.modlauncher.benchmarks',
                 '--add-exports', 'cpw.mods.modlauncher.benchmarks/cpw.mods.modlauncher.benchmarks.jmh_generated=jmh.core'
