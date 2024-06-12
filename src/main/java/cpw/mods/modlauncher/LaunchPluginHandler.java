@@ -26,6 +26,7 @@ import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
@@ -33,6 +34,7 @@ import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
@@ -41,10 +43,14 @@ public class LaunchPluginHandler {
     private final Map<String, ILaunchPluginService> plugins;
 
     public LaunchPluginHandler(final ModuleLayerHandler layerHandler) {
-        this.plugins = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchPluginService.class),
-                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e))
-                .collect(Collectors.toMap(ILaunchPluginService::name, Function.identity()));
-        final var modlist = plugins.entrySet().stream().map(e->Map.of(
+        this(ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow(), ILaunchPluginService.class),
+                e->LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading launch plugin service. Things will not work well", e)));
+    }
+
+    @VisibleForTesting
+    public LaunchPluginHandler(Stream<ILaunchPluginService> plugins) {
+        this.plugins = plugins.collect(Collectors.toMap(ILaunchPluginService::name, Function.identity()));
+        final var modlist = this.plugins.entrySet().stream().map(e->Map.of(
                 "name", e.getKey(),
                 "type", "PLUGINSERVICE",
                 "file", ServiceLoaderUtils.fileNameFor(e.getValue().getClass())))
@@ -55,7 +61,7 @@ public class LaunchPluginHandler {
                         throw new RuntimeException("The MODLIST isn't set, huh?");
                     });
         }
-        LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", plugins.keySet()));
+        LOGGER.debug(MODLAUNCHER,"Found launch plugins: [{}]", ()-> String.join(",", this.plugins.keySet()));
     }
 
     public Optional<ILaunchPluginService> get(final String name) {
