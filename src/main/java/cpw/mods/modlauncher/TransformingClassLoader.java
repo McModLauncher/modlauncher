@@ -20,6 +20,7 @@ package cpw.mods.modlauncher;
 
 import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.modlauncher.api.*;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.lang.module.Configuration;
 import java.util.*;
@@ -33,13 +34,19 @@ public class TransformingClassLoader extends ModuleClassLoader {
     }
     private final ClassTransformer classTransformer;
 
-    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, ModuleLayerHandler moduleLayerHandler) {
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, IModuleLayerManager moduleLayerHandler) {
         super("TRANSFORMER", moduleLayerHandler.getLayer(IModuleLayerManager.Layer.GAME).orElseThrow().configuration(), List.of(moduleLayerHandler.getLayer(IModuleLayerManager.Layer.SERVICE).orElseThrow()));
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this);
     }
 
-    TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, final Environment environment, final Configuration configuration, List<ModuleLayer> parentLayers) {
-        super("TRANSFORMER", configuration, parentLayers);
+    @VisibleForTesting
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, final Environment environment, final Configuration configuration, List<ModuleLayer> parentLayers) {
+        this(transformStore, pluginHandler, environment, configuration, parentLayers, null);
+    }
+
+    @VisibleForTesting
+    public TransformingClassLoader(TransformStore transformStore, LaunchPluginHandler pluginHandler, final Environment environment, final Configuration configuration, List<ModuleLayer> parentLayers, ClassLoader parentClassLoader) {
+        super("TRANSFORMER", configuration, parentLayers, parentClassLoader);
         TransformerAuditTrail tat = new TransformerAuditTrail();
         environment.computePropertyIfAbsent(IEnvironment.Keys.AUDITTRAIL.get(), v->tat);
         this.classTransformer = new ClassTransformer(transformStore, pluginHandler, this, tat);

@@ -21,6 +21,7 @@ package cpw.mods.modlauncher;
 import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
 import java.util.stream.*;
@@ -35,7 +36,8 @@ public class TransformationServiceDecorator {
     private final ITransformationService service;
     private boolean isValid;
 
-    TransformationServiceDecorator(ITransformationService service) {
+    @VisibleForTesting
+    public TransformationServiceDecorator(ITransformationService service) {
         this.service = service;
     }
 

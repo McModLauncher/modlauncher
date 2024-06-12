@@ -45,6 +45,11 @@ public final class ServiceLoaderUtils {
     }
 
     public static String fileNameFor(Class<?> clazz) {
+        // Used in test scenarios where services might come from normal CP
+        if (clazz.getModule().getLayer() == null) {
+            return clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
+        }
+
         return clazz.getModule().getLayer().configuration()
                 .findModule(clazz.getModule().getName())
                 .flatMap(rm->rm.reference().location())
