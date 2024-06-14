@@ -22,6 +22,7 @@ import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
+import cpw.mods.modlauncher.util.ClassConstantPoolParser;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,11 +69,21 @@ public class LaunchPluginHandler {
         return Optional.ofNullable(plugins.get(name));
     }
 
-    public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final boolean isEmpty, final String reason, final TransformerAuditTrail auditTrail) {
+    public EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> computeLaunchPluginTransformerSet(final Type className, final byte[] inputClass, final String reason, final TransformerAuditTrail auditTrail) {
         Set<ILaunchPluginService> uniqueValues = new HashSet<>();
         final EnumMap<ILaunchPluginService.Phase, List<ILaunchPluginService>> phaseObjectEnumMap = new EnumMap<>(ILaunchPluginService.Phase.class);
         for (ILaunchPluginService plugin : plugins.values()) {
-            for (ILaunchPluginService.Phase ph : plugin.handlesClass(className, isEmpty, reason)) {
+            // Check if the plugin handles classes of this name at all
+            var phaseSet = plugin.handlesClass(className, inputClass.length == 0, reason);
+            if (phaseSet.isEmpty()) {
+                continue;
+            }
+            // Filter out classes that don't match the constants filter
+            if (!ClassConstantPoolParser.constantPoolMatches(plugin.constantsFilter(className, reason), inputClass)) {
+                continue;
+            }
+            // The plugin will transform this class, add it to the list
+            for (ILaunchPluginService.Phase ph : phaseSet) {
                 phaseObjectEnumMap.computeIfAbsent(ph, e -> new ArrayList<>()).add(plugin);
                 if (uniqueValues.add(plugin)) {
                     plugin.customAuditConsumer(className.getClassName(), strings -> auditTrail.addPluginCustomAuditTrail(className.getClassName(), plugin, strings));
