@@ -21,7 +21,6 @@ package cpw.mods.modlauncher;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.*;
 import org.apache.logging.log4j.LogManager;
-import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,26 +37,43 @@ public class Launcher {
     private final TransformationServicesHandler transformationServicesHandler;
     private final Environment environment;
     private final TransformStore transformStore;
-    private final ArgumentHandler argumentHandler;
     private final LaunchServiceHandler launchService;
     private final LaunchPluginHandler launchPlugins;
     private final ModuleLayerHandler moduleLayerHandler;
     private TransformingClassLoader classLoader;
+    private ArgumentHandler argumentHandler;
 
-    private Launcher() {
-        INSTANCE = this;
+    public Launcher() {
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher {} starting: java version {} by {}; OS {} arch {} version {}", ()->IEnvironment.class.getPackage().getImplementationVersion(),  () -> System.getProperty("java.version"), ()->System.getProperty("java.vendor"), ()->System.getProperty("os.name"), ()->System.getProperty("os.arch"), ()->System.getProperty("os.version"));
         this.moduleLayerHandler = new ModuleLayerHandler();
         this.launchService = new LaunchServiceHandler(this.moduleLayerHandler);
         this.blackboard = new TypesafeMap();
-        this.environment = new Environment(this);
+        this.transformStore = new TransformStore();
+        this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
+        this.launchPlugins = new LaunchPluginHandler(this.moduleLayerHandler);
+        this.environment = new Environment(
+                launchPlugins::get,
+                launchService::findLaunchHandler,
+                moduleLayerHandler
+        );
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLSPEC_VERSION.get(), s->IEnvironment.class.getPackage().getSpecificationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MLIMPL_VERSION.get(), s->IEnvironment.class.getPackage().getImplementationVersion());
         environment.computePropertyIfAbsent(IEnvironment.Keys.MODLIST.get(), s->new ArrayList<>());
-        this.transformStore = new TransformStore();
-        this.transformationServicesHandler = new TransformationServicesHandler(this.transformStore, this.moduleLayerHandler);
-        this.argumentHandler = new ArgumentHandler();
-        this.launchPlugins = new LaunchPluginHandler(this.moduleLayerHandler);
+    }
+
+    public Launcher(TransformationServicesHandler transformationServicesHandler,
+                    Environment environment,
+                    TransformStore transformStore,
+                    LaunchServiceHandler launchService,
+                    LaunchPluginHandler launchPlugins,
+                    ModuleLayerHandler moduleLayerHandler) {
+        this.blackboard = new TypesafeMap();
+        this.transformationServicesHandler = transformationServicesHandler;
+        this.environment = environment;
+        this.transformStore = transformStore;
+        this.launchService = launchService;
+        this.launchPlugins = launchPlugins;
+        this.moduleLayerHandler = moduleLayerHandler;
     }
 
     public static void main(String... args) {
@@ -71,7 +87,9 @@ public class Launcher {
         }
         LogManager.getLogger().info(MODLAUNCHER,"ModLauncher running: args {}", () -> LaunchServiceHandler.hideAccessToken(args));
         LogManager.getLogger().info(MODLAUNCHER, "JVM identified as {} {} {}", props.getProperty("java.vm.vendor"), props.getProperty("java.vm.name"), props.getProperty("java.vm.version"));
-        new Launcher().run(args);
+        var launcher = new Launcher();
+        INSTANCE = launcher;
+        launcher.run(args);
     }
 
     public final TypesafeMap blackboard() {
@@ -79,8 +97,8 @@ public class Launcher {
     }
 
     private void run(String... args) {
-        final ArgumentHandler.DiscoveryData discoveryData = this.argumentHandler.setArgs(args);
-        this.transformationServicesHandler.discoverServices(discoveryData);
+        this.argumentHandler = new ArgumentHandler(args);
+        this.transformationServicesHandler.discoverServices(DiscoveryData.create(args));
         final var scanResults = this.transformationServicesHandler.initializeTransformationServices(this.argumentHandler, this.environment)
                 .stream().collect(Collectors.groupingBy(ITransformationService.Resource::target));
         scanResults.getOrDefault(IModuleLayerManager.Layer.PLUGIN, List.of())
@@ -105,14 +123,6 @@ public class Launcher {
 
     public Environment environment() {
         return this.environment;
-    }
-
-    Optional<ILaunchPluginService> findLaunchPlugin(final String name) {
-        return launchPlugins.get(name);
-    }
-
-    Optional<ILaunchHandlerService> findLaunchHandler(final String name) {
-        return launchService.findLaunchHandler(name);
     }
 
     public Optional<IModuleLayerManager> findLayerManager() {

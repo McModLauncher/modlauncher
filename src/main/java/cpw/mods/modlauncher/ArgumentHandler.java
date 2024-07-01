@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.function.*;
 
 public class ArgumentHandler {
-    private String[] args;
+    private final String[] args;
     private OptionSet optionSet;
     private OptionSpec<String> profileOption;
     private OptionSpec<Path> gameDirOption;
@@ -37,16 +37,8 @@ public class ArgumentHandler {
     private OptionSpec<String> launchTarget;
     private OptionSpec<String> uuidOption;
 
-    record DiscoveryData(Path gameDir, String launchTarget, String[] arguments) {}
-
-    DiscoveryData setArgs(String[] args) {
+    public ArgumentHandler(String[] args) {
         this.args = args;
-        final OptionParser parser = new OptionParser();
-        final var gameDir = parser.accepts("gameDir", "Alternative game directory").withRequiredArg().withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING)).defaultsTo(Path.of("."));
-        final var launchTarget = parser.accepts("launchTarget", "LauncherService target to launch").withRequiredArg();
-        parser.allowsUnrecognizedOptions();
-        final OptionSet optionSet = parser.parse(args);
-        return new DiscoveryData(optionSet.valueOf(gameDir), optionSet.valueOf(launchTarget), args);
     }
 
     void processArguments(Environment env, Consumer<OptionParser> parserConsumer, BiConsumer<OptionSet, BiFunction<String, OptionSet, ITransformationService.OptionResult>> resultConsumer) {
