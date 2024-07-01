@@ -48,7 +48,7 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
     private final EnumMap<Layer, List<PathOrJar>> layers = new EnumMap<>(Layer.class);
     private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
-    ModuleLayerHandler() {
+    public ModuleLayerHandler() {
         ClassLoader classLoader = getClass().getClassLoader();
         // Create a new ModuleClassLoader from the boot module layer if it doesn't exist already.
         // This allows us to launch without BootstrapLauncher.
@@ -57,7 +57,7 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
         completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), cl));
     }
 
-    void addToLayer(final Layer layer, final SecureJar jar) {
+    public void addToLayer(final Layer layer, final SecureJar jar) {
         if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
         layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(jar));
     }
