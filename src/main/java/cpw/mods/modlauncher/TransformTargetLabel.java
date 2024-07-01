@@ -74,7 +74,7 @@ public final class TransformTargetLabel {
         return this.elementDescriptor;
     }
 
-    final TargetType<?> getTargetType() {
+    public TargetType<?> getTargetType() {
         return this.labelType;
     }
 

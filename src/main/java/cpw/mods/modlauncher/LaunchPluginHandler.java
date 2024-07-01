@@ -83,7 +83,7 @@ public class LaunchPluginHandler {
         return phaseObjectEnumMap;
     }
 
-    void offerScanResultsToPlugins(List<SecureJar> scanResults) {
+    public void offerScanResultsToPlugins(List<SecureJar> scanResults) {
         plugins.forEach((n,p)->p.addResources(scanResults));
     }
 
