@@ -31,7 +31,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
-    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
+    public record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
 
     private record PathOrJar(NamedPath path, SecureJar jar) {
         static PathOrJar from(SecureJar jar) {
@@ -54,7 +54,8 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
         // This allows us to launch without BootstrapLauncher.
         ModuleClassLoader cl = classLoader instanceof ModuleClassLoader moduleCl ? moduleCl
             : new ModuleClassLoader("BOOT", ModuleLayer.boot().configuration(), List.of());
-        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), cl));
+        var ownLayer = Objects.requireNonNullElse(getClass().getModule().getLayer(), ModuleLayer.boot());
+        completedLayers.put(Layer.BOOT, new LayerInfo(ownLayer, cl));
     }
 
     public void addToLayer(final Layer layer, final SecureJar jar) {
