@@ -42,6 +42,12 @@ public class TransformationServicesHandler {
         this.layerHandler = layerHandler;
     }
 
+    public TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler, Environment environment, Collection<ITransformationService> services) {
+        this.transformStore = transformStore;
+        this.layerHandler = layerHandler;
+        setTransformationServices(services, environment);
+    }
+
     public List<ITransformationService.Resource> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
         loadTransformationServices(environment);
         validateTransformationServices();
@@ -125,14 +131,18 @@ public class TransformationServicesHandler {
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
         earlyDiscoveryServices.forEach(s->s.earlyInitialization(discoveryData.launchTarget(), discoveryData.arguments()));
-        serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
-                .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
+        setTransformationServices(ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
+                .toList(), Launcher.INSTANCE.environment());
+    }
+
+    private void setTransformationServices(Collection<ITransformationService> services, Environment environment) {
+        serviceLookup = services.stream().collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
         var modlist = serviceLookup.entrySet().stream().map(e->Map.of(
                 "name", e.getKey(),
                 "type", "TRANSFORMATIONSERVICE",
                 "file", ServiceLoaderUtils.fileNameFor(e.getValue().getClass())
                 )).toList();
-        Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).ifPresent(ml->ml.addAll(modlist));
+        environment.getProperty(IEnvironment.Keys.MODLIST.get()).ifPresent(ml->ml.addAll(modlist));
         LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
     }
 

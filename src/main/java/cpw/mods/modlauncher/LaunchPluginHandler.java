@@ -102,7 +102,7 @@ public class LaunchPluginHandler {
         return flags;
     }
 
-    void announceLaunch(final TransformingClassLoader transformerLoader, final NamedPath[] specialPaths) {
+    public void announceLaunch(final TransformingClassLoader transformerLoader, final NamedPath[] specialPaths) {
         plugins.forEach((k, p)->p.initializeLaunch((s->transformerLoader.buildTransformedClassNodeFor(s, k)), specialPaths));
     }
 }
