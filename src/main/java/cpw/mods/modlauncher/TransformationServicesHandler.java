@@ -31,18 +31,24 @@ import java.util.stream.*;
 
 import static cpw.mods.modlauncher.LogMarkers.*;
 
-class TransformationServicesHandler {
+public class TransformationServicesHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private Map<String, TransformationServiceDecorator> serviceLookup;
     private final TransformStore transformStore;
     private final ModuleLayerHandler layerHandler;
 
-    TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler) {
+    public TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler) {
         this.transformStore = transformStore;
         this.layerHandler = layerHandler;
     }
 
-    List<ITransformationService.Resource> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
+    public TransformationServicesHandler(TransformStore transformStore, ModuleLayerHandler layerHandler, Environment environment, Collection<ITransformationService> services) {
+        this.transformStore = transformStore;
+        this.layerHandler = layerHandler;
+        setTransformationServices(services, environment);
+    }
+
+    public List<ITransformationService.Resource> initializeTransformationServices(ArgumentHandler argumentHandler, Environment environment) {
         loadTransformationServices(environment);
         validateTransformationServices();
         processArguments(argumentHandler, environment);
@@ -50,7 +56,9 @@ class TransformationServicesHandler {
         return runScanningTransformationServices(environment);
     }
 
-    TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler, final Environment environment, final ModuleLayerHandler layerHandler) {
+    public TransformingClassLoader buildTransformingClassLoader(final LaunchPluginHandler pluginHandler,
+                                                                final Environment environment,
+                                                                final ModuleLayerHandler layerHandler) {
         final var layerInfo = layerHandler.buildLayer(IModuleLayerManager.Layer.GAME, (cf, parents)->new TransformingClassLoader(transformStore, pluginHandler, environment, cf, parents));
         layerHandler.updateLayer(IModuleLayerManager.Layer.PLUGIN, li->li.cl().setFallbackClassLoader(layerInfo.cl()));
         return (TransformingClassLoader) layerInfo.cl();
@@ -74,7 +82,7 @@ class TransformationServicesHandler {
                 .forEach(service -> service.argumentValues(resultHandler.apply(service.name(), optionSet)));
     }
 
-    void initialiseServiceTransformers() {
+    public void initialiseServiceTransformers() {
         LOGGER.debug(MODLAUNCHER,"Transformation services loading transformers");
 
         serviceLookup.values().forEach(s -> s.gatherTransformers(transformStore));
@@ -110,7 +118,7 @@ class TransformationServicesHandler {
         serviceLookup.values().forEach(s -> s.onLoad(environment, serviceLookup.keySet()));
     }
 
-    void discoverServices(final ArgumentHandler.DiscoveryData discoveryData) {
+    public void discoverServices(final DiscoveryData discoveryData) {
         LOGGER.debug(MODLAUNCHER, "Discovering transformation services");
         var bootLayer = layerHandler.getLayer(IModuleLayerManager.Layer.BOOT).orElseThrow();
         var earlyDiscoveryServices = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(bootLayer, ITransformerDiscoveryService.class),  sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation discoverer, expect problems", sce))
@@ -123,14 +131,18 @@ class TransformationServicesHandler {
         additionalPaths.forEach(np->layerHandler.addToLayer(IModuleLayerManager.Layer.SERVICE, np));
         var serviceLayer = layerHandler.buildLayer(IModuleLayerManager.Layer.SERVICE);
         earlyDiscoveryServices.forEach(s->s.earlyInitialization(discoveryData.launchTarget(), discoveryData.arguments()));
-        serviceLookup = ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
-                .collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
+        setTransformationServices(ServiceLoaderUtils.streamServiceLoader(()->ServiceLoader.load(serviceLayer.layer(), ITransformationService.class), sce -> LOGGER.fatal(MODLAUNCHER, "Encountered serious error loading transformation service, expect problems", sce))
+                .toList(), Launcher.INSTANCE.environment());
+    }
+
+    private void setTransformationServices(Collection<ITransformationService> services, Environment environment) {
+        serviceLookup = services.stream().collect(Collectors.toMap(ITransformationService::name, TransformationServiceDecorator::new));
         var modlist = serviceLookup.entrySet().stream().map(e->Map.of(
                 "name", e.getKey(),
                 "type", "TRANSFORMATIONSERVICE",
                 "file", ServiceLoaderUtils.fileNameFor(e.getValue().getClass())
                 )).toList();
-        Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).ifPresent(ml->ml.addAll(modlist));
+        environment.getProperty(IEnvironment.Keys.MODLIST.get()).ifPresent(ml->ml.addAll(modlist));
         LOGGER.debug(MODLAUNCHER,"Found transformer services : [{}]", () -> String.join(",",serviceLookup.keySet()));
     }
 

@@ -23,6 +23,7 @@ import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
@@ -31,7 +32,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
-    record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
+    public record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
 
     private record PathOrJar(NamedPath path, SecureJar jar) {
         static PathOrJar from(SecureJar jar) {
@@ -48,16 +49,21 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
     private final EnumMap<Layer, List<PathOrJar>> layers = new EnumMap<>(Layer.class);
     private final EnumMap<Layer, LayerInfo> completedLayers = new EnumMap<>(Layer.class);
 
-    ModuleLayerHandler() {
+    public ModuleLayerHandler() {
+        this(null);
+    }
+
+    public ModuleLayerHandler(@Nullable ClassLoader parentLoader) {
         ClassLoader classLoader = getClass().getClassLoader();
         // Create a new ModuleClassLoader from the boot module layer if it doesn't exist already.
         // This allows us to launch without BootstrapLauncher.
         ModuleClassLoader cl = classLoader instanceof ModuleClassLoader moduleCl ? moduleCl
-            : new ModuleClassLoader("BOOT", ModuleLayer.boot().configuration(), List.of());
-        completedLayers.put(Layer.BOOT, new LayerInfo(getClass().getModule().getLayer(), cl));
+            : new ModuleClassLoader("BOOT", ModuleLayer.boot().configuration(), List.of(), parentLoader);
+        var ownLayer = Objects.requireNonNullElse(getClass().getModule().getLayer(), ModuleLayer.boot());
+        completedLayers.put(Layer.BOOT, new LayerInfo(ownLayer, cl));
     }
 
-    void addToLayer(final Layer layer, final SecureJar jar) {
+    public void addToLayer(final Layer layer, final SecureJar jar) {
         if (completedLayers.containsKey(layer)) throw new IllegalStateException("Layer already populated");
         layers.computeIfAbsent(layer, l->new ArrayList<>()).add(PathOrJar.from(jar));
     }

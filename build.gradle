@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'com.github.ben-manes.versions' version '0.48.0'
-    id 'net.neoforged.gradleutils' version '3.0.0-alpha.4'
+    id 'net.neoforged.gradleutils' version '3.0.0'
     id 'org.gradlex.extra-java-module-info' version '1.4.2'
     id 'maven-publish'
 }
