@@ -23,14 +23,18 @@ import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.NamedPath;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
+import java.lang.module.ResolutionException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public final class ModuleLayerHandler implements IModuleLayerManager {
+    private static final Logger LOGGER = LogManager.getLogger();
     record LayerInfo(ModuleLayer layer, ModuleClassLoader cl) {}
 
     private record PathOrJar(NamedPath path, SecureJar jar) {
@@ -72,7 +76,15 @@ public final class ModuleLayerHandler implements IModuleLayerManager {
                 .map(PathOrJar::build)
                 .toArray(SecureJar[]::new);
         final var targets = Arrays.stream(finder).map(SecureJar::name).toList();
-        final var newConf = Configuration.resolveAndBind(JarModuleFinder.of(finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li->li.layer().configuration()).toList(), ModuleFinder.of(), targets);
+        final Configuration newConf;
+        try {
+            newConf = Configuration.resolveAndBind(JarModuleFinder.of(finder), Arrays.stream(layer.getParent()).map(completedLayers::get).map(li -> li.layer().configuration()).toList(), ModuleFinder.of(), targets);
+        } catch (ResolutionException e) {
+            // Catch and log errors when two mods have the same package name, or other module loading errors
+            // This ensures they make it to the log file.
+            LOGGER.error("Error while resolving modules.", e);
+            throw e;
+        }
         final var allParents = Arrays.stream(layer.getParent()).map(completedLayers::get).map(LayerInfo::layer).<ModuleLayer>mapMulti((moduleLayer, comp)-> {
             comp.accept(moduleLayer);
             moduleLayer.parents().forEach(comp);
